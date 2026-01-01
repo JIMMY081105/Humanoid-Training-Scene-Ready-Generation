@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "contract_id": "food_factory_full_quality_20260713",
+  "building": {
+    "width_m": 44.0,
+    "depth_m": 32.0,
+    "clear_height_m": 5.0,
+    "orientation": {"north": "+y", "east": "+x"},
+    "shell_bounds_xy": [0.0, 0.0, 44.0, 32.0],
+    "roof_hidden_in_review_renders": true
+  },
+  "room_order": [
+    "ingredient_receiving", "dry_storage", "cold_storage",
+    "washing_preparation", "qc_laboratory", "office_administration",
+    "processing_hall", "packaging_hall", "finished_goods_storage",
+    "maintenance", "changing_room", "break_room", "boys_toilet",
+    "girls_toilet"
+  ],
+  "rooms": {
+    "ingredient_receiving": {"bounds_xy": [0,22,10,32], "min_worker_aisle_m": 1.2, "min_forklift_aisle_m": 3.0, "windows": ["north","west"], "inventory": ["wooden_pallet","cardboard_carton","plastic_food_crate","ingredient_sack","pallet_scale","stainless_inspection_table","receiving_terminal","barcode_scanner","clipboard_station","manual_pallet_truck","safety_bollard","fire_extinguisher","hygiene_sign","roll_up_receiving_door"]},
+    "dry_storage": {"bounds_xy": [10,24,28,32], "min_worker_aisle_m": 1.2, "min_forklift_aisle_m": 3.0, "windows": ["north"], "inventory": ["pallet_rack","metal_shelving","cardboard_carton","sealed_food_container","ingredient_sack","plastic_bin","labelled_storage_crate","loaded_pallet","forklift","manual_pallet_truck","inventory_terminal","temperature_humidity_monitor"]},
+    "cold_storage": {"bounds_xy": [28,24,44,32], "min_worker_aisle_m": 1.2, "min_forklift_aisle_m": 2.5, "windows": ["north_high_insulated","east_high_insulated"], "inventory": ["insulated_wall_panel","cold_room_door","stainless_storage_rack","chilled_container","temperature_control_panel","refrigeration_compressor","ceiling_cooling_unit","floor_drain"]},
+    "washing_preparation": {"bounds_xy": [0,13,10,22], "min_worker_aisle_m": 1.2, "windows": ["west"], "inventory": ["deep_stainless_sink","wash_basin","spray_hose","stainless_preparation_table","cutting_table","ingredient_crate","red_food_bin","green_food_bin","neutral_food_bin","food_safe_tray","drainage_channel","floor_drain","wall_storage_shelf","waste_sorting_bin","hand_washing_station","soap_dispenser","paper_towel_dispenser","ppe_storage"]},
+    "qc_laboratory": {"bounds_xy": [0,7,10,13], "min_worker_aisle_m": 1.2, "windows": ["west"], "inventory": ["laboratory_workbench","laboratory_table","laboratory_sink","computer_workstation","office_chair","laboratory_stool","testing_machine","sample_container","laboratory_scale","microscope","storage_cabinet","glass_fronted_cabinet","wall_shelf","task_light"]},
+    "office_administration": {"bounds_xy": [0,0,10,7], "min_worker_aisle_m": 1.2, "windows": ["west","south"], "inventory": ["office_desk","computer_monitor","ergonomic_office_chair","filing_cabinet","low_storage_cabinet","printer","office_shelving","meeting_table","meeting_chair","notice_board","wall_clock","indoor_plant"]},
+    "processing_hall": {"bounds_xy": [10,14,38,24], "min_worker_aisle_m": 1.5, "min_production_aisle_m": 2.5, "inventory": ["mixing_tank","cylindrical_vat","hopper","pump","pipe_network","valve","processing_control_panel","food_processing_machine","stainless_conveyor","inspection_station","transfer_machine","electric_motor","machine_safety_guard","machine_support_frame","utility_connection","emergency_stop"]},
+    "packaging_hall": {"bounds_xy": [10,6,38,14], "min_worker_aisle_m": 1.5, "min_production_aisle_m": 2.5, "inventory": ["stainless_conveyor","filling_station","sealing_machine","labelling_machine","weighing_station","inspection_station","carton_sealing_machine","packing_table","packaging_material_bin","packaging_control_panel","empty_carton_stack","product_collection_area","machine_safety_guard","emergency_stop"]},
+    "finished_goods_storage": {"bounds_xy": [10,0,44,6], "min_worker_aisle_m": 1.2, "min_forklift_aisle_m": 3.0, "windows": ["south"], "inventory": ["pallet_rack","cardboard_carton","wrapped_finished_pallet","plastic_food_crate","organized_pallet_stack","forklift","manual_pallet_truck","inventory_terminal","marked_floor_lane"]},
+    "maintenance": {"bounds_xy": [38,19,44,24], "min_worker_aisle_m": 1.2, "windows": ["east"], "inventory": ["heavy_duty_workbench","tool_cabinet","toolbox","wall_mounted_tools","spare_machine_part","metal_shelving","utility_cart","maintenance_compressor","bench_vise","maintenance_terminal","task_light"]},
+    "changing_room": {"bounds_xy": [38,15,44,19], "min_worker_aisle_m": 1.2, "windows": ["east_high_privacy"], "inventory": ["locker","changing_bench","coat_hook","shoe_rack","ppe_storage","hand_washing_station"]},
+    "break_room": {"bounds_xy": [38,10,44,15], "min_worker_aisle_m": 1.2, "windows": ["east"], "inventory": ["dining_table","dining_chair","kitchen_counter","break_room_sink","refrigerator","microwave","kitchen_cabinet","water_dispenser","waste_bin","notice_board","indoor_plant"]},
+    "boys_toilet": {"bounds_xy": [38,8,44,10], "min_worker_aisle_m": 1.2, "windows": ["east_high_frosted"], "inventory": ["toilet_cubicle","urinal","toilet_sink","mirror","soap_dispenser","hand_dryer","privacy_partition"]},
+    "girls_toilet": {"bounds_xy": [38,6,44,8], "min_worker_aisle_m": 1.2, "windows": ["east_high_frosted"], "inventory": ["toilet_cubicle","toilet_sink","mirror","soap_dispenser","hand_dryer","privacy_partition"]}
+  },
+  "common_zones": {
+    "entrance_transition": {"bounds_xy": [18,0,22,6], "carved_from": ["finished_goods_storage"], "exterior_portal": {"wall":"south","width_m":2.0,"leaves":2}, "forklift_prohibited": true},
+    "internal_circulation": {"bounds_xy_parts": [[10,0,18,6],[38,0,44,6],[36,10,38,24]], "carved_from": ["finished_goods_storage","packaging_hall","processing_hall"], "min_forklift_aisle_m": 3.0},
+    "toilet_foyer": {"bounds_xy": [36,6,38,10], "carved_from": ["packaging_hall"], "forklift_prohibited": true, "min_worker_aisle_m": 1.2},
+    "loading_dock": {"bounds_xy": [44,0,52,8], "outside_shell": true, "inventory": ["roll_up_loading_door","loading_platform","dock_leveller","safety_marking","safety_bollard","wheel_stop","pallet_staging_zone","box_truck","dock_canopy","exterior_loading_light","marked_loading_lane"]},
+    "exterior_truck_road": {"bounds_xy": [52,-8,60,12], "outside_shell": true},
+    "landscaping": {"bounds_xy": [-6,-6,44,0], "outside_shell": true}
+  },
+  "required_connections": [
+    ["ingredient_receiving","dry_storage"], ["ingredient_receiving","washing_preparation"],
+    ["dry_storage","cold_storage"], ["dry_storage","processing_hall"],
+    ["cold_storage","processing_hall"], ["washing_preparation","processing_hall"],
+    ["processing_hall","packaging_hall"], ["packaging_hall","finished_goods_storage"],
+    ["finished_goods_storage","internal_circulation"], ["internal_circulation","loading_dock"],
+    ["entrance_transition","packaging_hall"], ["maintenance","internal_circulation"],
+    ["changing_room","internal_circulation"], ["break_room","internal_circulation"],
+    ["boys_toilet","toilet_foyer"], ["girls_toilet","toilet_foyer"],
+    ["toilet_foyer","internal_circulation"], ["internal_circulation","processing_hall"],
+    ["internal_circulation","packaging_hall"], ["qc_laboratory","washing_preparation"],
+    ["office_administration","qc_laboratory"], ["loading_dock","exterior_truck_road"]
+  ],
+  "workflow": ["ingredient_receiving","dry_storage_or_cold_storage","washing_preparation","processing_hall","packaging_hall","finished_goods_storage","internal_circulation","loading_dock"],
+  "articulated_roles": {
+    "cold_room_insulated_door": {"room":"cold_storage","joint_type":["revolute","prismatic"],"authority":["artvip","artiverse"]},
+    "maintenance_tool_cabinet": {"room":"maintenance","joint_type":["revolute","prismatic"],"authority":["artvip","artiverse"]},
+    "office_filing_cabinet": {"room":"office_administration","joint_type":["prismatic"],"authority":["artvip","artiverse"]}
+  },
+  "global_requirements": {
+    "minimum_artiverse_survivors": 1,
+    "max_collision_hulls_per_object": 32,
+    "humanoid_radius_m": 0.35,
+    "turning_witness_diameter_m": 1.5,
+    "no_hssd": true,
+    "review_images_per_room": 3,
+    "visual_gate_threshold": 7
+  }
+}
