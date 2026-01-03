@@ -144,6 +144,7 @@ class ManipulandTools:
         self._rejected_support_surfaces: set[str] = set()
         self._max_parent_collision_lift_m = 0.08
         self._collision_lift_margin_m = 0.005
+        self._ensure_exposed_articulated_top_surface()
         # The Agents SDK can invoke independent function tools concurrently.
         # Placement validation builds a Drake model from the mutable scene, so
         # overlapping mutations can make an object removed by one call appear
@@ -172,6 +173,78 @@ class ManipulandTools:
 
         # Create tool closures.
         self.tools = self._create_tool_closures()
+
+    def _ensure_exposed_articulated_top_surface(self) -> None:
+        """Add a conservative top fallback when articulated HSM misses it.
+
+        Per-link extraction can return only internal shelves for Artiverse
+        cabinets.  Those planes are visually plausible but lie within the
+        cabinet's coarse collision volume, making every generated placement fail
+        physics validation.  An articulated furniture envelope has a reliable
+        visual top from its already-attested bounding box, so publish one small,
+        open-air support surface only when no extracted surface reaches that top.
+        """
+        furniture = self.scene.get_object(self.current_furniture_id)
+        if (
+            furniture is None
+            or not furniture.metadata.get("is_articulated", False)
+            or furniture.bbox_min is None
+            or furniture.bbox_max is None
+        ):
+            return
+
+        # SceneObject bounds are already in their final scene scale.  Applying
+        # ``scale_factor`` again would put the fallback halfway down a scaled
+        # cabinet, exactly where the coarse collision volume is solid.
+        bbox_min = np.asarray(furniture.bbox_min, dtype=float)
+        bbox_max = np.asarray(furniture.bbox_max, dtype=float)
+        extent = bbox_max - bbox_min
+        if not np.all(np.isfinite(extent)) or np.any(extent <= 0.0):
+            return
+
+        local_top_z = float(bbox_max[2])
+        top_transform = furniture.transform @ RigidTransform(
+            p=[0.0, 0.0, local_top_z + 0.01]
+        )
+        top_world_z = float(top_transform.translation()[2])
+        top_tolerance_m = max(0.03, 0.04 * float(extent[2]))
+        if any(
+            float(surface.transform.translation()[2]) >= top_world_z - top_tolerance_m
+            for surface in self.support_surfaces.values()
+        ):
+            return
+
+        # Keep the fallback away from thin outer edges while allowing a small
+        # classroom caddy or other required manipuland grouping.
+        half_width = max(0.06, 0.38 * float(extent[0]))
+        half_depth = max(0.06, 0.38 * float(extent[1]))
+        surface_id = self.scene.generate_surface_id()
+        fallback = SupportSurface(
+            surface_id=surface_id,
+            bounding_box_min=np.array([-half_width, -half_depth, 0.0]),
+            bounding_box_max=np.array([half_width, half_depth, 0.50]),
+            transform=top_transform,
+            mesh=None,
+            link_name=None,
+        )
+        # This branch means the extracted inventory never reaches the visible
+        # furniture envelope.  Do not leave those internal HSM planes available
+        # to the designer: on these coarse articulated collision meshes they
+        # are embedded in the parent, so each attempted placement is guaranteed
+        # to fail and wastes an agent turn.  Keep a single, exposed surface in
+        # both authoritative inventories.
+        replaced_surface_count = len(self.support_surfaces)
+        self.support_surfaces.clear()
+        self.support_surfaces[str(surface_id)] = fallback
+        furniture.support_surfaces[:] = [fallback]
+        console_logger.warning(
+            "Replaced %d internal articulated HSM surface(s) with exposed top "
+            "fallback %s for %s; the extracted inventory did not reach the "
+            "furniture top envelope",
+            replaced_surface_count,
+            surface_id,
+            self.current_furniture_id,
+        )
 
     def _protected_mutation_failure(self, object_id: str) -> str | None:
         """Reject writes to the immutable pre-workflow object snapshot."""
