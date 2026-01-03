@@ -5,6 +5,7 @@ This module implements manipuland placement using persistent agents that work
 per-furniture, with fresh contexts for each furniture surface to bound token usage.
 """
 
+import asyncio
 import copy
 import hashlib
 import json
@@ -116,6 +117,7 @@ _SCORE_CATEGORIES = (
     "Prompt Following",
 )
 _TRANSFORM_TOLERANCE = 1e-9
+_PLANNER_TRANSPORT_RETRY_ATTEMPTS = 4
 
 
 def _fsync_directory(directory: Path) -> None:
@@ -2274,6 +2276,47 @@ class StatefulManipulandAgent(BaseStatefulAgent, BaseManipulandAgent):
             tools=planner_tools, furniture_description=furniture_description
         )
 
+    async def _run_planner_with_transport_retry(
+        self, runner_instruction: str
+    ) -> RunResult:
+        """Retry an unstarted planner turn after a transient transport failure.
+
+        Planner tool calls can mutate the scene, so an automatic retry is safe only
+        while the exact input scene has not changed.  A failed initial `/responses`
+        request therefore recovers from a brief proxy or provider outage, whereas a
+        failure after any scene mutation remains fail-closed and cannot replay a
+        placement action.
+        """
+        input_scene_hash = self.scene.content_hash()
+        for attempt in range(1, _PLANNER_TRANSPORT_RETRY_ATTEMPTS + 1):
+            try:
+                return await Runner.run(
+                    starting_agent=self.planner,
+                    input=runner_instruction,
+                    max_turns=self.cfg.agents.planner_agent.max_turns,
+                    run_config=self._create_run_config(),
+                )
+            except Exception as error:
+                scene_unchanged = self.scene.content_hash() == input_scene_hash
+                if (
+                    attempt >= _PLANNER_TRANSPORT_RETRY_ATTEMPTS
+                    or not self._is_transient_model_transport_error(error)
+                    or not scene_unchanged
+                ):
+                    raise
+                delay_s = float(2 ** (attempt - 1))
+                console_logger.warning(
+                    "Planner transport failure on attempt %d/%d with unchanged "
+                    "scene; retrying in %.1fs: %s",
+                    attempt,
+                    _PLANNER_TRANSPORT_RETRY_ATTEMPTS,
+                    delay_s,
+                    error,
+                )
+                await asyncio.sleep(delay_s)
+
+        raise AssertionError("planner retry loop exhausted without returning or raising")
+
     async def _run_furniture_workflow(self, furniture_id: UniqueID) -> None:
         """Execute the multi-agent workflow for a furniture piece.
 
@@ -2295,12 +2338,7 @@ class StatefulManipulandAgent(BaseStatefulAgent, BaseManipulandAgent):
             prompt_enum=planner_runner_prompt,
         )
 
-        result: RunResult = await Runner.run(
-            starting_agent=self.planner,
-            input=runner_instruction,
-            max_turns=self.cfg.agents.planner_agent.max_turns,
-            run_config=self._create_run_config(),
-        )
+        result = await self._run_planner_with_transport_retry(runner_instruction)
         log_agent_usage(result=result, agent_name="PLANNER (MANIPULAND)")
 
         if result.final_output:
