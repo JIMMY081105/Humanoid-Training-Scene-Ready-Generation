@@ -1,0 +1,538 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf xmlns:drake="drake.mit.edu" version="1.7">
+  <model name="whiteboard">
+    <link name="base_link">
+      <inertial>
+        <mass>20.000000</mass>
+        <pose>-0.008556 0.025550 1.447625 0 0 0</pose>
+        <inertia>
+          <ixx>6.380931e+00</ixx>
+          <iyy>1.343399e+01</iyy>
+          <izz>7.360419e+00</izz>
+          <ixy>-1.378549e-03</ixy>
+          <ixz>1.543736e-02</ixz>
+          <iyz>-3.983288e-02</iyz>
+        </inertia>
+      </inertial>
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>whiteboard.gltf</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision_0">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_0.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_1">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_1.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_2">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_2.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_3">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_3.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_4">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_4.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_5">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_5.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_6">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_marker_tray_collision_6.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_7">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_7.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_8">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_8.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_9">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_9.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_10">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_10.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_11">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_11.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_12">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_12.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_13">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_13.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_14">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_14.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_15">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_15.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_16">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_16.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_17">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_17.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_18">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_18.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_19">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_19.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_20">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_20.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_21">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_21.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_22">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_22.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_23">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_23.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_24">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_24.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_25">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_25.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_26">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_26.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_27">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_27.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_28">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_28.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_29">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_29.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_30">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_30.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+      <collision name="collision_31">
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.740</mu>
+              <mu2>0.740</mu2>
+            </ode>
+          </friction>
+        </surface>
+        <geometry>
+          <mesh>
+            <uri>whiteboard_collision_31.obj</uri>
+            <drake:declare_convex />
+          </mesh>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>
