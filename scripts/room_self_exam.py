@@ -32,6 +32,23 @@ except ImportError:  # Direct execution: python scripts/room_self_exam.py
     from school_room_contract import evaluate_room_inventory  # type: ignore[no-redef]
     from school_room_contract import object_world_bounds  # type: ignore[no-redef]
 
+try:
+    from .factory_room_contract import PROFILE as FACTORY_CONTRACT_PROFILE
+    from .factory_room_contract import evaluate_room_inventory as evaluate_factory_inventory
+    from .factory_room_contract import load_contract as load_factory_contract
+    from .factory_room_contract import room_ids as factory_room_ids
+except ImportError:  # Direct execution in the canonical checkout.
+    try:
+        from factory_room_contract import PROFILE as FACTORY_CONTRACT_PROFILE  # type: ignore[no-redef]
+        from factory_room_contract import evaluate_room_inventory as evaluate_factory_inventory  # type: ignore[no-redef]
+        from factory_room_contract import load_contract as load_factory_contract  # type: ignore[no-redef]
+        from factory_room_contract import room_ids as factory_room_ids  # type: ignore[no-redef]
+    except ImportError:
+        FACTORY_CONTRACT_PROFILE = "factory_reference_20260713"
+        evaluate_factory_inventory = None  # type: ignore[assignment]
+        load_factory_contract = None  # type: ignore[assignment]
+        factory_room_ids = None  # type: ignore[assignment]
+
 
 PASS_THRESHOLD = 7
 DEFAULT_GATE_DIR = Path("quality_gates") / "room_self_exam"
@@ -68,7 +85,9 @@ def _valid_sha256(value: Any) -> bool:
 
 
 def _load_prompt_binding(
-    binding_path: Path, *, expected_layout_path: Path | None
+    binding_path: Path, *, expected_layout_path: Path | None,
+    contract_profile: str,
+    expected_room_ids: set[str],
 ) -> dict[str, Any]:
     """Revalidate the prompt-binding receipt and both of its hashed inputs."""
 
@@ -79,22 +98,22 @@ def _load_prompt_binding(
     if (
         binding.get("schema_version") != 1
         or binding.get("status") != "pass"
-        or binding.get("profile") != SCHOOL_CONTRACT_PROFILE
+        or binding.get("profile") != contract_profile
     ):
         raise RuntimeError("Room prompt binding schema/status/profile is invalid")
 
     prompt_hashes = binding.get("room_prompt_sha256")
     if (
         not isinstance(prompt_hashes, dict)
-        or set(prompt_hashes) != set(SCHOOL_ROOM_IDS)
+        or set(prompt_hashes) != expected_room_ids
         or any(not _valid_sha256(value) for value in prompt_hashes.values())
     ):
         raise RuntimeError("Room prompt binding does not contain all exact prompt hashes")
     occurrences = binding.get("occurrence_counts")
     if (
         not isinstance(occurrences, dict)
-        or set(occurrences) != set(SCHOOL_ROOM_IDS)
-        or any(occurrences[room_id] != 2 for room_id in SCHOOL_ROOM_IDS)
+        or set(occurrences) != expected_room_ids
+        or any(occurrences[room_id] != 2 for room_id in expected_room_ids)
     ):
         raise RuntimeError("Room prompt binding occurrence counts are invalid")
 
@@ -214,6 +233,59 @@ def _bbox_bounds(obj: dict[str, Any]) -> tuple[float, float, float, float] | Non
     return bounds[0], bounds[1], bounds[2], bounds[3]
 
 
+def _is_authorized_open_door_exterior_extension(
+    obj: dict[str, Any],
+    bounds: tuple[float, float, float, float],
+    *,
+    x_min_room: float,
+    x_max_room: float,
+    y_min_room: float,
+    y_max_room: float,
+    margin: float,
+) -> bool:
+    """Allow only a real outward-open door leaf to project into a corridor.
+
+    A standalone room state deliberately does not include its adjacent corridor,
+    so a physically open door can extend through exactly one room boundary.  It
+    remains subject to the separate full collision and clearance gates.  This
+    exception is deliberately narrow so it cannot disguise ordinary furniture
+    overflow or a blocked doorway.
+    """
+    metadata = obj.get("metadata", {})
+    if not isinstance(metadata, dict):
+        return False
+    if (
+        str(obj.get("object_type", "")).lower() != "wall_mounted"
+        or metadata.get("asset_source") != "architectural_repair"
+        or metadata.get("door_state") != "open_outward"
+    ):
+        return False
+    try:
+        clear_width = float(metadata.get("clear_width_m", 0.0))
+    except (TypeError, ValueError):
+        return False
+    if clear_width < 0.90:
+        return False
+
+    x0, x1, y0, y1 = bounds
+    x_spill = max(0.0, x_min_room - margin - x0) + max(
+        0.0, x1 - (x_max_room + margin)
+    )
+    y_spill = max(0.0, y_min_room - margin - y0) + max(
+        0.0, y1 - (y_max_room + margin)
+    )
+    # The door must remain within the lateral span of its doorway and may only
+    # project one conventional leaf length through one normal wall boundary.
+    one_axis_only = (x_spill > 0.0) != (y_spill > 0.0)
+    lateral_contained = (
+        y0 >= y_min_room - margin
+        and y1 <= y_max_room + margin
+        if x_spill > 0.0
+        else x0 >= x_min_room - margin and x1 <= x_max_room + margin
+    )
+    return bool(one_axis_only and lateral_contained and max(x_spill, y_spill) <= 1.10)
+
+
 def _find_review_images(review_dir: Path, room_id: str) -> list[str]:
     if not review_dir.exists():
         return []
@@ -243,6 +315,7 @@ def _score_room(
     expected_prompt_sha256: str | None = None,
     asset_root: Path | None = None,
     production_mode: bool = False,
+    factory_contract_path: Path | None = None,
 ) -> dict[str, Any]:
     issues: list[str] = []
     repairs: list[str] = []
@@ -266,9 +339,12 @@ def _score_room(
         }
 
     production_contract = production_mode or contract_profile is not None
-    if production_contract and contract_profile != SCHOOL_CONTRACT_PROFILE:
+    if production_contract and contract_profile not in {
+        SCHOOL_CONTRACT_PROFILE,
+        FACTORY_CONTRACT_PROFILE,
+    }:
         issues.append(
-            f"Production school room requires contract profile {SCHOOL_CONTRACT_PROFILE}."
+            "Production room requires its immutable school or factory contract profile."
         )
         repairs.append("Run the production room gate with its immutable contract profile.")
 
@@ -298,6 +374,7 @@ def _score_room(
     y_max_room = depth / 2.0
     margin = 0.15
     overflow_objects: list[str] = []
+    authorized_exterior_objects: list[str] = []
     unknown_bbox = 0
     object_area = 0.0
 
@@ -308,13 +385,25 @@ def _score_room(
             continue
         x0, x1, y0, y1 = bounds
         object_area += max(0.0, x1 - x0) * max(0.0, y1 - y0)
-        if (
+        exceeds_room_bounds = (
             x0 < x_min_room - margin
             or x1 > x_max_room + margin
             or y0 < y_min_room - margin
             or y1 > y_max_room + margin
-        ):
-            overflow_objects.append(oid)
+        )
+        if exceeds_room_bounds:
+            if _is_authorized_open_door_exterior_extension(
+                obj,
+                bounds,
+                x_min_room=x_min_room,
+                x_max_room=x_max_room,
+                y_min_room=y_min_room,
+                y_max_room=y_max_room,
+                margin=margin,
+            ):
+                authorized_exterior_objects.append(oid)
+            else:
+                overflow_objects.append(oid)
 
     if overflow_objects:
         issues.append(
@@ -348,11 +437,147 @@ def _score_room(
         )
         repairs.append("Regenerate collision meshes with max hull cap <= 32.")
 
+    factory_spatial_evidence = None
+    if contract_profile == FACTORY_CONTRACT_PROFILE and factory_contract_path is not None:
+        factory_contract = load_factory_contract(factory_contract_path)
+        room_contract = factory_contract["rooms"][room_id]
+        obstacle_rectangles: list[tuple[float, float, float, float]] = []
+        machine_records: list[dict[str, Any]] = []
+        wet_centers: list[tuple[str, float, float]] = []
+        electrical_centers: list[tuple[str, float, float]] = []
+        for object_id, obj in objects:
+            bounds = _bbox_bounds(obj)
+            if bounds is None:
+                continue
+            x0, x1, y0, y1 = bounds
+            obstacle_rectangles.append((x0, x1, y0, y1))
+            semantic = " ".join(
+                str(value)
+                for value in (
+                    object_id,
+                    obj.get("name", ""),
+                    obj.get("description", ""),
+                    obj.get("object_type", ""),
+                )
+            ).lower()
+            center = (object_id, (x0 + x1) / 2.0, (y0 + y1) / 2.0)
+            if any(token in semantic for token in ("sink", "wash", "hose", "drain", "wet")):
+                wet_centers.append(center)
+            if any(token in semantic for token in ("computer", "terminal", "control panel", "electric", "motor")):
+                electrical_centers.append(center)
+            if any(token in semantic for token in ("machine", "conveyor", "hopper", "filling station", "sealing")):
+                metadata = obj.get("metadata") if isinstance(obj.get("metadata"), dict) else {}
+                declared = metadata.get("under_machine_free_space_preserved") is True
+                clearance = metadata.get("under_machine_clearance_m")
+                if isinstance(clearance, (int, float)) and math.isfinite(clearance) and clearance >= 0.1:
+                    declared = True
+                machine_records.append(
+                    {
+                        "object_id": object_id,
+                        "under_machine_free_space_declared": declared,
+                    }
+                )
+
+        def maximum_axis_gap(
+            intervals: list[tuple[float, float]], low: float, high: float
+        ) -> float:
+            clipped = sorted(
+                (max(low, first), min(high, second))
+                for first, second in intervals
+                if min(high, second) > max(low, first)
+            )
+            cursor = low
+            best = 0.0
+            for first, second in clipped:
+                best = max(best, first - cursor)
+                cursor = max(cursor, second)
+            return max(best, high - cursor)
+
+        max_x_gap = maximum_axis_gap(
+            [(rect[0], rect[1]) for rect in obstacle_rectangles],
+            -width / 2.0,
+            width / 2.0,
+        )
+        max_y_gap = maximum_axis_gap(
+            [(rect[2], rect[3]) for rect in obstacle_rectangles],
+            -depth / 2.0,
+            depth / 2.0,
+        )
+        clear_channel = max(max_x_gap, max_y_gap)
+        required_channel = float(
+            room_contract.get(
+                "min_forklift_aisle_m",
+                room_contract.get(
+                    "min_production_aisle_m",
+                    room_contract.get("min_worker_aisle_m", 1.2),
+                ),
+            )
+        )
+        if clear_channel + 1e-6 < required_channel:
+            issues.append(
+                f"Factory free-channel witness {clear_channel:.3f} m is below "
+                f"the required {required_channel:.3f} m."
+            )
+            repairs.append("Reposition objects to restore the contract aisle width.")
+        unsafe_wet_electrical = []
+        for wet_id, wet_x, wet_y in wet_centers:
+            for electrical_id, electric_x, electric_y in electrical_centers:
+                distance = math.hypot(wet_x - electric_x, wet_y - electric_y)
+                if distance < 0.75:
+                    unsafe_wet_electrical.append(
+                        {"wet": wet_id, "electrical": electrical_id, "distance_m": distance}
+                    )
+        if unsafe_wet_electrical:
+            issues.append("Wet fixtures are within 0.75 m of electrical equipment.")
+            repairs.append("Separate wet and electrical equipment with distance/partitioning.")
+        missing_under_space = [
+            record["object_id"]
+            for record in machine_records
+            if not record["under_machine_free_space_declared"]
+        ]
+        if room_id in {"processing_hall", "packaging_hall"} and len(machine_records) < 2:
+            issues.append("Factory machinery is not represented as at least two modular sections.")
+            repairs.append("Use multiple collision-independent modular machine sections.")
+        if missing_under_space:
+            issues.append(
+                "Machinery lacks declared under-machine free-space evidence: "
+                + ", ".join(missing_under_space)
+            )
+            repairs.append("Record and preserve real under-machine gaps in object metadata/collision.")
+        factory_spatial_evidence = {
+            "required_channel_width_m": required_channel,
+            "maximum_x_free_channel_m": max_x_gap,
+            "maximum_y_free_channel_m": max_y_gap,
+            "maximum_free_channel_m": clear_channel,
+            "wet_fixture_count": len(wet_centers),
+            "electrical_equipment_count": len(electrical_centers),
+            "unsafe_wet_electrical_pairs": unsafe_wet_electrical,
+            "machine_sections": machine_records,
+            "missing_under_machine_free_space": missing_under_space,
+            "pedestrian_forklift_separation_deferred_to_whole_factory_gate": room_id
+            in {"ingredient_receiving", "dry_storage", "finished_goods_storage"},
+        }
+
     inventory_result = None
     if contract_profile:
-        if contract_profile != SCHOOL_CONTRACT_PROFILE:
+        if contract_profile == FACTORY_CONTRACT_PROFILE:
+            if evaluate_factory_inventory is None or factory_contract_path is None:
+                issues.append("Factory room contract implementation/path is unavailable.")
+                repairs.append("Install factory_room_contract.py and pass --factory-contract.")
+            else:
+                inventory_result = evaluate_factory_inventory(
+                    factory_contract_path,
+                    room_id,
+                    room_state,
+                    spec.prompt,
+                    expected_prompt_sha256=expected_prompt_sha256,
+                    asset_root=asset_root,
+                )
+                issues.extend(inventory_result["critical_issues"])
+                repairs.extend(inventory_result["repair_instructions"])
+        elif contract_profile != SCHOOL_CONTRACT_PROFILE:
             issues.append(f"Unsupported room contract profile: {contract_profile}")
-            repairs.append("Use the immutable school_reference_20260710 profile.")
+            repairs.append("Use the immutable school or factory profile.")
         else:
             inventory_result = evaluate_room_inventory(
                 room_id,
@@ -423,12 +648,14 @@ def _score_room(
             "object_count": object_count,
             "unknown_bbox_count": unknown_bbox,
             "overflow_object_count": len(overflow_objects),
+            "authorized_exterior_object_ids": authorized_exterior_objects,
             "object_footprint_density": round(density, 4)
             if math.isfinite(density)
             else None,
             "max_collision_hulls": max_collision_hulls,
             "contract_profile": contract_profile,
             "semantic_inventory": inventory_result,
+            "factory_spatial_contract": factory_spatial_evidence,
         },
     }
 
@@ -448,7 +675,7 @@ def main() -> None:
     parser.add_argument("--max-collision-hulls", type=int, default=32)
     parser.add_argument(
         "--contract-profile",
-        choices=(SCHOOL_CONTRACT_PROFILE,),
+        choices=(SCHOOL_CONTRACT_PROFILE, FACTORY_CONTRACT_PROFILE),
         help="Optional immutable semantic inventory contract.",
     )
     parser.add_argument(
@@ -457,6 +684,10 @@ def main() -> None:
             "Prompt-binding receipt. Required for production school layouts; defaults to "
             "<scene-dir>/quality_gates/room_prompt_binding.json."
         ),
+    )
+    parser.add_argument(
+        "--factory-contract",
+        help="Immutable factory_contract.json; required by the factory profile.",
     )
     args = parser.parse_args()
 
@@ -475,11 +706,21 @@ def main() -> None:
         default_output = house_state.parent / DEFAULT_GATE_DIR
 
     school_layout = set(specs) == set(SCHOOL_ROOM_IDS)
-    production_mode = school_layout or args.contract_profile is not None
+    factory_contract_path: Path | None = None
+    factory_ids: set[str] = set()
+    if args.contract_profile == FACTORY_CONTRACT_PROFILE:
+        if load_factory_contract is None or factory_room_ids is None or not args.factory_contract:
+            raise RuntimeError("Factory profile requires --factory-contract and factory_room_contract.py")
+        factory_contract_path = Path(args.factory_contract).resolve(strict=True)
+        factory_ids = set(factory_room_ids(load_factory_contract(factory_contract_path)))
+    factory_layout = bool(factory_ids) and set(specs) == factory_ids
+    production_mode = school_layout or factory_layout or args.contract_profile is not None
     if school_layout and args.contract_profile != SCHOOL_CONTRACT_PROFILE:
         raise RuntimeError(
             f"Exact school layout requires --contract-profile {SCHOOL_CONTRACT_PROFILE}"
         )
+    if factory_ids and not factory_layout:
+        raise RuntimeError("Factory profile layout does not contain the exact 14 factory rooms")
     prompt_hashes: dict[str, str] = {}
     prompt_binding_summary: dict[str, Any] | None = None
     if production_mode:
@@ -494,6 +735,8 @@ def main() -> None:
         binding = _load_prompt_binding(
             prompt_binding_path,
             expected_layout_path=(scene_dir / "house_layout.json") if args.scene_dir else None,
+            contract_profile=args.contract_profile,
+            expected_room_ids=(factory_ids if factory_layout else set(SCHOOL_ROOM_IDS)),
         )
         prompt_hashes = {
             str(room_id): str(digest)
@@ -544,6 +787,7 @@ def main() -> None:
                     else house_state.parent
                 ),
                 production_mode=production_mode,
+                factory_contract_path=factory_contract_path,
             )
         results.append(result)
         _write_json(output_dir / f"{room_id}.json", result)
