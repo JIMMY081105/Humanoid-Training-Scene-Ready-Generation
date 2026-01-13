@@ -13,7 +13,7 @@ import shutil
 import time
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 try:
     from .artiverse_contract import (
@@ -35,6 +35,12 @@ try:
     from .school_room_contract import ARTICULATED_ROLE_RULES
     from .school_room_contract import PROFILE as SCHOOL_CONTRACT_PROFILE
     from .school_room_contract import collect_required_articulated_roles
+    from .factory_room_contract import ROLE_RULES as FACTORY_ARTICULATED_ROLE_RULES
+    from .factory_room_contract import PROFILE as FACTORY_CONTRACT_PROFILE
+    from .factory_room_contract import collect_required_articulated_roles as collect_factory_articulated_roles
+    from .factory_room_contract import load_contract as load_factory_contract
+    from .factory_room_contract import room_ids as factory_room_ids
+    from .factory_room_visual_self_exam import _validate_existing as validate_existing_factory_visual
     from .room_visual_self_exam import (
         ROOM_SCORE_KEYS,
         SCHOOL_GATE_THRESHOLD,
@@ -68,6 +74,12 @@ except ImportError:  # Direct execution: python scripts/assemble_final_house_and
     from school_room_contract import ARTICULATED_ROLE_RULES  # type: ignore[no-redef]
     from school_room_contract import PROFILE as SCHOOL_CONTRACT_PROFILE  # type: ignore[no-redef]
     from school_room_contract import collect_required_articulated_roles  # type: ignore[no-redef]
+    from factory_room_contract import ROLE_RULES as FACTORY_ARTICULATED_ROLE_RULES  # type: ignore[no-redef]
+    from factory_room_contract import PROFILE as FACTORY_CONTRACT_PROFILE  # type: ignore[no-redef]
+    from factory_room_contract import collect_required_articulated_roles as collect_factory_articulated_roles  # type: ignore[no-redef]
+    from factory_room_contract import load_contract as load_factory_contract  # type: ignore[no-redef]
+    from factory_room_contract import room_ids as factory_room_ids  # type: ignore[no-redef]
+    from factory_room_visual_self_exam import _validate_existing as validate_existing_factory_visual  # type: ignore[no-redef]
     from room_visual_self_exam import (  # type: ignore[no-redef]
         ROOM_SCORE_KEYS,
         SCHOOL_GATE_THRESHOLD,
@@ -573,7 +585,32 @@ def _verify_room_gates(
     scene_dir: Path,
     contract_profile: str | None = None,
     input_dir: Path | None = None,
+    factory_contract: Path | None = None,
 ) -> list[str]:
+    if contract_profile == FACTORY_CONTRACT_PROFILE:
+        if factory_contract is None:
+            return ["factory contract path was not supplied to assembly"]
+        try:
+            contract = load_factory_contract(factory_contract)
+            expected = list(factory_room_ids(contract))
+        except Exception as exc:
+            return [f"cannot load immutable factory contract: {exc}"]
+        failures: list[str] = []
+        if room_ids != expected:
+            failures.append(
+                f"assembly layout room order differs from exact factory contract: {room_ids}"
+            )
+        for room_id in expected:
+            failures.extend(
+                validate_existing_factory_visual(
+                    gate_dir / f"{room_id}.json",
+                    room_id=room_id,
+                    contract=contract,
+                    threshold=SCHOOL_GATE_THRESHOLD,
+                )
+            )
+        return failures
+
     failures: list[str] = []
     shared_reference: tuple[str, str] | None = None
     for room_id in room_ids:
@@ -905,21 +942,24 @@ def _load_combined_room_states(house_state_path: Path) -> dict[str, dict[str, An
     }
 
 
-def _require_school_articulated_roles(
+def _require_articulated_roles(
     role_result: dict[str, Any],
     valid_artiverse_records: list[dict[str, Any]],
     context: str,
+    *,
+    profile: str,
+    role_rules: Mapping[str, Any],
 ) -> None:
     if role_result.get("status") != "pass":
         raise RuntimeError(
-            f"Refusing final assembly: school articulated-role contract failed in {context}: "
+            f"Refusing final assembly: articulated-role contract failed in {context}: "
             + "; ".join(str(issue) for issue in role_result.get("critical_issues", []))
         )
-    if role_result.get("profile") != SCHOOL_CONTRACT_PROFILE:
+    if role_result.get("profile") != profile:
         raise RuntimeError(
             f"Refusing final assembly: articulated-role profile is invalid in {context}"
         )
-    expected_roles = set(ARTICULATED_ROLE_RULES)
+    expected_roles = set(role_rules)
     role_records = role_result.get("roles")
     if not isinstance(role_records, dict):
         raise RuntimeError(
@@ -990,9 +1030,9 @@ def _require_school_articulated_roles(
 
 
 def _verify_articulated_role_survival(
-    placed: dict[str, Any], final: dict[str, Any]
+    placed: dict[str, Any], final: dict[str, Any], role_rules: Mapping[str, Any]
 ) -> None:
-    for role in ARTICULATED_ROLE_RULES:
+    for role in role_rules:
         placed_records = placed.get("roles", {}).get(role, [])
         final_records = final.get("roles", {}).get(role, [])
         placed_ids = {
@@ -1607,12 +1647,18 @@ def main() -> None:
         help="Revalidate the already-published combined_house without assembling it.",
     )
     parser.add_argument(
-        "--contract-profile", choices=(SCHOOL_CONTRACT_PROFILE,)
+        "--contract-profile",
+        choices=(SCHOOL_CONTRACT_PROFILE, FACTORY_CONTRACT_PROFILE),
     )
     parser.add_argument(
         "--input-dir",
         type=Path,
         help="Immutable staged input directory required by the school contract.",
+    )
+    parser.add_argument(
+        "--factory-contract",
+        type=Path,
+        help="Immutable factory_contract.json; required by the factory profile.",
     )
     parser.add_argument("--render", action="store_true")
     args = parser.parse_args()
@@ -1626,8 +1672,20 @@ def main() -> None:
     run_dir = Path(args.run_dir).resolve()
     scene_dir = run_dir / "scene_000"
     input_dir = args.input_dir.resolve() if args.input_dir else None
+    factory_contract = args.factory_contract.resolve() if args.factory_contract else None
     if args.contract_profile and input_dir is None:
         raise RuntimeError("--input-dir is required with --contract-profile")
+    if args.contract_profile == FACTORY_CONTRACT_PROFILE and factory_contract is None:
+        raise RuntimeError("--factory-contract is required by the factory profile")
+
+    if args.contract_profile == FACTORY_CONTRACT_PROFILE:
+        collect_articulated_roles = collect_factory_articulated_roles
+        articulated_role_rules = FACTORY_ARTICULATED_ROLE_RULES
+        articulated_profile = FACTORY_CONTRACT_PROFILE
+    else:
+        collect_articulated_roles = collect_required_articulated_roles
+        articulated_role_rules = ARTICULATED_ROLE_RULES
+        articulated_profile = SCHOOL_CONTRACT_PROFILE
 
     layout_path = scene_dir / "house_layout.json"
     with layout_path.open(encoding="utf-8") as f:
@@ -1650,6 +1708,7 @@ def main() -> None:
             scene_dir,
             contract_profile=args.contract_profile,
             input_dir=input_dir,
+            factory_contract=factory_contract,
         )
         if gate_failures:
             raise RuntimeError(
@@ -1672,12 +1731,16 @@ def main() -> None:
     )
     placed_roles = None
     if args.contract_profile:
-        placed_roles = collect_required_articulated_roles(
+        placed_roles = collect_articulated_roles(
             _load_final_room_states(scene_dir, room_ids),
             require_runtime_provenance=True,
         )
-        _require_school_articulated_roles(
-            placed_roles, placed_artiverse, "passing final room states"
+        _require_articulated_roles(
+            placed_roles,
+            placed_artiverse,
+            "passing final room states",
+            profile=articulated_profile,
+            role_rules=articulated_role_rules,
         )
 
     if args.verify_published_only:
@@ -1703,14 +1766,20 @@ def main() -> None:
         _verify_combined_survival(placed_artiverse, final_artiverse)
         final_roles = None
         if args.contract_profile:
-            final_roles = collect_required_articulated_roles(
+            final_roles = collect_articulated_roles(
                 _load_combined_room_states(combined_dir / "house_state.json"),
                 require_runtime_provenance=True,
             )
-            _require_school_articulated_roles(
-                final_roles, final_artiverse, "published combined house state"
+            _require_articulated_roles(
+                final_roles,
+                final_artiverse,
+                "published combined house state",
+                profile=articulated_profile,
+                role_rules=articulated_role_rules,
             )
-            _verify_articulated_role_survival(placed_roles, final_roles)
+            _verify_articulated_role_survival(
+                placed_roles, final_roles, articulated_role_rules
+            )
             usage_data = json.loads(
                 (combined_dir / "artiverse_usage.json").read_text(encoding="utf-8")
             )
@@ -1769,14 +1838,20 @@ def main() -> None:
     _verify_combined_survival(placed_artiverse, final_artiverse)
     final_roles = None
     if args.contract_profile:
-        final_roles = collect_required_articulated_roles(
+        final_roles = collect_articulated_roles(
             _load_combined_room_states(candidate_dir / "house_state.json"),
             require_runtime_provenance=True,
         )
-        _require_school_articulated_roles(
-            final_roles, final_artiverse, "combined house candidate"
+        _require_articulated_roles(
+            final_roles,
+            final_artiverse,
+            "combined house candidate",
+            profile=articulated_profile,
+            role_rules=articulated_role_rules,
         )
-        _verify_articulated_role_survival(placed_roles, final_roles)
+        _verify_articulated_role_survival(
+            placed_roles, final_roles, articulated_role_rules
+        )
     usage_manifest = candidate_dir / "artiverse_usage.json"
     _write_artiverse_usage_manifest(
         usage_manifest,
