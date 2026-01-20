@@ -2097,3 +2097,23 @@ def test_explicit_optional_zero_surface_target_is_allowed_to_noop() -> None:
 
     assert StatefulManipulandAgent._allows_noop_without_support_surfaces(optional)
     assert not StatefulManipulandAgent._allows_noop_without_support_surfaces(required)
+
+
+def test_required_none_inventory_allows_zero_surface_target_to_noop() -> None:
+    optional = FurnitureSelection(
+        furniture_id="bulletin_board_0",
+        suggested_items=(
+            "REQUIRED: none. Optional: school hygiene poster, pinned notices"
+        ),
+        prompt_constraints="No specific requirements for this surface.",
+        style_notes="Keep tidy.",
+    )
+    required = FurnitureSelection(
+        furniture_id="bulletin_board_0",
+        suggested_items="REQUIRED: hygiene poster. Optional: pinned notices",
+        prompt_constraints="Keep tidy.",
+        style_notes="",
+    )
+
+    assert StatefulManipulandAgent._allows_noop_without_support_surfaces(optional)
+    assert not StatefulManipulandAgent._allows_noop_without_support_surfaces(required)
