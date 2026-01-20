@@ -4106,7 +4106,21 @@ class StatefulManipulandAgent(BaseStatefulAgent, BaseManipulandAgent):
         then the completed visual result and must not stop every later target.
         """
         constraints = furniture_selection.prompt_constraints.casefold()
-        return "no specific manipulands required" in constraints
+        if "no specific manipulands required" in constraints:
+            return True
+
+        # The furniture-analysis response also uses an explicit inventory form,
+        # e.g. ``REQUIRED: none. Optional: ...``. Treat only that exact negative
+        # required clause as a no-op; any named required item remains fail-closed.
+        required_clauses = re.findall(
+            r"\brequired\s*:\s*([^.;\n]+)",
+            furniture_selection.suggested_items,
+            flags=re.IGNORECASE,
+        )
+        return bool(required_clauses) and all(
+            re.fullmatch(r"\s*(?:none|nothing|n/?a)\s*", clause) is not None
+            for clause in required_clauses
+        )
 
     async def _analyze_furniture_for_placement(
         self, scene: RoomScene
