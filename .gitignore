@@ -24,5 +24,14 @@ scenesmith_current_code.tar
 CODEX_SQZ_REMOTE_HANDOFF.md
 local_setup/setup_env_sqz.sh
 local_setup/RECONNECT_RUNBOOK.md
-local_setup/compute_node_env.sh
 private/
+
+# Local scratch/probe directories — never transfer or commit
+.tmp/
+.tmp_timeout_fix_tests/
+.codex_migration_*/
+.codex_tmp/
+.manual_final_acceptance_*/
+.pytest_acl_*/
+.pytest_safe_*/
+.python_fs_probe/
