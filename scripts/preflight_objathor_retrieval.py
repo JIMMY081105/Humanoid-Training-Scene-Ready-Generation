@@ -32,6 +32,11 @@ EMBEDDING_DIMENSION = 768
 DEFAULT_MINIMUM_ROWS = 50_000
 DEFAULT_MAXIMUM_ROWS = 51_000
 DEFAULT_SAMPLE_COUNT = 5
+# CPU vector reductions vary by a few ULPs across supported compute-node
+# architectures.  The smoke validator already requires each norm to be within
+# 1e-4 of one; the repeat-proof comparison is deliberately much tighter while
+# keeping the semantic identity fields exact.
+MODEL_SMOKE_NORM_COMPARISON_ABS_TOLERANCE = 1e-6
 OFFLINE_VARIABLES = (
     "HF_HUB_OFFLINE",
     "TRANSFORMERS_OFFLINE",
@@ -661,13 +666,43 @@ def run(
     return result
 
 
+def _model_smoke_matches(saved: Any, current: Any) -> bool:
+    """Compare stable smoke evidence without treating CPU ULP drift as mutation."""
+
+    if not isinstance(saved, Mapping) or not isinstance(current, Mapping):
+        return False
+    stable_fields = (
+        "query",
+        "query_sha256",
+        "embedding_shape",
+        "embedding_dtype",
+        "finite",
+        "device",
+        "loaded_weight_blob",
+    )
+    if any(saved.get(field) != current.get(field) for field in stable_fields):
+        return False
+    try:
+        saved_norm = float(saved["embedding_norm"])
+        current_norm = float(current["embedding_norm"])
+    except (KeyError, TypeError, ValueError):
+        return False
+    return (
+        math.isfinite(saved_norm)
+        and math.isfinite(current_norm)
+        and abs(saved_norm - current_norm) <= MODEL_SMOKE_NORM_COMPARISON_ABS_TOLERANCE
+    )
+
+
 def _compare_current_to_saved(
     saved: Mapping[str, Any], current: Mapping[str, Any]
 ) -> list[str]:
     failures: list[str] = []
-    for field in ("dataset", "model", "model_smoke", "evidence"):
+    for field in ("dataset", "model", "evidence"):
         if saved.get(field) != current.get(field):
             failures.append(f"ObjectThor saved {field} evidence differs from current offline proof")
+    if not _model_smoke_matches(saved.get("model_smoke"), current.get("model_smoke")):
+        failures.append("ObjectThor saved model_smoke evidence differs from current offline proof")
     return failures
 
 
