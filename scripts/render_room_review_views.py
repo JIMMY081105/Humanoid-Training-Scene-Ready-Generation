@@ -552,6 +552,35 @@ def render_room(
             math.sqrt(width * width + depth * depth + room_bounds["height"] ** 2) * 1.15
         )
         camera_distance = max(width, depth, room_bounds["height"]) * 1.35
+        oblique_a_offset = Vector(
+            (camera_distance, -camera_distance, camera_distance * 1.25)
+        )
+        oblique_b_offset = Vector(
+            (-camera_distance, camera_distance, camera_distance * 1.25)
+        )
+        # Compact restrooms need complementary views of the stall and vanity
+        # walls; the generic southeast camera can otherwise sit directly behind
+        # an opaque partition and produce an unusable wall-only image.  The long
+        # main corridor needs both cameras north of the room and aimed toward its
+        # south library/entrance thresholds.  These remain full-room orthographic
+        # cutaways and retain the same evidence contract.
+        if room_id == "boys_toilet":
+            oblique_a_offset = Vector(
+                (camera_distance, camera_distance, camera_distance * 1.25)
+            )
+        elif room_id == "girls_toilet":
+            oblique_a_offset = Vector(
+                (-camera_distance, -camera_distance, camera_distance * 1.25)
+            )
+        elif room_id == "main_corridor":
+            target = center + Vector((0.0, -depth * 0.22, 0.0))
+            oblique_a_offset = Vector(
+                (-camera_distance, camera_distance, camera_distance * 1.25)
+            )
+            oblique_b_offset = Vector(
+                (camera_distance, camera_distance, camera_distance * 1.25)
+            )
+
         views = (
             (
                 "top",
@@ -560,14 +589,12 @@ def render_room(
             ),
             (
                 "oblique_a",
-                target
-                + Vector((camera_distance, -camera_distance, camera_distance * 1.25)),
+                target + oblique_a_offset,
                 diagonal_scale,
             ),
             (
                 "oblique_b",
-                target
-                + Vector((-camera_distance, camera_distance, camera_distance * 1.25)),
+                target + oblique_b_offset,
                 diagonal_scale,
             ),
         )
