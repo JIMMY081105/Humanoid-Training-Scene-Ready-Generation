@@ -310,6 +310,37 @@ def test_verify_only_rehashes_weight_and_repeats_model_load(tmp_path: Path) -> N
     assert calls["load"] == 1
 
 
+def test_repeat_smoke_allows_only_tight_cross_host_norm_ulp_drift() -> None:
+    base_smoke = {
+        "query": preflight.SMOKE_QUERY,
+        "query_sha256": "query-hash",
+        "embedding_shape": [preflight.EMBEDDING_DIMENSION],
+        "embedding_dtype": "float32",
+        "embedding_norm": 1.0,
+        "finite": True,
+        "device": "cpu",
+        "loaded_weight_blob": "/cache/pinned.safetensors",
+    }
+    saved = {"dataset": {"hash": "a"}, "model": {"revision": "pinned"}, "evidence": {"hash": "b"}, "model_smoke": base_smoke}
+    current = {
+        **saved,
+        "model_smoke": {
+            **base_smoke,
+            "embedding_norm": 1.0 + preflight.MODEL_SMOKE_NORM_COMPARISON_ABS_TOLERANCE / 2,
+        },
+    }
+
+    assert preflight._compare_current_to_saved(saved, current) == []
+
+    current["model_smoke"]["embedding_norm"] = (
+        1.0 + preflight.MODEL_SMOKE_NORM_COMPARISON_ABS_TOLERANCE * 2
+    )
+    assert "model_smoke evidence differs" in preflight._compare_current_to_saved(saved, current)[0]
+
+    current["model_smoke"] = {**base_smoke, "query": "different query"}
+    assert "model_smoke evidence differs" in preflight._compare_current_to_saved(saved, current)[0]
+
+
 def test_verify_only_rejects_index_mutation_and_still_repeats_model_load(
     tmp_path: Path,
 ) -> None:
