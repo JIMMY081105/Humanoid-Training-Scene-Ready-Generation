@@ -46,6 +46,14 @@ except ImportError:  # Direct execution: python scripts/room_visual_self_exam.py
     )
 
 try:
+    from .factory_room_contract import PROFILE as FACTORY_CONTRACT_PROFILE
+except ImportError:  # Direct execution or school-only checkout.
+    try:
+        from factory_room_contract import PROFILE as FACTORY_CONTRACT_PROFILE  # type: ignore[no-redef]
+    except ImportError:
+        FACTORY_CONTRACT_PROFILE = "factory_reference_20260713"
+
+try:
     from .visual_gate_utils import (
         build_multimodal_content,
         call_vlm_service,
@@ -170,10 +178,11 @@ def validate_requirement_evidence(
             raise ValueError(
                 f"Visual requirement {key!r} must cite valid generated-view indices"
             )
-        if view_indices != sorted(set(view_indices)):
-            raise ValueError(
-                f"Visual requirement {key!r} view_indices must be sorted and unique"
-            )
+        # The model may cite the same valid view twice or list valid views in the
+        # order it inspected them.  Canonicalize those citations before recording
+        # evidence; this preserves the cited evidence set while keeping the
+        # published contract sorted and unique.
+        normalized_view_indices = sorted(set(view_indices))
         observation = item.get("observation")
         if not isinstance(observation, str) or len(observation.strip()) < 8:
             raise ValueError(
@@ -182,7 +191,7 @@ def validate_requirement_evidence(
         normalized[key] = {
             "label": label,
             "status": status,
-            "view_indices": sorted(set(view_indices)),
+            "view_indices": normalized_view_indices,
             "observation": observation.strip(),
         }
         if status != "pass":
@@ -1371,7 +1380,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--scene-dir", required=True, type=Path)
     parser.add_argument("--deterministic-gate-dir", required=True, type=Path)
     parser.add_argument("--review-dir", required=True, type=Path)
-    parser.add_argument("--reference-image", required=True, type=Path)
+    parser.add_argument(
+        "--reference-image",
+        type=Path,
+        help="Required by the school profile; forbidden by the prompt-only factory profile.",
+    )
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--rooms", nargs="*")
     parser.add_argument(
@@ -1390,19 +1403,34 @@ def build_parser() -> argparse.ArgumentParser:
         "--vlm-backend", choices=("openai", "codex"), default="openai"
     )
     parser.add_argument(
-        "--contract-profile", choices=(SCHOOL_CONTRACT_PROFILE,)
+        "--contract-profile",
+        choices=(SCHOOL_CONTRACT_PROFILE, FACTORY_CONTRACT_PROFILE),
     )
     parser.add_argument("--effective-prompt", type=Path)
     parser.add_argument("--input-manifest", type=Path)
     parser.add_argument("--prompt-binding", type=Path)
+    parser.add_argument(
+        "--factory-contract",
+        type=Path,
+        help="Immutable factory_contract.json; required by the factory profile.",
+    )
     return parser
 
 
 def run_gate(args: argparse.Namespace, *, vlm_service: Any | None = None) -> dict[str, Any]:
+    if getattr(args, "contract_profile", None) == FACTORY_CONTRACT_PROFILE:
+        try:
+            from .factory_room_visual_self_exam import run_gate as run_factory_gate
+        except ImportError:
+            from factory_room_visual_self_exam import run_gate as run_factory_gate  # type: ignore[no-redef]
+        return run_factory_gate(args, vlm_service=vlm_service)
+
     scene_dir = args.scene_dir.resolve()
     house_layout_path = scene_dir / "house_layout.json"
     deterministic_dir = args.deterministic_gate_dir.resolve()
     review_dir = args.review_dir.resolve()
+    if args.reference_image is None:
+        raise ValueError("--reference-image is required by the school visual profile")
     reference_image = args.reference_image.resolve()
     contract_profile = getattr(args, "contract_profile", None)
     effective_prompt_path = getattr(args, "effective_prompt", None)
