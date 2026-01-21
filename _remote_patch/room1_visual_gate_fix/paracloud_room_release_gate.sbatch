@@ -38,8 +38,9 @@ export no_proxy="$NO_PROXY"
 unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy
 
 ssh -N -o BatchMode=yes -o ExitOnForwardFailure=yes -o ConnectTimeout=15 \
+  -o ServerAliveInterval=15 -o ServerAliveCountMax=4 \
   -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$FACTORY/ln07_known_hosts" \
-  -L "127.0.0.1:${PROXY_PORT}:127.0.0.1:18093" ln07 &
+  -L "127.0.0.1:${PROXY_PORT}:127.0.0.1:18104" ln07 &
 TUNNEL_PID=$!
 cleanup() { kill "$TUNNEL_PID" 2>/dev/null || true; wait "$TUNNEL_PID" 2>/dev/null || true; }
 trap cleanup EXIT
