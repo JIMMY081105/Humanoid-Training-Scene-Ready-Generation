@@ -8,6 +8,7 @@ import argparse
 import json
 import logging
 import os
+import signal
 import uuid
 from collections.abc import MutableMapping
 from pathlib import Path
@@ -37,6 +38,16 @@ REQUIRED_EMBEDDING_FILES = (
 
 PYTORCH_CUDA_ALLOC_CONF = "PYTORCH_CUDA_ALLOC_CONF"
 REQUIRED_CUDA_ALLOCATOR_SETTING = "expandable_segments:True"
+OPENAI_MAX_RETRIES_ENV = "SCENESMITH_OPENAI_MAX_RETRIES"
+DEFAULT_OPENAI_MAX_RETRIES = 24
+OPENAI_REQUEST_TIMEOUT_SECONDS = 120.0
+
+
+def _graceful_termination_handler(signum: int, _frame: Any) -> None:
+    """Turn scheduler termination into ``SystemExit`` so service cleanup runs."""
+    signal_name = signal.Signals(signum).name
+    console_logger.warning("Received %s; stopping worker services cleanly", signal_name)
+    raise SystemExit(128 + signum)
 
 
 def _configure_pytorch_cuda_allocator(
@@ -558,6 +569,41 @@ def _configure_agents_transport() -> str:
     return transport
 
 
+def _configure_openai_request_resilience(
+    environ: MutableMapping[str, str] | None = None,
+) -> int:
+    """Keep an in-flight agent turn alive across a brief proxy interruption.
+
+    Retrying at the OpenAI request boundary is safe even after earlier tool calls
+    mutated the room: no new tool result is applied until one Responses request
+    completes. This avoids rolling back and regenerating a whole furniture target
+    when the laptop-to-cluster proxy reconnects for a minute or two.
+    """
+
+    target = os.environ if environ is None else environ
+    raw_retries = target.get(OPENAI_MAX_RETRIES_ENV, str(DEFAULT_OPENAI_MAX_RETRIES))
+    try:
+        max_retries = int(raw_retries)
+    except ValueError as error:
+        raise RuntimeError(
+            f"{OPENAI_MAX_RETRIES_ENV} must be an integer, got {raw_retries!r}"
+        ) from error
+    if not 2 <= max_retries <= 40:
+        raise RuntimeError(
+            f"{OPENAI_MAX_RETRIES_ENV} must be between 2 and 40, got {max_retries}"
+        )
+
+    from agents import set_default_openai_client
+    from openai import AsyncOpenAI
+
+    client = AsyncOpenAI(
+        max_retries=max_retries,
+        timeout=OPENAI_REQUEST_TIMEOUT_SECONDS,
+    )
+    set_default_openai_client(client, use_for_tracing=False)
+    return max_retries
+
+
 def main() -> None:
     # This must run before the SceneSmith imports below initialize torch/CUDA.
     # Geometry-server subprocesses inherit the validated allocator policy.
@@ -695,6 +741,7 @@ def main() -> None:
         return
 
     _configure_agents_transport()
+    openai_max_retries = _configure_openai_request_resilience()
 
     house_layout_path = scene_dir / "house_layout.json"
     with house_layout_path.open() as f:
@@ -711,6 +758,11 @@ def main() -> None:
     logger = ConsoleLogger(output_dir=room_dir)
     experiment = IndoorSceneGenerationExperiment(cfg)
 
+    # A scheduler or recovery controller uses SIGTERM to stop a worker. Raise
+    # SystemExit so the service-cleanup ``finally`` below still runs.
+    signal.signal(signal.SIGTERM, _graceful_termination_handler)
+    signal.signal(signal.SIGINT, _graceful_termination_handler)
+
     with FileLoggingContext(log_file_path=log_path, suppress_stdout=False):
         console_logger.info(
             "Starting one-room worker: room=%s start=%s stop=%s port_offset=%s",
@@ -718,6 +770,11 @@ def main() -> None:
             args.start_stage,
             args.stop_stage,
             args.port_offset,
+        )
+        console_logger.info(
+            "OpenAI request resilience enabled: max_retries=%s timeout_s=%.1f",
+            openai_max_retries,
+            OPENAI_REQUEST_TIMEOUT_SECONDS,
         )
         started_services: list[str] = []
         try:
