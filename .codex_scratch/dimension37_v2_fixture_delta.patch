@@ -1,0 +1,26 @@
+diff --git a/tests/unit/test_artiverse_retrieval_integration.py b/tests/unit/test_artiverse_retrieval_integration.py
+--- a/tests/unit/test_artiverse_retrieval_integration.py
++++ b/tests/unit/test_artiverse_retrieval_integration.py
+@@ -241,7 +241,9 @@ def test_asset_manager_records_visual_normalization_in_artiverse_metadata(
+ 
+     class CombinedMesh:
+         def export(self, path):
+-            Path(path).write_bytes(b"combined")
++            asset_manager_module.trimesh.creation.box(
++                extents=[1.0, 0.5, 1.5]
++            ).export(path)
+ 
+     monkeypatch.setattr(
+         asset_manager_module, "normalize_copied_artiverse_visuals", normalize
+@@ -252,11 +254,6 @@ def test_asset_manager_records_visual_normalization_in_artiverse_metadata(
+         "combine_sdf_meshes_at_joint_angles",
+         lambda *_args, **_kwargs: CombinedMesh(),
+     )
+-    monkeypatch.setattr(
+-        asset_manager_module,
+-        "measure_mesh_dimensions",
+-        lambda *_args, **_kwargs: np.asarray(item.dimensions, dtype=float),
+-    )
+     monkeypatch.setattr(asset_manager_module.time, "time", lambda: 1234567890)
+ 
+     scene_object = manager._convert_articulated_to_scene_object(
