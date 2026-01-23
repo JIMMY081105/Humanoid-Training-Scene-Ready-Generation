@@ -1,0 +1,48 @@
+{
+  "articulated_roles": [
+    "cold_room_insulated_door",
+    "maintenance_tool_cabinet",
+    "office_filing_cabinet"
+  ],
+  "contract_id": "food_factory_full_quality_20260713",
+  "contract_sha256": "f33e56eef4375d1f68684bd10c02d7d2f82ee72420b8a12570e8fcbe135a94cd",
+  "inventory_family_count_by_room": {
+    "boys_toilet": 7,
+    "break_room": 11,
+    "changing_room": 6,
+    "cold_storage": 8,
+    "dry_storage": 12,
+    "finished_goods_storage": 9,
+    "girls_toilet": 6,
+    "ingredient_receiving": 14,
+    "maintenance": 11,
+    "office_administration": 12,
+    "packaging_hall": 14,
+    "processing_hall": 16,
+    "qc_laboratory": 14,
+    "washing_preparation": 18
+  },
+  "max_collision_hulls_per_object": 32,
+  "minimum_artiverse_survivors": 1,
+  "positive_area_overlaps": [],
+  "required_connection_count": 22,
+  "room_count": 14,
+  "room_order": [
+    "ingredient_receiving",
+    "dry_storage",
+    "cold_storage",
+    "washing_preparation",
+    "qc_laboratory",
+    "office_administration",
+    "processing_hall",
+    "packaging_hall",
+    "finished_goods_storage",
+    "maintenance",
+    "changing_room",
+    "break_room",
+    "boys_toilet",
+    "girls_toilet"
+  ],
+  "schema_version": 1,
+  "status": "pass"
+}
