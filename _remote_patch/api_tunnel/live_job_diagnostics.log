@@ -1,0 +1,231 @@
+RUNTIME_LOGS
+FILE:/data/run01/scvj260/codex_factory/logs/resume6_classroom_05-170298.runtime.out
+/data/run01/scvj260/scenesmith/.venv/lib/python3.11/site-packages/hydra/_internal/defaults_list.py:251: UserWarning: In 'config': Defaults list is missing `_self_`. See https://hydra.cc/docs/1.2/upgrades/1.0_to_1.1/default_composition_order for more information
+  warnings.warn(msg, UserWarning)
+{
+  "attestation": "e1372fdb0ebd12a3e481ea6dedc5aa3c8002cc00dbffdfcd6ee0e8ffe0a8faae",
+  "new_config_sha256": "4d4c2607b0cc5dd340639b0ef13169c2dad9b2f160af07fb6864c1e33b51f9aa",
+  "old_config_sha256": "4d4c2607b0cc5dd340639b0ef13169c2dad9b2f160af07fb6864c1e33b51f9aa",
+  "operation": "bind_durable_plan_to_exact_recovery_transport_config",
+  "plan_after_sha256": "4250c48d59654448affcce2b18469c5fc1b4a77b91873f803262cf7801dd44f3",
+  "plan_before_sha256": "4250c48d59654448affcce2b18469c5fc1b4a77b91873f803262cf7801dd44f3",
+  "port_offset": 2605,
+  "quality_configuration_modified": false,
+  "room_id": "classroom_05",
+  "run_name": "resume_classroom_05",
+  "schema_version": 1,
+  "selection_content_modified": false,
+  "status": "pass"
+}
+curl: (7) Failed to connect to 127.0.0.1 port 21605 after 0 ms: Connection refused
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+GPU proxy unavailable: 000
+FILE:/data/run01/scvj260/codex_factory/logs/resume6_classroom_06-170300.runtime.out
+/data/run01/scvj260/scenesmith/.venv/lib/python3.11/site-packages/hydra/_internal/defaults_list.py:251: UserWarning: In 'config': Defaults list is missing `_self_`. See https://hydra.cc/docs/1.2/upgrades/1.0_to_1.1/default_composition_order for more information
+  warnings.warn(msg, UserWarning)
+{
+  "attestation": "8d865f54c27ba1270bb50282f82001b5b3ce09b807550d8c79011ceb117d9a61",
+  "new_config_sha256": "b54a67815824abc796245764db8ddc328a626c7b7d91cc6139fbc92693d80b07",
+  "old_config_sha256": "b54a67815824abc796245764db8ddc328a626c7b7d91cc6139fbc92693d80b07",
+  "operation": "bind_durable_plan_to_exact_recovery_transport_config",
+  "plan_after_sha256": "c1bfa3b2657f91b3b6d19e693a0dde403c8fcc7669ca03a4e5130442b96be509",
+  "plan_before_sha256": "c1bfa3b2657f91b3b6d19e693a0dde403c8fcc7669ca03a4e5130442b96be509",
+  "port_offset": 2606,
+  "quality_configuration_modified": false,
+  "room_id": "classroom_06",
+  "run_name": "resume_classroom_06",
+  "schema_version": 1,
+  "selection_content_modified": false,
+  "status": "pass"
+}
+curl: (7) Failed to connect to 127.0.0.1 port 21606 after 0 ms: Connection refused
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+GPU proxy unavailable: 000
+FILE:/data/run01/scvj260/codex_factory/logs/resume6_library-170301.runtime.out
+/data/run01/scvj260/scenesmith/.venv/lib/python3.11/site-packages/hydra/_internal/defaults_list.py:251: UserWarning: In 'config': Defaults list is missing `_self_`. See https://hydra.cc/docs/1.2/upgrades/1.0_to_1.1/default_composition_order for more information
+  warnings.warn(msg, UserWarning)
+{
+  "attestation": "d210cc6a8ba78fb7ccc8ac41f685167d567de709d90ecb3f9b38aae3e23ad2b5",
+  "new_config_sha256": "38e2528ee634e58fefb6492375bfac6673f4424098d25564f1c335310760cc3c",
+  "old_config_sha256": "38e2528ee634e58fefb6492375bfac6673f4424098d25564f1c335310760cc3c",
+  "operation": "bind_durable_plan_to_exact_recovery_transport_config",
+  "plan_after_sha256": "48e44e6b6f883f4aadc35aeefcfc0dc6f59c300cc81796eb1df474f53f78cf8e",
+  "plan_before_sha256": "48e44e6b6f883f4aadc35aeefcfc0dc6f59c300cc81796eb1df474f53f78cf8e",
+  "port_offset": 2610,
+  "quality_configuration_modified": false,
+  "room_id": "library",
+  "run_name": "resume_library",
+  "schema_version": 1,
+  "selection_content_modified": false,
+  "status": "pass"
+}
+curl: (7) Failed to connect to 127.0.0.1 port 21610 after 0 ms: Connection refused
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+GPU proxy unavailable: 000
+FILE:/data/run01/scvj260/codex_factory/logs/resume6_storage_room-170299.runtime.out
+/data/run01/scvj260/scenesmith/.venv/lib/python3.11/site-packages/hydra/_internal/defaults_list.py:251: UserWarning: In 'config': Defaults list is missing `_self_`. See https://hydra.cc/docs/1.2/upgrades/1.0_to_1.1/default_composition_order for more information
+  warnings.warn(msg, UserWarning)
+{
+  "attestation": "f2d59897021e64d740d63580e6d818d8bd8f955bf159a25cf232fd27857ffcc8",
+  "new_config_sha256": "e2226a43cb3ba05996de4a31d506e1952a16122437d219c969ad0226610128c1",
+  "old_config_sha256": "e2226a43cb3ba05996de4a31d506e1952a16122437d219c969ad0226610128c1",
+  "operation": "bind_durable_plan_to_exact_recovery_transport_config",
+  "plan_after_sha256": "58876ab0889db62b07b006828845ae949ebb702fedd761a5df44f55676660d51",
+  "plan_before_sha256": "58876ab0889db62b07b006828845ae949ebb702fedd761a5df44f55676660d51",
+  "port_offset": 2611,
+  "quality_configuration_modified": false,
+  "room_id": "storage_room",
+  "run_name": "resume_storage_room",
+  "schema_version": 1,
+  "selection_content_modified": false,
+  "status": "pass"
+}
+curl: (7) Failed to connect to 127.0.0.1 port 21611 after 0 ms: Connection refused
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+channel 1: open failed: connect failed: Connection refused
+curl: (56) Recv failure: Connection reset by peer
+GPU proxy unavailable: 000
+FILE:/data/run01/scvj260/codex_factory/logs/visual_completion_v2c-170303_0.runtime.out
+Traceback (most recent call last):
+  File "/data/run01/scvj260/codex_factory/repair_visual_completion_v2.py", line 306, in <module>
+    if __name__=="__main__": main()
+                             ^^^^^^
+  File "/data/run01/scvj260/codex_factory/repair_visual_completion_v2.py", line 254, in main
+    if before_sha!=EXPECTED[room_id]: raise RuntimeError(f"Unexpected {room_id} state: {before_sha}")
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Unexpected classroom_01 state: f8e8d05a0b7602a7c773fc1b354621725000ed3d680d4d6d0ba791471ca95194
+FILE:/data/run01/scvj260/codex_factory/logs/visual_completion_v2c-170303_1.runtime.out
+Traceback (most recent call last):
+  File "/data/run01/scvj260/codex_factory/repair_visual_completion_v2.py", line 306, in <module>
+    if __name__=="__main__": main()
+                             ^^^^^^
+  File "/data/run01/scvj260/codex_factory/repair_visual_completion_v2.py", line 254, in main
+    if before_sha!=EXPECTED[room_id]: raise RuntimeError(f"Unexpected {room_id} state: {before_sha}")
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Unexpected classroom_02 state: 0abeef378e628a0028ec0c830a61e0cabe35b11e10e3592c25d155a2980c0b6c
+FILE:/data/run01/scvj260/codex_factory/logs/visual_completion_v2c-170303_2.runtime.out
+Traceback (most recent call last):
+  File "/data/run01/scvj260/codex_factory/repair_visual_completion_v2.py", line 306, in <module>
+    if __name__=="__main__": main()
+                             ^^^^^^
+  File "/data/run01/scvj260/codex_factory/repair_visual_completion_v2.py", line 254, in main
+    if before_sha!=EXPECTED[room_id]: raise RuntimeError(f"Unexpected {room_id} state: {before_sha}")
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Unexpected classroom_03 state: 13cecd49bbec0f99ea9fcc000ac5534265c3d51736db0b14f22e3c4214795dff
+FILE:/data/run01/scvj260/codex_factory/logs/visual_completion_v2c-170303_3.runtime.out
+Traceback (most recent call last):
+  File "/data/run01/scvj260/codex_factory/repair_visual_completion_v2.py", line 306, in <module>
+    if __name__=="__main__": main()
+                             ^^^^^^
+  File "/data/run01/scvj260/codex_factory/repair_visual_completion_v2.py", line 254, in main
+    if before_sha!=EXPECTED[room_id]: raise RuntimeError(f"Unexpected {room_id} state: {before_sha}")
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Unexpected classroom_04 state: 87601ec24e2f14db979688f2772c926660b10006a5c2d24dc49d3c58e200fc9c
+FILE:/data/run01/scvj260/codex_factory/logs/visual_completion_v2c-170303_4.runtime.out
+Traceback (most recent call last):
+  File "/data/run01/scvj260/codex_factory/repair_visual_completion_v2.py", line 306, in <module>
+    if __name__=="__main__": main()
+                             ^^^^^^
+  File "/data/run01/scvj260/codex_factory/repair_visual_completion_v2.py", line 254, in main
+    if before_sha!=EXPECTED[room_id]: raise RuntimeError(f"Unexpected {room_id} state: {before_sha}")
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Unexpected boys_toilet state: 80b736e09310c588464b66804a93ba68076b41c4823c2d604f48f9a173462a7e
+FILE:/data/run01/scvj260/codex_factory/logs/visual_completion_v2c-170303_5.runtime.out
+Traceback (most recent call last):
+  File "/data/run01/scvj260/codex_factory/repair_visual_completion_v2.py", line 306, in <module>
+    if __name__=="__main__": main()
+                             ^^^^^^
+  File "/data/run01/scvj260/codex_factory/repair_visual_completion_v2.py", line 297, in main
+    if changed: raise RuntimeError("New/deeper collision: "+"; ".join(item.to_description() for item in changed))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: New/deeper collision: restroom_stall_partition_0 collides with sanitary_disposal_bin_0 (0.8cm penetration)
+FILE:/data/run01/scvj260/codex_factory/logs/visual_completion_v2c-170303_6.runtime.out
+Traceback (most recent call last):
+  File "/data/run01/scvj260/codex_factory/repair_visual_completion_v2.py", line 306, in <module>
+    if __name__=="__main__": main()
+                             ^^^^^^
+  File "/data/run01/scvj260/codex_factory/repair_visual_completion_v2.py", line 254, in main
+    if before_sha!=EXPECTED[room_id]: raise RuntimeError(f"Unexpected {room_id} state: {before_sha}")
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Unexpected main_corridor state: 42d07e8dfcf215ccdc1654fca4cc8253840e6f8795140826e186b4facdd034c6
+MONITOR
+2026-07-15T07:38:43+08:00
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+2026-07-15T07:39:13+08:00
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+2026-07-15T07:39:43+08:00
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+2026-07-15T07:40:13+08:00
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+2026-07-15T07:40:43+08:00
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+2026-07-15T07:41:13+08:00
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+2026-07-15T07:41:43+08:00
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
