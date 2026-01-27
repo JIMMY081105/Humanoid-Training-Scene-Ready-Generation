@@ -1,0 +1,2 @@
+getsockname failed: Bad file descriptor
+channel_request_remote_forwarding: request tcpip-forward: Bad file descriptor
