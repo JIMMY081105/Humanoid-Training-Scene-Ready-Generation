@@ -1,0 +1,28 @@
+diff --git a/scenesmith/manipuland_agents/stateful_manipuland_agent.py b/scenesmith/manipuland_agents/stateful_manipuland_agent.py
+--- a/scenesmith/manipuland_agents/stateful_manipuland_agent.py
++++ b/scenesmith/manipuland_agents/stateful_manipuland_agent.py
+@@ -2459,7 +2459,6 @@ class StatefulManipulandAgent(BaseManipulandAgent):
+             selections = document.get("selections")
+             if (
+                 not isinstance(selections, list)
+-                or not selections
+                 or document.get("selections_sha256")
+                 != _sha256_bytes(_canonical_json_bytes(selections))
+             ):
+diff --git a/tests/unit/test_manipuland_furniture_checkpoint.py b/tests/unit/test_manipuland_furniture_checkpoint.py
+--- a/tests/unit/test_manipuland_furniture_checkpoint.py
++++ b/tests/unit/test_manipuland_furniture_checkpoint.py
+@@ -648,6 +648,13 @@ def test_exact_furniture_plan_is_reused(tmp_path: Path) -> None:
+         agent._load_furniture_plan("f" * 64)
+ 
+ 
++def test_exact_empty_furniture_plan_is_reused(tmp_path: Path) -> None:
++    agent = _agent(tmp_path, _base_state())
++    input_hash = agent.scene.content_hash()
++    agent._publish_furniture_plan(input_hash, [])
++    assert agent._load_furniture_plan(input_hash) == []
++
++
+ def test_fabricated_predecessor_furniture_plan_runtime_is_rejected(
+     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+ ) -> None:
