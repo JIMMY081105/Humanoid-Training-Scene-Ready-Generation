@@ -1,0 +1,20 @@
+diff --git a/tests/unit/test_manipuland_furniture_checkpoint.py b/tests/unit/test_manipuland_furniture_checkpoint.py
+--- a/tests/unit/test_manipuland_furniture_checkpoint.py
++++ b/tests/unit/test_manipuland_furniture_checkpoint.py
+@@ -652,7 +652,15 @@ def test_exact_furniture_plan_is_reused(tmp_path: Path) -> None:
+ def test_exact_empty_furniture_plan_is_reused(tmp_path: Path) -> None:
+     agent = _agent(tmp_path, _base_state())
+     input_hash = agent.scene.content_hash()
+-    agent._publish_furniture_plan(input_hash, [])
++    agent._publish_furniture_plan(input_hash, [_selection()])
++    path = tmp_path / "scene_states" / "manipuland_furniture_plan.json"
++    document = json.loads(path.read_text(encoding="utf-8"))
++    document["selections"] = []
++    document["selections_sha256"] = checkpoint._sha256_bytes(
++        checkpoint._canonical_json_bytes([])
++    )
++    document["attestation"] = checkpoint._receipt_attestation(document)
++    path.write_text(json.dumps(document), encoding="utf-8")
+     assert agent._load_furniture_plan(input_hash) == []
+ 
+ 
