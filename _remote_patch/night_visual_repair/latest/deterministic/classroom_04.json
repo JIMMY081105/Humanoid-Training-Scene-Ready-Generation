@@ -1,0 +1,2913 @@
+{
+  "contract_profile": "school_reference_20260710",
+  "critical_issues": [],
+  "metrics": {
+    "authorized_exterior_object_ids": [],
+    "contract_profile": "school_reference_20260710",
+    "factory_spatial_contract": null,
+    "max_collision_hulls": 32,
+    "object_count": 81,
+    "object_footprint_density": 0.2424,
+    "overflow_object_count": 0,
+    "room_depth": 7.5,
+    "room_width": 9.0,
+    "semantic_inventory": {
+      "canonical_requirements": "Create exactly 12 student desks and exactly 12 corresponding student chairs. Orient them toward a strong front teaching wall/whiteboard with clear aisles. Include a teacher desk and teacher chair, storage cabinet, bookshelf or cubbies, bulletin board/educational posters, classroom clock, trash bin, at least one plant, and visible exterior daylight/windows. Add believable school-use details including textbooks, notebooks, folders/worksheets, pencil/marker holders, erasers/rulers, glue/scissors, water bottles, backpacks, storage bins and paper trays without clutter. Make the room especially tidy and naturally lit, with a seating arrangement and decoration placement distinct from the other classrooms.",
+      "counts": {
+        "backpack": 1,
+        "board_markers": 1,
+        "bookshelf": 1,
+        "clock": 1,
+        "display": 1,
+        "erasers": 1,
+        "folders": 1,
+        "glue_sticks": 1,
+        "markers": 1,
+        "notebooks": 1,
+        "paper_trays": 1,
+        "pencil_holders": 1,
+        "plant": 1,
+        "rulers": 1,
+        "scissors": 1,
+        "storage": 1,
+        "storage_bins": 1,
+        "student_chairs": 12,
+        "student_desks": 12,
+        "teacher_chair": 1,
+        "teacher_desk": 1,
+        "textbooks": 1,
+        "trash": 1,
+        "water_bottle": 1,
+        "whiteboard": 1,
+        "whiteboard_eraser": 1,
+        "worksheets": 1
+      },
+      "critical_issues": [],
+      "fixture_multiplicity_evidence": {},
+      "invalid_physical_candidates": {},
+      "matched_object_ids": {
+        "backpack": [
+          "kids_backpack_0"
+        ],
+        "board_markers": [
+          "filled_container_1"
+        ],
+        "bookshelf": [
+          "cubby_bookshelf_0"
+        ],
+        "clock": [
+          "clock_0"
+        ],
+        "display": [
+          "bulletin_board_0"
+        ],
+        "erasers": [
+          "pencil_0"
+        ],
+        "folders": [
+          "file_folder_organizer_0"
+        ],
+        "glue_sticks": [
+          "acceptance_glue_stick_0"
+        ],
+        "markers": [
+          "filled_container_0"
+        ],
+        "notebooks": [
+          "spiral_notebook_0"
+        ],
+        "paper_trays": [
+          "acceptance_paper_tray_0"
+        ],
+        "pencil_holders": [
+          "acceptance_pencil_holder_0"
+        ],
+        "plant": [
+          "potted_plant_0"
+        ],
+        "rulers": [
+          "acceptance_ruler_0"
+        ],
+        "scissors": [
+          "scissors_0"
+        ],
+        "storage": [
+          "storage_cabinet_0"
+        ],
+        "storage_bins": [
+          "acceptance_storage_bin_0"
+        ],
+        "student_chairs": [
+          "classroom_chair_b",
+          "classroom_chair_a",
+          "classroom_chair_9",
+          "classroom_chair_8",
+          "classroom_chair_7",
+          "classroom_chair_6",
+          "classroom_chair_5",
+          "classroom_chair_4",
+          "classroom_chair_3",
+          "classroom_chair_2",
+          "classroom_chair_1",
+          "classroom_chair_0"
+        ],
+        "student_desks": [
+          "student_desk_b",
+          "student_desk_a",
+          "student_desk_9",
+          "student_desk_8",
+          "student_desk_7",
+          "student_desk_6",
+          "student_desk_5",
+          "student_desk_4",
+          "student_desk_3",
+          "student_desk_2",
+          "student_desk_1",
+          "student_desk_0"
+        ],
+        "teacher_chair": [
+          "swivel_chair_0"
+        ],
+        "teacher_desk": [
+          "desk_0"
+        ],
+        "textbooks": [
+          "math_textbook_0"
+        ],
+        "trash": [
+          "trash_bin_0"
+        ],
+        "water_bottle": [
+          "water_bottle_0"
+        ],
+        "whiteboard": [
+          "calendar_whiteboard_0"
+        ],
+        "whiteboard_eraser": [
+          "acceptance_whiteboard_eraser_0"
+        ],
+        "worksheets": [
+          "printed_worksheet_0"
+        ]
+      },
+      "physical_object_evidence": {
+        "acceptance_glue_stick_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.026,
+              0.026,
+              0.12
+            ],
+            "minimum": [
+              -0.026,
+              -0.026,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/contract_inventory/glue_stick_v1/glue_stick.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/contract_inventory/glue_stick_v1/glue_stick.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9999171857839595,
+            -0.0010621963127445417,
+            -0.0005925578763940007,
+            0.012811798782489796
+          ],
+          "status": "pass",
+          "translation": [
+            -2.181234383233016,
+            2.520682088838426,
+            0.750034322054883
+          ],
+          "world_bounds": [
+            -2.208037423403924,
+            -2.154576811250013,
+            2.4940244918075734,
+            2.5475927698570007,
+            0.7499485948424643,
+            0.8701196942146991
+          ]
+        },
+        "acceptance_paper_tray_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.16,
+              0.12,
+              0.055
+            ],
+            "minimum": [
+              -0.16,
+              -0.12,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/contract_inventory/paper_tray_v1/paper_tray.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/contract_inventory/paper_tray_v1/paper_tray.gltf"
+          ],
+          "rotation_wxyz": [
+            0.7071140555119834,
+            -0.0004500511000969665,
+            -0.0003971552283320461,
+            0.7070992520284035
+          ],
+          "status": "pass",
+          "translation": [
+            4.269168729473388,
+            0.8090223053238675,
+            1.3377859145769073
+          ],
+          "world_bounds": [
+            4.149099561682715,
+            4.389172000131614,
+            0.6490197989502351,
+            0.9690289267198053,
+            1.337630171866609,
+            1.392941617656596
+          ]
+        },
+        "acceptance_pencil_holder_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.06,
+              0.06,
+              0.18
+            ],
+            "minimum": [
+              -0.06,
+              -0.06,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/contract_inventory/pencil_holder_v1/pencil_holder.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/contract_inventory/pencil_holder_v1/pencil_holder.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9999107232879879,
+            -0.0024486145590433364,
+            -0.0003979702190400391,
+            0.013129789036350729
+          ],
+          "status": "pass",
+          "translation": [
+            -2.9638679410850783,
+            2.5351932144744143,
+            0.7493012718288339
+          ],
+          "world_bounds": [
+            -3.0255773826149577,
+            -2.9023133299687762,
+            2.4736390699639066,
+            2.597626900433238,
+            0.7489629430948201,
+            0.9296373850891682
+          ]
+        },
+        "acceptance_ruler_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.15,
+              0.0175,
+              0.008
+            ],
+            "minimum": [
+              -0.15,
+              -0.0175,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/contract_inventory/ruler_v1/ruler.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/contract_inventory/ruler_v1/ruler.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9966938597517971,
+            0.024906973529934293,
+            0.01654930597732503,
+            0.07554543715084983
+          ],
+          "status": "pass",
+          "translation": [
+            -2.5828236581517374,
+            2.506224276150267,
+            0.764354656631622
+          ],
+          "world_bounds": [
+            -2.733650282178455,
+            -2.431703014927353,
+            2.46585618722606,
+            2.5462151746260315,
+            0.759058141772632,
+            0.777636863700872
+          ]
+        },
+        "acceptance_storage_bin_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.14,
+              0.1,
+              0.11
+            ],
+            "minimum": [
+              -0.14,
+              -0.1,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/contract_inventory/storage_bin_v1/storage_bin.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/contract_inventory/storage_bin_v1/storage_bin.gltf"
+          ],
+          "rotation_wxyz": [
+            0.7071164243014186,
+            -0.0005271224300854111,
+            -0.00020870795666389237,
+            0.7070969106608435
+          ],
+          "status": "pass",
+          "translation": [
+            4.2803602812576145,
+            0.4719517221876495,
+            1.337895920305164
+          ],
+          "world_bounds": [
+            4.180241971492865,
+            4.3803641233798665,
+            0.3319490002200808,
+            0.6120039793940579,
+            1.3377288167403123,
+            1.4480629531582607
+          ]
+        },
+        "acceptance_whiteboard_eraser_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.0675,
+              0.031,
+              0.032
+            ],
+            "minimum": [
+              -0.0675,
+              -0.031,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/contract_inventory/whiteboard_eraser_v1/whiteboard_eraser.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/contract_inventory/whiteboard_eraser_v1/whiteboard_eraser.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9988763017592225,
+            0.004849970891979945,
+            -0.00017278349670006931,
+            -0.04714426489011098
+          ],
+          "status": "pass",
+          "translation": [
+            -2.883849237711013,
+            2.7900161320133647,
+            0.749275789994315
+          ],
+          "world_bounds": [
+            -2.9539944723193443,
+            -2.8137296823124505,
+            2.7524884253025537,
+            2.82723431070899,
+            0.7489673566952332,
+            0.7815827159608022
+          ]
+        },
+        "bulletin_board_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              1.2159815013408661,
+              0.06500000096857549,
+              0.5253901302814484
+            ],
+            "minimum": [
+              -1.2159815013408661,
+              -0.0,
+              -0.5253901302814484
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/wall_mounted/sdf/bulletin_board_1783998012317786368_e29f4d9890564861988d4a09e86490ac_1783998042659774572_4b0257d7aaa247e09fe35e27f96bd05e/bulletin_board.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/wall_mounted/sdf/bulletin_board_1783998012317786368_e29f4d9890564861988d4a09e86490ac_1783998042659774572_4b0257d7aaa247e09fe35e27f96bd05e/bulletin_board.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9999999509422034,
+            -1.9180055864034207e-20,
+            0.00031323408312320105,
+            -6.123233695344398e-17
+          ],
+          "status": "pass",
+          "translation": [
+            -4.0175699770550466e-05,
+            -3.7,
+            1.6505341047903386
+          ],
+          "world_bounds": [
+            -1.2163505786024844,
+            1.2162702272029433,
+            -3.7,
+            -3.6349999990314243,
+            1.1243823039428527,
+            2.1766859056378243
+          ]
+        },
+        "calendar_whiteboard_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.44999998807907104,
+              0.03367290645837784,
+              0.30094730854034424
+            ],
+            "minimum": [
+              -0.44999998807907104,
+              4.1879538059674815e-08,
+              -0.30094730854034424
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/wall_mounted/sdf/calendar_whiteboard_1783998048987813212_9bef1b80acb547c9bc017f7a1eb3820f_1783998084374694983_bdb62abf6a094c67bd53abfe08119e85/calendar_whiteboard.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/wall_mounted/sdf/calendar_whiteboard_1783998048987813212_9bef1b80acb547c9bc017f7a1eb3820f_1783998084374694983_bdb62abf6a094c67bd53abfe08119e85/calendar_whiteboard.gltf"
+          ],
+          "rotation_wxyz": [
+            0.7071067811865476,
+            0.0,
+            0.0,
+            0.7071067811865475
+          ],
+          "status": "pass",
+          "translation": [
+            4.45,
+            -0.5999999999999996,
+            1.63
+          ],
+          "world_bounds": [
+            4.416327093541622,
+            4.449999958120462,
+            -1.0499999880790707,
+            -0.1500000119209286,
+            1.3290526914596557,
+            1.9309473085403441
+          ]
+        },
+        "classroom_chair_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.2218010127544403,
+              0.23999999463558197,
+              0.703583300113678
+            ],
+            "minimum": [
+              -0.2218010127544403,
+              -0.23999999463558197,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9996750240116057,
+            0.0003865023847562748,
+            0.0008972412127879143,
+            0.025473357484012853
+          ],
+          "status": "pass",
+          "translation": [
+            1.1581984664894924,
+            -0.960927150102173,
+            0.0017347994112323238
+          ],
+          "world_bounds": [
+            0.9244625893210822,
+            1.3932103554982849,
+            -1.2124236541387456,
+            -0.7099421807239683,
+            0.0011448466193288375,
+            0.7059067092805827
+          ]
+        },
+        "classroom_chair_1": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.2218010127544403,
+              0.23999999463558197,
+              0.703583300113678
+            ],
+            "minimum": [
+              -0.2218010127544403,
+              -0.23999999463558197,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9999970466442155,
+            0.00041120584673164323,
+            0.0008861916491149768,
+            -0.0022253711958809676
+          ],
+          "status": "pass",
+          "translation": [
+            -1.74585265055626,
+            -2.1159592222987,
+            -0.0003667860317692516
+          ],
+          "world_bounds": [
+            -1.968719468005013,
+            -1.521740105178322,
+            -2.3575251817860536,
+            -1.8749746713165787,
+            -0.0009567388236727363,
+            0.7038051238375812
+          ]
+        },
+        "classroom_chair_2": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.2218010127544403,
+              0.23999999463558197,
+              0.703583300113678
+            ],
+            "minimum": [
+              -0.2218010127544403,
+              -0.23999999463558197,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9999935210730457,
+            0.0004123037213834017,
+            0.000885681392308096,
+            -0.003464590314137159
+          ],
+          "status": "pass",
+          "translation": [
+            -0.29299585780579285,
+            -1.279478849065234,
+            -0.0003667860317692517
+          ],
+          "world_bounds": [
+            -0.5164543656790619,
+            -0.06829306681961797,
+            -1.5215942220020282,
+            -1.0379479703186973,
+            -0.0009567388236727361,
+            0.7038051238375812
+          ]
+        },
+        "classroom_chair_3": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.2218010127544403,
+              0.23999999463558197,
+              0.703583300113678
+            ],
+            "minimum": [
+              -0.2218010127544403,
+              -0.23999999463558197,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9998614677136749,
+            0.00039443610280884115,
+            0.0008937818795144516,
+            0.016615984941275263
+          ],
+          "status": "pass",
+          "translation": [
+            -1.7610939058558837,
+            -0.8905958324342333,
+            -0.00036678603176925164
+          ],
+          "world_bounds": [
+            -1.9907464882197465,
+            -1.5301745752237559,
+            -1.1383673110882562,
+            -0.6433584162750134,
+            -0.0009567388236727371,
+            0.7038051238375812
+          ]
+        },
+        "classroom_chair_4": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.2218010127544403,
+              0.23999999463558197,
+              0.703583300113678
+            ],
+            "minimum": [
+              -0.2218010127544403,
+              -0.23999999463558197,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9999688180558344,
+            0.00040226848568408817,
+            0.0008902841977553246,
+            0.007836356942500308
+          ],
+          "status": "pass",
+          "translation": [
+            -1.7386260093603891,
+            0.25096962985262733,
+            -0.0003667860317692517
+          ],
+          "world_bounds": [
+            -1.964160591637612,
+            -1.5118342521208046,
+            0.006966690770166206,
+            0.4944163450255723,
+            -0.0009567388236727367,
+            0.7038051238375812
+          ]
+        },
+        "classroom_chair_5": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.2218010127544403,
+              0.23999999463558197,
+              0.703583300113678
+            ],
+            "minimum": [
+              -0.2218010127544403,
+              -0.23999999463558197,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9999627402039467,
+            0.0004168263093228615,
+            0.0008835619475756608,
+            -0.008576932897430379
+          ],
+          "status": "pass",
+          "translation": [
+            -0.25879745238204444,
+            1.5160646687652122,
+            -0.0003667860317692517
+          ],
+          "world_bounds": [
+            -0.4846824368665533,
+            -0.031674226110531445,
+            1.2716984424040145,
+            1.7598337090578984,
+            -0.0009567388236727374,
+            0.7038051238375812
+          ]
+        },
+        "classroom_chair_6": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.2218010127544403,
+              0.23999999463558197,
+              0.703583300113678
+            ],
+            "minimum": [
+              -0.2218010127544403,
+              -0.23999999463558197,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9999885133613043,
+            0.0004050655558395059,
+            0.0008890150633256142,
+            0.004692410847442485
+          ],
+          "status": "pass",
+          "translation": [
+            -1.729586137519669,
+            1.5809579007737897,
+            -0.0003667860317692517
+          ],
+          "world_bounds": [
+            -1.953629190557552,
+            -1.5042894318978597,
+            1.3383227370854167,
+            1.8230289464582645,
+            -0.0009567388236727376,
+            0.7038051238375812
+          ]
+        },
+        "classroom_chair_7": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.2218010127544403,
+              0.23999999463558197,
+              0.703583300113678
+            ],
+            "minimum": [
+              -0.2218010127544403,
+              -0.23999999463558197,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9999986592570694,
+            0.0004080665569066581,
+            0.0008876415788378567,
+            0.0013141758543229489
+          ],
+          "status": "pass",
+          "translation": [
+            -0.25272079204821807,
+            0.30001933630457833,
+            -0.0003667860317692516
+          ],
+          "world_bounds": [
+            -0.47515131884490647,
+            -0.0290404527205399,
+            0.058864544240601974,
+            0.5406015529928283,
+            -0.0009567388236727389,
+            0.7038051238375812
+          ]
+        },
+        "classroom_chair_8": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.2218010127544403,
+              0.23999999463558197,
+              0.703583300113678
+            ],
+            "minimum": [
+              -0.2218010127544403,
+              -0.23999999463558197,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9999967285359909,
+            0.00040713446343860777,
+            0.0008880694882879226,
+            0.0023639990331067308
+          ],
+          "status": "pass",
+          "translation": [
+            1.21030090191212,
+            -2.06694834209357,
+            -0.0003667860317692516
+          ],
+          "world_bounds": [
+            0.9873681758304955,
+            1.4344846399773954,
+            -2.3085643563537412,
+            -1.8259022777788054,
+            -0.0009567388236727383,
+            0.7038051238375812
+          ]
+        },
+        "classroom_chair_9": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.2218010127544403,
+              0.23999999463558197,
+              0.703583300113678
+            ],
+            "minimum": [
+              -0.2218010127544403,
+              -0.23999999463558197,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9999602853032578,
+            0.00040135822718987216,
+            0.0008906949313959395,
+            0.008858520776072725
+          ],
+          "status": "pass",
+          "translation": [
+            -0.2640405586202269,
+            -2.0352585290866165,
+            -0.0003667860317692517
+          ],
+          "world_bounds": [
+            -0.4900581579065618,
+            -0.03676464985540917,
+            -2.2797040920301073,
+            -1.7913666187236017,
+            -0.000956738823672738,
+            0.7038051238375812
+          ]
+        },
+        "classroom_chair_a": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.2218010127544403,
+              0.23999999463558197,
+              0.703583300113678
+            ],
+            "minimum": [
+              -0.2218010127544403,
+              -0.23999999463558197,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "rotation_wxyz": [
+            0.999982097560472,
+            0.0004144625267686076,
+            0.0008846732172118683,
+            -0.005903400094146987
+          ],
+          "status": "pass",
+          "translation": [
+            1.2211149846695126,
+            0.26508907063671333,
+            -0.00036678603176925164
+          ],
+          "world_bounds": [
+            0.9964960214365812,
+            1.4469753652512234,
+            0.021896779390567833,
+            0.5076908054590881,
+            -0.0009567388236727384,
+            0.7038051238375812
+          ]
+        },
+        "classroom_chair_b": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.2218010127544403,
+              0.23999999463558197,
+              0.703583300113678
+            ],
+            "minimum": [
+              -0.2218010127544403,
+              -0.23999999463558197,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/classroom_chair_1783994351616992479_fb27585c2b1c42098ac21e4524542186_1783994385455431932_09815360a164403fb148349046f9700c/classroom_chair.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9999518947387159,
+            0.00041787120221244037,
+            0.0008830682565401988,
+            -0.009759804432710665
+          ],
+          "status": "pass",
+          "translation": [
+            1.3201669838118424,
+            1.4950145635037304,
+            -0.00036678603176925164
+          ],
+          "world_bounds": [
+            1.0937239139651795,
+            1.5478468791325326,
+            1.2501311635658523,
+            1.7392978495604954,
+            -0.0009567388236727385,
+            0.7038051238375812
+          ]
+        },
+        "clock_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.22499999403953552,
+              0.019146913662552834,
+              0.22393465042114258
+            ],
+            "minimum": [
+              -0.22499999403953552,
+              -1.0057087607151516e-08,
+              -0.22393465042114258
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/wall_mounted/sdf/clock_1783997619835858692_d4b4d247b80041cf95ae23caf8380b71_1783997655060388817_a55b9608d30e49789a4b13c6b09f1fe0/clock.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/wall_mounted/sdf/clock_1783997619835858692_d4b4d247b80041cf95ae23caf8380b71_1783997655060388817_a55b9608d30e49789a4b13c6b09f1fe0/clock.gltf"
+          ],
+          "rotation_wxyz": [
+            6.123233995736766e-17,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "status": "pass",
+          "translation": [
+            3.9299999999999997,
+            3.7,
+            2.68
+          ],
+          "world_bounds": [
+            3.705000005960464,
+            4.154999994039535,
+            3.6808530863374473,
+            3.700000010057088,
+            2.4560653495788576,
+            2.9039346504211427
+          ]
+        },
+        "cubby_bookshelf_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.6936219334602356,
+              0.20000000298023224,
+              1.339066982269287
+            ],
+            "minimum": [
+              -0.6936219334602356,
+              -0.20000000298023224,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/cubby_bookshelf_1783994633234032687_0babb9dedcfb4ceda2bedfec5ff65c23_1783994695310365856_faf91fd2b73a4c31a4f999f96a7e0f67/cubby_bookshelf.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/cubby_bookshelf_1783994633234032687_0babb9dedcfb4ceda2bedfec5ff65c23_1783994695310365856_faf91fd2b73a4c31a4f999f96a7e0f67/cubby_bookshelf.gltf"
+          ],
+          "rotation_wxyz": [
+            0.7071141493398279,
+            -0.00011166096216480543,
+            -0.00016960507629570538,
+            0.7070993837993068
+          ],
+          "status": "pass",
+          "translation": [
+            4.240588491384517,
+            0.8074397628674641,
+            -0.00033039112624241363
+          ],
+          "world_bounds": [
+            4.040041389481891,
+            4.44060295114923,
+            0.11370392755042713,
+            1.501065873432676,
+            -0.0004667869769179388,
+            1.338872876563404
+          ]
+        },
+        "desk_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.6803597807884216,
+              0.3449890911579132,
+              0.75
+            ],
+            "minimum": [
+              -0.6803597807884216,
+              -0.3449890911579132,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/desk_1783994471235211697_97f39574fe384f8c9e015832e33ebf78_1783994522394324739_8d7cb4ef09e54536b31d3bf65ad70d0e/desk.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/desk_1783994471235211697_97f39574fe384f8c9e015832e33ebf78_1783994522394324739_8d7cb4ef09e54536b31d3bf65ad70d0e/desk.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9999177691115118,
+            -0.0003106498637867124,
+            -0.0007325991875193231,
+            0.01279928943926315
+          ],
+          "status": "pass",
+          "translation": [
+            -2.586098776225897,
+            2.674345201762684,
+            0.00018318015616344244
+          ],
+          "world_bounds": [
+            -3.276170030972254,
+            -1.8971322940436772,
+            2.31205408962859,
+            3.037088185251371,
+            -0.001028983317673437,
+            0.7513943938226392
+          ]
+        },
+        "file_folder_organizer_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.13556893169879913,
+              0.11999999731779099,
+              0.021014871075749397
+            ],
+            "minimum": [
+              -0.13556893169879913,
+              -0.11999999731779099,
+              3.711694840369262e-10
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/manipuland/sdf/721bb93d169a4d5f9e8dd15ad45a367f_1784016483678300112_5cf8a483e245415da1c2fc504bf92655/file_folder_organizer.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/721bb93d169a4d5f9e8dd15ad45a367f_1784016483678300112_5cf8a483e245415da1c2fc504bf92655/file_folder_organizer.gltf"
+          ],
+          "rotation_wxyz": [
+            0.997105914333974,
+            0.0077808588298185575,
+            -0.0046776914790817,
+            0.07548094487025715
+          ],
+          "status": "pass",
+          "translation": [
+            -2.690078224413736,
+            2.5329984213518895,
+            0.7479105860943062
+          ],
+          "world_bounds": [
+            -2.8423395326041128,
+            -2.5379882650656334,
+            2.3936427587429305,
+            2.672013163192756,
+            0.7447094534398991,
+            0.7721231259965551
+          ]
+        },
+        "file_folder_organizer_1": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.13556893169879913,
+              0.11999999731779099,
+              0.021014871075749397
+            ],
+            "minimum": [
+              -0.13556893169879913,
+              -0.11999999731779099,
+              3.711694840369262e-10
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/manipuland/sdf/721bb93d169a4d5f9e8dd15ad45a367f_1784016483678300112_5cf8a483e245415da1c2fc504bf92655/file_folder_organizer.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/721bb93d169a4d5f9e8dd15ad45a367f_1784016483678300112_5cf8a483e245415da1c2fc504bf92655/file_folder_organizer.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9770438137757211,
+            0.006693491025949131,
+            -0.007804101530870467,
+            -0.21279022331811992
+          ],
+          "status": "pass",
+          "translation": [
+            -3.438398441523047,
+            -0.6590989094844227,
+            0.7364675438045488
+          ],
+          "world_bounds": [
+            -3.6119389135873363,
+            -3.2652383074699607,
+            -0.8248112842996872,
+            -0.49359160608527175,
+            0.7328182031054122,
+            0.761127313120019
+          ]
+        },
+        "filled_container_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.1253402785278741,
+              0.12528760064819933,
+              0.09195687544094788
+            ],
+            "minimum": [
+              -0.12530299260042588,
+              -0.1253129088172127,
+              -0.0004307834043242309
+            ]
+          },
+          "mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/0dd8be84d117499d9adfae347dc5a389_1784015673554271337_7e402f4b0fb74d5ead86b61f6fe1d9f8/red_dry_erase_marker.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/0dd8be84d117499d9adfae347dc5a389_1784015686159909483_b6d34354865b4c25aafc0aaf4fb1280c/blue_dry_erase_marker.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/8d4857932fba4a65a286ec60751c5201_1784015700839698775_4cf5cbda707248659f8941cb60a4fb0d/black_dry_erase_marker.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/8efaf047e51145d7babd4ee0cdc23539_1784016333845606518_59fe9e1080044e9297b0e445640195f4/blackboard_eraser.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/d94767ddd97840f6b5d2d0d7088e701a_1784016577548408405_3e684874911c4b5a9d442e5e4dc6c173/plastic_tray.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/0dd8be84d117499d9adfae347dc5a389_1784015673554271337_7e402f4b0fb74d5ead86b61f6fe1d9f8/red_dry_erase_marker.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/0dd8be84d117499d9adfae347dc5a389_1784015686159909483_b6d34354865b4c25aafc0aaf4fb1280c/blue_dry_erase_marker.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/8d4857932fba4a65a286ec60751c5201_1784015700839698775_4cf5cbda707248659f8941cb60a4fb0d/black_dry_erase_marker.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/8efaf047e51145d7babd4ee0cdc23539_1784016333845606518_59fe9e1080044e9297b0e445640195f4/blackboard_eraser.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/d94767ddd97840f6b5d2d0d7088e701a_1784016577548408405_3e684874911c4b5a9d442e5e4dc6c173/plastic_tray.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9983287665312827,
+            -0.0012004014843940473,
+            0.001486115142767311,
+            -0.057758327660923016
+          ],
+          "status": "pass",
+          "translation": [
+            -2.692086472460016,
+            2.83228188390857,
+            0.7479308575474746
+          ],
+          "world_bounds": [
+            -2.8310053105592132,
+            -2.552849242334058,
+            2.69334933219064,
+            2.9713886528100955,
+            0.7468237437920487,
+            0.8405633548264375
+          ]
+        },
+        "filled_container_1": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.06652528212188713,
+              0.12011265214543898,
+              0.19813511938803652
+            ],
+            "minimum": [
+              -0.07861141881475264,
+              -0.09340817760320008,
+              -0.00011310537140440946
+            ]
+          },
+          "mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/0dd8be84d117499d9adfae347dc5a389_1784015673554271337_7e402f4b0fb74d5ead86b61f6fe1d9f8/red_dry_erase_marker.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/0dd8be84d117499d9adfae347dc5a389_1784015686159909483_b6d34354865b4c25aafc0aaf4fb1280c/blue_dry_erase_marker.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/20ac8f3a7880404d967cd494c0e55070_1784022748182688978_d2b5290d776548f0bb25920a89f79eb4/pencil.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/54e44c23db6c4b7caeeb20951b8e18ed_1784016784967488847_d4bbacd7edcc4669b4118327710dff25/pen_cup_holder.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/8d4857932fba4a65a286ec60751c5201_1784015700839698775_4cf5cbda707248659f8941cb60a4fb0d/black_dry_erase_marker.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/0dd8be84d117499d9adfae347dc5a389_1784015673554271337_7e402f4b0fb74d5ead86b61f6fe1d9f8/red_dry_erase_marker.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/0dd8be84d117499d9adfae347dc5a389_1784015686159909483_b6d34354865b4c25aafc0aaf4fb1280c/blue_dry_erase_marker.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/20ac8f3a7880404d967cd494c0e55070_1784022748182688978_d2b5290d776548f0bb25920a89f79eb4/pencil.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/54e44c23db6c4b7caeeb20951b8e18ed_1784016784967488847_d4bbacd7edcc4669b4118327710dff25/pen_cup_holder.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/8d4857932fba4a65a286ec60751c5201_1784015700839698775_4cf5cbda707248659f8941cb60a4fb0d/black_dry_erase_marker.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9966388326895496,
+            -0.0003962930989002232,
+            -2.980895717194006e-05,
+            -0.08191995628916013
+          ],
+          "status": "pass",
+          "translation": [
+            -3.1373901200907497,
+            -0.7494557433222752,
+            0.7384542220360237
+          ],
+          "world_bounds": [
+            -3.230198986508748,
+            -3.0521435283891716,
+            -0.8524731392879211,
+            -0.617961377570614,
+            0.7382370486420864,
+            0.9366708799971153
+          ]
+        },
+        "kids_backpack_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.15494194626808167,
+              0.0636712908744812,
+              0.05999999865889549
+            ],
+            "minimum": [
+              0.0,
+              -0.0636712908744812,
+              -0.05999999865889549
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/manipuland/sdf/040089295e3a4ee684d4562a8fabce9f_1784025296474181769_001a5ba16d474395985fce86d53fa281/kids_backpack.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/040089295e3a4ee684d4562a8fabce9f_1784025296474181769_001a5ba16d474395985fce86d53fa281/kids_backpack.gltf"
+          ],
+          "rotation_wxyz": [
+            0.5074204153865309,
+            0.05607202915643426,
+            0.20037908139103044,
+            0.8361989436349027
+          ],
+          "status": "pass",
+          "translation": [
+            4.309598507870907,
+            0.976754695332324,
+            0.16132958759511618
+          ],
+          "world_bounds": [
+            4.164989464233098,
+            4.380027405991088,
+            0.9342914657177755,
+            1.1541847793690507,
+            0.06458656652154351,
+            0.24109435988659023
+          ]
+        },
+        "kids_backpack_1": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.08376794308423996,
+              0.1507520079612732,
+              0.05999999865889549
+            ],
+            "minimum": [
+              -0.08376794308423996,
+              -0.0,
+              -0.05999999865889549
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/manipuland/sdf/2f60b5e95a6d417aa4183ead6bb05e7f_1784025321635888175_6aaabdef8902428785eee3936aee1cff/kids_backpack.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/2f60b5e95a6d417aa4183ead6bb05e7f_1784025321635888175_6aaabdef8902428785eee3936aee1cff/kids_backpack.gltf"
+          ],
+          "rotation_wxyz": [
+            0.7426934939176782,
+            -0.16714740164679884,
+            0.20140730360712653,
+            0.6163628949480834
+          ],
+          "status": "pass",
+          "translation": [
+            4.298169805985189,
+            0.6650820449769115,
+            0.12305197720573824
+          ],
+          "world_bounds": [
+            4.13108896011317,
+            4.31708150233725,
+            0.5642358922482131,
+            0.7937143639550831,
+            0.02895156076358313,
+            0.2171526049981845
+          ]
+        },
+        "math_textbook_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.11065119877457619,
+              0.12102941051125526,
+              0.043750000186264515
+            ],
+            "minimum": [
+              -0.11065119877457619,
+              -0.12102941051125526,
+              2.1968701857666417e-09
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/manipuland/sdf/3c35b1fa7524479fbf2b8cdfd70bc461_1784023612608032453_097ff82e798642b09db1101329f20dcc/math_textbook.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/3c35b1fa7524479fbf2b8cdfd70bc461_1784023612608032453_097ff82e798642b09db1101329f20dcc/math_textbook.gltf"
+          ],
+          "rotation_wxyz": [
+            0.025671877396108076,
+            -0.005318915577941234,
+            -0.006006479311077606,
+            0.9996382275875206
+          ],
+          "status": "pass",
+          "translation": [
+            -1.7173362621354251,
+            -2.025372441775304,
+            0.5650005300034598
+          ],
+          "world_bounds": [
+            -1.8345182038058168,
+            -1.6006330495234897,
+            -2.1524332834538535,
+            -1.8988250291058189,
+            0.5623715459587213,
+            0.6113738841735703
+          ]
+        },
+        "math_textbook_1": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.11065119877457619,
+              0.12102941051125526,
+              0.043750000186264515
+            ],
+            "minimum": [
+              -0.11065119877457619,
+              -0.12102941051125526,
+              2.1968701857666417e-09
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/manipuland/sdf/3c35b1fa7524479fbf2b8cdfd70bc461_1784023612608032453_097ff82e798642b09db1101329f20dcc/math_textbook.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/3c35b1fa7524479fbf2b8cdfd70bc461_1784023612608032453_097ff82e798642b09db1101329f20dcc/math_textbook.gltf"
+          ],
+          "rotation_wxyz": [
+            0.04237992717477298,
+            0.0001707118883583896,
+            0.0021073777179892238,
+            -0.999099330191581
+          ],
+          "status": "pass",
+          "translation": [
+            -0.09412870042240057,
+            -1.9026244459833157,
+            0.7152565730000605
+          ],
+          "world_bounds": [
+            -0.21463881274832006,
+            0.026374302736460728,
+            -2.0327731449710305,
+            -1.7726606095177622,
+            0.7146911669532492,
+            0.7595715902889382
+          ]
+        },
+        "pencil_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.0949999988079071,
+              0.004027627408504486,
+              0.007675942033529282
+            ],
+            "minimum": [
+              -0.0949999988079071,
+              -0.004027627408504486,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/manipuland/sdf/20ac8f3a7880404d967cd494c0e55070_1784022748182688978_d2b5290d776548f0bb25920a89f79eb4/pencil.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/20ac8f3a7880404d967cd494c0e55070_1784022748182688978_d2b5290d776548f0bb25920a89f79eb4/pencil.gltf"
+          ],
+          "rotation_wxyz": [
+            0.21074947114374362,
+            -0.002319620153169615,
+            0.004378364725353034,
+            -0.977527549329076
+          ],
+          "status": "pass",
+          "translation": [
+            -0.2270694697811199,
+            -2.040025603416195,
+            0.7140900339363534
+          ],
+          "world_bounds": [
+            -0.3152889405877507,
+            -0.13880102292334098,
+            -2.0828979781057755,
+            -1.9972114294603165,
+            0.7137961164266601,
+            0.7220595165798407
+          ]
+        },
+        "pencil_1": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.0949999988079071,
+              0.004027627408504486,
+              0.007675942033529282
+            ],
+            "minimum": [
+              -0.0949999988079071,
+              -0.004027627408504486,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/manipuland/sdf/20ac8f3a7880404d967cd494c0e55070_1784022748182688978_d2b5290d776548f0bb25920a89f79eb4/pencil.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/20ac8f3a7880404d967cd494c0e55070_1784022748182688978_d2b5290d776548f0bb25920a89f79eb4/pencil.gltf"
+          ],
+          "rotation_wxyz": [
+            0.2754254361374922,
+            -0.002311101353886629,
+            0.004134335940050939,
+            -0.9613107693172583
+          ],
+          "status": "pass",
+          "translation": [
+            -1.9415735240686207,
+            -0.9257527794103596,
+            0.7140853147478013
+          ],
+          "world_bounds": [
+            -2.0242919740889698,
+            -1.8588034857628117,
+            -0.9795284543945537,
+            -0.87202834664431,
+            0.7138424054180752,
+            0.7220038217080696
+          ]
+        },
+        "pencil_eraser_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.02359198033809662,
+              0.010591274127364159,
+              0.014999999664723873
+            ],
+            "minimum": [
+              -0.02359198033809662,
+              -0.010591273196041584,
+              -4.0530065414934313e-10
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/manipuland/sdf/e4f44df62e974e8a8c09e2e6f4be0a43_1784023631032687315_9d1c819b4d4b41e789daa3ab523ac768/pencil_eraser.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/e4f44df62e974e8a8c09e2e6f4be0a43_1784023631032687315_9d1c819b4d4b41e789daa3ab523ac768/pencil_eraser.gltf"
+          ],
+          "rotation_wxyz": [
+            0.08183751907740704,
+            0.0021124102138826545,
+            0.0009501913151860174,
+            0.9966429929171268
+          ],
+          "status": "pass",
+          "translation": [
+            -1.6718521154669235,
+            -2.1601523792214032,
+            0.7143891688872845
+          ],
+          "world_bounds": [
+            -1.6968555415829192,
+            -1.6467831971019484,
+            -2.1744503168402147,
+            -2.1458312187094335,
+            0.7142697784630636,
+            0.7295083976188091
+          ]
+        },
+        "potted_plant_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.20708419382572174,
+              0.22500000894069672,
+              0.7341418862342834
+            ],
+            "minimum": [
+              -0.20708419382572174,
+              -0.22499999403953552,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/potted_plant_1783994817805690265_9352cb355c4e49548d63e045e52b5271_1783994867356867057_49d5843860ac4050b05355bb381f31c4/potted_plant.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/potted_plant_1783994817805690265_9352cb355c4e49548d63e045e52b5271_1783994867356867057_49d5843860ac4050b05355bb381f31c4/potted_plant.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9999575672391605,
+            0.00010064286671673324,
+            0.000573646493799121,
+            0.009193721871667481
+          ],
+          "status": "pass",
+          "translation": [
+            -3.9635622928504124,
+            -2.7871228351469193,
+            0.0007063353544005758
+          ],
+          "world_bounds": [
+            -4.174748316475531,
+            -3.7515326708240684,
+            -3.0160324222645833,
+            -2.5583532554984485,
+            0.00042148177234078814,
+            0.7351325771330922
+          ]
+        },
+        "printed_worksheet_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.14999985694885254,
+              0.07709120959043503,
+              0.002096927259117365
+            ],
+            "minimum": [
+              -0.15000014007091522,
+              -0.07709121704101562,
+              -6.5567018481260675e-09
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/manipuland/sdf/844211c1ec654c13a6cc167a823aa390_1784022933646374094_48017781eddf4dc6b0be4be8c332b518/printed_worksheet.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/844211c1ec654c13a6cc167a823aa390_1784022933646374094_48017781eddf4dc6b0be4be8c332b518/printed_worksheet.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9963471788997466,
+            -0.001906845267686921,
+            0.0005891258024786191,
+            0.08537163446034393
+          ],
+          "status": "pass",
+          "translation": [
+            -2.9726935506362397,
+            -0.5128504577585664,
+            0.737937855219706
+          ],
+          "world_bounds": [
+            -3.133621986721341,
+            -2.8117636133209025,
+            -0.6143350068748201,
+            -0.41135778542548884,
+            0.7374277460475498,
+            0.7405448688417808
+          ]
+        },
+        "scissors_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.04603766277432442,
+              0.029999999329447746,
+              0.003925725352019072
+            ],
+            "minimum": [
+              -0.04603766277432442,
+              -0.029999999329447746,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/manipuland/sdf/f1b0c6ffa28d4dcc8df653627dfc2b27_1784022723470776607_4471e48aa4fc40f99fc4c6ec47052b92/scissors.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/f1b0c6ffa28d4dcc8df653627dfc2b27_1784022723470776607_4471e48aa4fc40f99fc4c6ec47052b92/scissors.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9571238380040614,
+            -0.00025411501113761277,
+            0.0009205506917841824,
+            0.28967748745175265
+          ],
+          "status": "pass",
+          "translation": [
+            -2.926276084761121,
+            -0.6933257447070266,
+            0.7380974332538053
+          ],
+          "world_bounds": [
+            -2.9812227957916404,
+            -2.871323033922738,
+            -0.7438194855131661,
+            -0.6428280005847807,
+            0.7380081230428628,
+            0.7421124616563379
+          ]
+        },
+        "spiral_notebook_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.2170894589275122,
+              0.07179521229118109,
+              0.01110000009648502
+            ],
+            "minimum": [
+              -3.3265561208417617e-10,
+              -0.07179523296654225,
+              -0.01110000009648502
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/manipuland/sdf/2a37a4b61b8c4aad9e4eb78a689913a4_1784024213203993675_5c3fc5ba8f5a41fe8a07660dc75fcbb8/spiral_notebook.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/2a37a4b61b8c4aad9e4eb78a689913a4_1784024213203993675_5c3fc5ba8f5a41fe8a07660dc75fcbb8/spiral_notebook.gltf"
+          ],
+          "rotation_wxyz": [
+            0.09621151821871522,
+            0.00015184328405567468,
+            -0.006133204881113159,
+            0.9953420037874184
+          ],
+          "status": "pass",
+          "translation": [
+            -0.3005969483379632,
+            -1.9901121645871587,
+            0.7257188293415515
+          ],
+          "world_bounds": [
+            -0.527427932944504,
+            -0.2868363633735703,
+            -2.060708655667677,
+            -1.8779376232943754,
+            0.7137451952213313,
+            0.7380142862238375
+          ]
+        },
+        "spiral_notebook_1": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.2170894589275122,
+              0.07179521229118109,
+              0.01110000009648502
+            ],
+            "minimum": [
+              -3.3265561208417617e-10,
+              -0.07179523296654225,
+              -0.01110000009648502
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/manipuland/sdf/2a37a4b61b8c4aad9e4eb78a689913a4_1784024213203993675_5c3fc5ba8f5a41fe8a07660dc75fcbb8/spiral_notebook.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/2a37a4b61b8c4aad9e4eb78a689913a4_1784024213203993675_5c3fc5ba8f5a41fe8a07660dc75fcbb8/spiral_notebook.gltf"
+          ],
+          "rotation_wxyz": [
+            0.09642329334921297,
+            -2.7642507137792234e-05,
+            0.003995770710346517,
+            -0.9953323975195492
+          ],
+          "status": "pass",
+          "translation": [
+            -1.6248690698201083,
+            -0.9095828429683278,
+            0.7257270891741956
+          ],
+          "world_bounds": [
+            -1.8517117597484272,
+            -1.6110790846984162,
+            -1.0217985706764052,
+            -0.8390366950283832,
+            0.713900647453999,
+            0.737398194047828
+          ]
+        },
+        "stack_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.24715403420558113,
+              0.13416547710039084,
+              0.01648228521163997
+            ],
+            "minimum": [
+              -0.10701413372630864,
+              -0.11731095613540332,
+              -0.011884489469392134
+            ]
+          },
+          "mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/20ac8f3a7880404d967cd494c0e55070_1784022748182688978_d2b5290d776548f0bb25920a89f79eb4/pencil.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/2a37a4b61b8c4aad9e4eb78a689913a4_1784024213203993675_5c3fc5ba8f5a41fe8a07660dc75fcbb8/spiral_notebook.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/20ac8f3a7880404d967cd494c0e55070_1784022748182688978_d2b5290d776548f0bb25920a89f79eb4/pencil.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/2a37a4b61b8c4aad9e4eb78a689913a4_1784024213203993675_5c3fc5ba8f5a41fe8a07660dc75fcbb8/spiral_notebook.gltf"
+          ],
+          "rotation_wxyz": [
+            0.10063506327778184,
+            0.009240084771393936,
+            -0.00046884609840032004,
+            -0.9948803873108718
+          ],
+          "status": "pass",
+          "translation": [
+            -1.9033007141698008,
+            -2.0965044028555706,
+            0.7271484756035054
+          ],
+          "world_bounds": [
+            -2.169200367114434,
+            -1.77138869021716,
+            -2.277459790033593,
+            -1.9601291913198553,
+            0.7104176706569285,
+            0.7459600318067662
+          ]
+        },
+        "stack_1": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.12509048171685708,
+              0.1513750049961402,
+              0.11864897870804919
+            ],
+            "minimum": [
+              -0.1246396196181205,
+              -0.1513985767363284,
+              -1.0682448117318999e-05
+            ]
+          },
+          "mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/3c35b1fa7524479fbf2b8cdfd70bc461_1784023612608032453_097ff82e798642b09db1101329f20dcc/math_textbook.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/691a48c370b2415fbe4fcaadd2a17c32_1784025195987186911_0c4a77235cba47e0a391a3367ae1ad9c/history_textbook.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/8fba401d5dd348018e5bd3a9374fd83e_1784025169035375533_2cd06201407d443f9a39da71096e21e2/science_textbook.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/3c35b1fa7524479fbf2b8cdfd70bc461_1784023612608032453_097ff82e798642b09db1101329f20dcc/math_textbook.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/691a48c370b2415fbe4fcaadd2a17c32_1784025195987186911_0c4a77235cba47e0a391a3367ae1ad9c/history_textbook.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/8fba401d5dd348018e5bd3a9374fd83e_1784025169035375533_2cd06201407d443f9a39da71096e21e2/science_textbook.gltf"
+          ],
+          "rotation_wxyz": [
+            0.7112608728178104,
+            0.002998935604233304,
+            -0.004959677491172106,
+            0.7029042458136612
+          ],
+          "status": "pass",
+          "translation": [
+            4.250194277454626,
+            0.30925032479544934,
+            0.08779764955220899
+          ],
+          "world_bounds": [
+            4.097022540534292,
+            4.403058053392776,
+            0.18150234016754435,
+            0.4361155269898942,
+            0.08597246542863486,
+            0.2082583048761244
+          ]
+        },
+        "stack_2": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.14428509003560297,
+              0.14914943115322155,
+              0.09357154366078041
+            ],
+            "minimum": [
+              -0.14060223016971474,
+              -0.14781963542485155,
+              -0.016363613421003842
+            ]
+          },
+          "mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/3c35b1fa7524479fbf2b8cdfd70bc461_1784023612608032453_097ff82e798642b09db1101329f20dcc/math_textbook.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/eaf63782d5574515a89cc138e1d40cf8_1784025143763681505_39554e912b074573aad8c7494e168bb6/english_textbook.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/3c35b1fa7524479fbf2b8cdfd70bc461_1784023612608032453_097ff82e798642b09db1101329f20dcc/math_textbook.gltf",
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/eaf63782d5574515a89cc138e1d40cf8_1784025143763681505_39554e912b074573aad8c7494e168bb6/english_textbook.gltf"
+          ],
+          "rotation_wxyz": [
+            0.6999093119056741,
+            0.026606521393698165,
+            -0.015094597283784985,
+            0.7135763457822105
+          ],
+          "status": "pass",
+          "translation": [
+            4.249050672851724,
+            0.9775555834386748,
+            0.36823469864660363
+          ],
+          "world_bounds": [
+            4.096955216665491,
+            4.401047705802274,
+            0.8287704754129827,
+            1.1254513397433545,
+            0.3412708746568174,
+            0.47250049978939795
+          ]
+        },
+        "storage_cabinet_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.3212299644947052,
+              0.1950407475233078,
+              1.2000000476837158
+            ],
+            "minimum": [
+              -0.3212299644947052,
+              -0.1950407475233078,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/storage_cabinet_1783994579444161450_04f9c2e658fd4c3b9f3924d0566f30ee_1783994633233414204_f04fdace23714c7b81b75f8687e32f39/storage_cabinet.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/storage_cabinet_1783994579444161450_04f9c2e658fd4c3b9f3924d0566f30ee_1783994633233414204_f04fdace23714c7b81b75f8687e32f39/storage_cabinet.gltf"
+          ],
+          "rotation_wxyz": [
+            0.7071066440423536,
+            0.0015664158888522423,
+            0.001431623392540015,
+            0.707103734077883
+          ],
+          "status": "pass",
+          "translation": [
+            4.244954612171365,
+            2.192614667569124,
+            4.427250962615154e-05
+          ],
+          "world_bounds": [
+            4.049914165951097,
+            4.445082888042024,
+            1.8711552246658139,
+            2.5138453500577054,
+            -0.0008439043349661277,
+            1.200921689347245
+          ]
+        },
+        "student_desk_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.3508732371300459,
+              0.23007966058507562,
+              0.7181402218043804
+            ],
+            "minimum": [
+              -0.3508732371300459,
+              -0.23007966058507562,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "rotation_wxyz": [
+            0.0032246471301593106,
+            1.4069234783431581e-05,
+            0.0004887531309201884,
+            -0.9999946812725155
+          ],
+          "status": "pass",
+          "translation": [
+            -1.7519219348211539,
+            -2.011562914467101,
+            -0.00252862043085994
+          ],
+          "world_bounds": [
+            -2.104289665114263,
+            -1.3995721481283854,
+            -2.2446025961170446,
+            -1.7792252808088023,
+            -0.0027644816423464252,
+            0.7158471192025739
+          ]
+        },
+        "student_desk_1": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.3508732371300459,
+              0.23007966058507562,
+              0.7181402218043804
+            ],
+            "minimum": [
+              -0.3508732371300459,
+              -0.23007966058507562,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "rotation_wxyz": [
+            0.0036450547444760195,
+            -1.7426471768459332e-05,
+            -0.0004886449472095062,
+            0.9999932372263043
+          ],
+          "status": "pass",
+          "translation": [
+            -0.18907641080420562,
+            -1.9255977873152847,
+            -0.0025286204308599394
+          ],
+          "world_bounds": [
+            -0.5416452020194806,
+            0.16346479306665668,
+            -2.158930852349006,
+            -1.6929664574836125,
+            -0.0027644816423464252,
+            0.7158471192025739
+          ]
+        },
+        "student_desk_2": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.3508732371300459,
+              0.23007966058507562,
+              0.7181402218043804
+            ],
+            "minimum": [
+              -0.3508732371300459,
+              -0.23007966058507562,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "rotation_wxyz": [
+            0.011453638370503325,
+            1.00467384091191e-05,
+            0.0004888523595105345,
+            -0.9999342853860504
+          ],
+          "status": "pass",
+          "translation": [
+            1.2879938906584878,
+            -2.0116586946605954,
+            -0.00252862043085994
+          ],
+          "world_bounds": [
+            0.9319361713725306,
+            1.6440452228914184,
+            -2.250417145826758,
+            -1.7736024917133129,
+            -0.0027644816423464252,
+            0.7158471192025739
+          ]
+        },
+        "student_desk_3": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.3508732371300459,
+              0.23007966058507562,
+              0.7181402218043804
+            ],
+            "minimum": [
+              -0.3508732371300459,
+              -0.23007966058507562,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "rotation_wxyz": [
+            0.008440101102643042,
+            -1.9769382919899788e-05,
+            -0.0004885557673906268,
+            0.9999642621693091
+          ],
+          "status": "pass",
+          "translation": [
+            -1.7961741042262065,
+            -0.8165685599608535,
+            -0.00252862043085994
+          ],
+          "world_bounds": [
+            -2.1509153157164045,
+            -1.441467208544385,
+            -1.0532393757877458,
+            -0.5805991824995087,
+            -0.0027644816423464252,
+            0.7158471192025739
+          ]
+        },
+        "student_desk_4": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.3508732371300459,
+              0.23007966058507562,
+              0.7181402218043804
+            ],
+            "minimum": [
+              -0.3508732371300459,
+              -0.23007966058507562,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "rotation_wxyz": [
+            0.015213462721532319,
+            -2.3078307117948655e-05,
+            -0.0004884106449415779,
+            0.9998841490265031
+          ],
+          "status": "pass",
+          "translation": [
+            -0.38105471042499284,
+            -0.7395719690987725,
+            -0.0025286204308599394
+          ],
+          "world_bounds": [
+            -0.7388091440546583,
+            -0.023344092039234987,
+            -0.9809206903155001,
+            -0.4989241569915361,
+            -0.0027644816423464252,
+            0.7158471192025739
+          ]
+        },
+        "student_desk_5": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.3508732371300459,
+              0.23007966058507562,
+              0.7181402218043804
+            ],
+            "minimum": [
+              -0.3508732371300459,
+              -0.23007966058507562,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "rotation_wxyz": [
+            0.0013302527540451463,
+            1.4995102817013458e-05,
+            0.0004887256011743046,
+            -0.9999989956745177
+          ],
+          "status": "pass",
+          "translation": [
+            1.2346497475679563,
+            -0.8644769157911637,
+            -0.00252862043085994
+          ],
+          "world_bounds": [
+            0.8831450180407674,
+            1.5861338737108104,
+            -1.0961911212486108,
+            -0.6334646853018746,
+            -0.0027644816423464252,
+            0.7158471192025739
+          ]
+        },
+        "student_desk_6": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.3508732371300459,
+              0.23007966058507562,
+              0.7181402218043804
+            ],
+            "minimum": [
+              -0.3508732371300459,
+              -0.23007966058507562,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "rotation_wxyz": [
+            0.012481798434378305,
+            -2.174392022824407e-05,
+            -0.0004884718705153718,
+            0.9999219797715606
+          ],
+          "status": "pass",
+          "translation": [
+            -1.6626590444166365,
+            0.3910244632529671,
+            -0.0025286204308599394
+          ],
+          "world_bounds": [
+            -2.0192061002500807,
+            -1.3061519735265172,
+            0.151557082960395,
+            0.62979070549945,
+            -0.0027644816423464252,
+            0.7158471192025739
+          ]
+        },
+        "student_desk_7": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.3508732371300459,
+              0.23007966058507562,
+              0.7181402218043804
+            ],
+            "minimum": [
+              -0.3508732371300459,
+              -0.23007966058507562,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "rotation_wxyz": [
+            0.0084365721890491,
+            1.1521664041066224e-05,
+            0.0004888198212116637,
+            -0.9999642919485339
+          ],
+          "status": "pass",
+          "translation": [
+            -0.22504376364901355,
+            0.4068405229372142,
+            -0.00252862043085994
+          ],
+          "world_bounds": [
+            -0.5797597092339929,
+            0.12966155735456028,
+            0.17017140816619467,
+            0.6428074408173005,
+            -0.0027644816423464252,
+            0.7158471192025739
+          ]
+        },
+        "student_desk_8": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.3508732371300459,
+              0.23007966058507562,
+              0.7181402218043804
+            ],
+            "minimum": [
+              -0.3508732371300459,
+              -0.23007966058507562,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "rotation_wxyz": [
+            0.011230556240215473,
+            -2.1132663673962548e-05,
+            -0.0004884986969048346,
+            0.999936815768361
+          ],
+          "status": "pass",
+          "translation": [
+            1.2181566210075823,
+            0.3374482616440019,
+            -0.0025286204308599394
+          ],
+          "world_bounds": [
+            0.8621661482726577,
+            1.574108863633241,
+            0.09884500018888143,
+            0.5753502871801108,
+            -0.0027644816423464252,
+            0.7158471192025739
+          ]
+        },
+        "student_desk_9": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.3508732371300459,
+              0.23007966058507562,
+              0.7181402218043804
+            ],
+            "minimum": [
+              -0.3508732371300459,
+              -0.23007966058507562,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "rotation_wxyz": [
+            0.004177780485309104,
+            -1.7686785050340534e-05,
+            -0.0004886355942686342,
+            0.9999911534971948
+          ],
+          "status": "pass",
+          "translation": [
+            -1.7261303029556603,
+            1.6437015440788563,
+            -0.00252862043085994
+          ],
+          "world_bounds": [
+            -2.078942050336206,
+            -1.3733468905743558,
+            1.4099965966498322,
+            1.8767047860973378,
+            -0.0027644816423464252,
+            0.7158471192025739
+          ]
+        },
+        "student_desk_a": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.3508732371300459,
+              0.23007966058507562,
+              0.7181402218043804
+            ],
+            "minimum": [
+              -0.3508732371300459,
+              -0.23007966058507562,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "rotation_wxyz": [
+            0.011660606124307379,
+            9.945554749952984e-06,
+            0.0004888544285289784,
+            -0.9999318932743607
+          ],
+          "status": "pass",
+          "translation": [
+            -0.21334561030558627,
+            1.5807937074453386,
+            -0.00252862043085994
+          ],
+          "world_bounds": [
+            -0.5694949008246163,
+            0.1427975838658793,
+            1.3418922452462003,
+            1.8189929188417626,
+            -0.0027644816423464257,
+            0.7158471192025739
+          ]
+        },
+        "student_desk_b": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.3508732371300459,
+              0.23007966058507562,
+              0.7181402218043804
+            ],
+            "minimum": [
+              -0.3508732371300459,
+              -0.23007966058507562,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/student_desk_1783995550039356173_d6f232caab674b4d87914ca6a626870a_1783995587652418737_3eca9218a87940509f5fdaec8a2ccd64/student_desk.gltf"
+          ],
+          "rotation_wxyz": [
+            0.008738384103604448,
+            -1.99151153124434e-05,
+            -0.0004885498485659067,
+            0.9999617000494027
+          ],
+          "status": "pass",
+          "translation": [
+            1.2559550329614435,
+            1.5658614954140462,
+            -0.00252862043085994
+          ],
+          "world_bounds": [
+            0.9010797563329422,
+            1.6107955753179302,
+            1.32898376215887,
+            1.802037810900903,
+            -0.0027644816423464257,
+            0.7158471192025739
+          ]
+        },
+        "swivel_chair_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.30000001192092896,
+              0.2741166651248932,
+              0.7658475637435913
+            ],
+            "minimum": [
+              -0.30000001192092896,
+              -0.2741166651248932,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/swivel_chair_1783994522394949233_e8320976c8964fe2a1bec62aa657bf57_1783994579256969076_daa358cdc18840b1a6c2ffda39ff3cf5/swivel_chair.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/swivel_chair_1783994522394949233_e8320976c8964fe2a1bec62aa657bf57_1783994579256969076_daa358cdc18840b1a6c2ffda39ff3cf5/swivel_chair.gltf"
+          ],
+          "rotation_wxyz": [
+            3.7514867766917505e-06,
+            0.0009145055755553706,
+            -0.0010749019722863622,
+            0.9999990041251184
+          ],
+          "status": "pass",
+          "translation": [
+            -2.606568923955036,
+            3.063036122767672,
+            -0.0011480544919879481
+          ],
+          "world_bounds": [
+            -2.9065710296787453,
+            -2.3051660820686846,
+            2.7872720042707955,
+            3.33715381553583,
+            -0.002286054352411094,
+            0.7658344583816947
+          ]
+        },
+        "trash_bin_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.15000000596046448,
+              0.0906650498509407,
+              0.3613314628601074
+            ],
+            "minimum": [
+              -0.15000000596046448,
+              -0.0906650498509407,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/trash_bin_1783994759745241426_bb3f7a11914344769d8c1bcbbd63b7be_1783994817805121881_b6e68e0b6be04dbea3720218de3394c0/trash_bin.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/furniture/sdf/trash_bin_1783994759745241426_bb3f7a11914344769d8c1bcbbd63b7be_1783994817805121881_b6e68e0b6be04dbea3720218de3394c0/trash_bin.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9999875177189504,
+            -2.397172501608086e-05,
+            -3.867089175299305e-05,
+            -0.004996232201413377
+          ],
+          "status": "pass",
+          "translation": [
+            -3.5450001658439088,
+            2.135809023268318,
+            0.0009212403666368989
+          ],
+          "world_bounds": [
+            -3.6959264979161843,
+            -3.394101692890464,
+            2.043649649211923,
+            2.227985860210215,
+            0.0009052916065010026,
+            0.36226865049090906
+          ]
+        },
+        "water_bottle_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.03456820175051689,
+              0.03454159200191498,
+              0.23000000417232513
+            ],
+            "minimum": [
+              -0.03456820175051689,
+              -0.03454159200191498,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/manipuland/sdf/b09bd813f93c41218d97691f31beaefe_1784024793665943410_ec16c5525caf484dadb0e7299f65a21a/water_bottle.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/manipuland/sdf/b09bd813f93c41218d97691f31beaefe_1784024793665943410_ec16c5525caf484dadb0e7299f65a21a/water_bottle.gltf"
+          ],
+          "rotation_wxyz": [
+            0.16555576460502108,
+            -0.014330609835803676,
+            0.00246018633658486,
+            0.9860932359117824
+          ],
+          "status": "pass",
+          "translation": [
+            -2.010104598582253,
+            -0.6842619119930913,
+            0.715142976397116
+          ],
+          "world_bounds": [
+            -2.0603572129830696,
+            -1.9661650332179132,
+            -0.7281939216515277,
+            -0.6381225977344758,
+            0.714134135761227,
+            0.9460545685118307
+          ]
+        },
+        "whiteboard_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              1.7801952123641969,
+              0.1439999967813492,
+              0.7622989296913147
+            ],
+            "minimum": [
+              -1.7801952123641969,
+              -0.0,
+              -0.7622989296913147
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/wall_mounted/sdf/whiteboard_1783997580325889423_b84b80f3b34942a3ad351c29a0550d52_1783997619835176088_3ef6e73366cf47c9a23e615698e29756/whiteboard.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_04/generated_assets/wall_mounted/sdf/whiteboard_1783997580325889423_b84b80f3b34942a3ad351c29a0550d52_1783997619835176088_3ef6e73366cf47c9a23e615698e29756/whiteboard.gltf"
+          ],
+          "rotation_wxyz": [
+            6.123233995310198e-17,
+            1.1803720578173392e-05,
+            7.227694312044895e-22,
+            0.9999999999303362
+          ],
+          "status": "pass",
+          "translation": [
+            0.000772178604274032,
+            3.7,
+            1.6007743433793216
+          ],
+          "world_bounds": [
+            -1.7794410291909868,
+            1.7809853863995349,
+            3.5560000032186507,
+            3.7,
+            0.8384333880467059,
+            2.3631152987119375
+          ]
+        }
+      },
+      "profile": "school_reference_20260710",
+      "prompt_binding": {
+        "effective_prompt_sha256": "ac8d297cc9a2d605f41b4bcd7abd52aac29bfd0f195875840342ee1e6a7da86f",
+        "expected_room_prompt_sha256": "01e3cf876bf538d8974baebc21df0750091a6ae38c70052310ef253f4d5b3f17",
+        "issues": [],
+        "room_prompt_sha256": "01e3cf876bf538d8974baebc21df0750091a6ae38c70052310ef253f4d5b3f17",
+        "status": "pass"
+      },
+      "raw_matched_object_ids": {
+        "backpack": [
+          "kids_backpack_0",
+          "kids_backpack_1"
+        ],
+        "board_markers": [
+          "filled_container_0",
+          "filled_container_1"
+        ],
+        "bookshelf": [
+          "cubby_bookshelf_0"
+        ],
+        "clock": [
+          "clock_0"
+        ],
+        "display": [
+          "bulletin_board_0"
+        ],
+        "erasers": [
+          "filled_container_0",
+          "pencil_0",
+          "pencil_1",
+          "pencil_eraser_0"
+        ],
+        "folders": [
+          "file_folder_organizer_0",
+          "file_folder_organizer_1"
+        ],
+        "glue_sticks": [
+          "acceptance_glue_stick_0"
+        ],
+        "markers": [
+          "filled_container_0",
+          "filled_container_1"
+        ],
+        "notebooks": [
+          "spiral_notebook_0",
+          "spiral_notebook_1",
+          "stack_0"
+        ],
+        "paper_trays": [
+          "acceptance_paper_tray_0"
+        ],
+        "pencil_holders": [
+          "acceptance_pencil_holder_0"
+        ],
+        "plant": [
+          "potted_plant_0"
+        ],
+        "rulers": [
+          "acceptance_ruler_0"
+        ],
+        "scissors": [
+          "scissors_0"
+        ],
+        "storage": [
+          "storage_cabinet_0"
+        ],
+        "storage_bins": [
+          "acceptance_storage_bin_0"
+        ],
+        "student_chairs": [
+          "classroom_chair_0",
+          "classroom_chair_1",
+          "classroom_chair_2",
+          "classroom_chair_3",
+          "classroom_chair_4",
+          "classroom_chair_5",
+          "classroom_chair_6",
+          "classroom_chair_7",
+          "classroom_chair_8",
+          "classroom_chair_9",
+          "classroom_chair_a",
+          "classroom_chair_b"
+        ],
+        "student_desks": [
+          "student_desk_0",
+          "student_desk_1",
+          "student_desk_2",
+          "student_desk_3",
+          "student_desk_4",
+          "student_desk_5",
+          "student_desk_6",
+          "student_desk_7",
+          "student_desk_8",
+          "student_desk_9",
+          "student_desk_a",
+          "student_desk_b"
+        ],
+        "teacher_chair": [
+          "swivel_chair_0"
+        ],
+        "teacher_desk": [
+          "desk_0"
+        ],
+        "textbooks": [
+          "math_textbook_0",
+          "math_textbook_1",
+          "stack_1",
+          "stack_2"
+        ],
+        "trash": [
+          "trash_bin_0"
+        ],
+        "water_bottle": [
+          "water_bottle_0"
+        ],
+        "whiteboard": [
+          "acceptance_whiteboard_eraser_0",
+          "calendar_whiteboard_0",
+          "whiteboard_0"
+        ],
+        "whiteboard_eraser": [
+          "acceptance_whiteboard_eraser_0"
+        ],
+        "worksheets": [
+          "printed_worksheet_0"
+        ]
+      },
+      "raw_semantic_counts": {
+        "backpack": 2,
+        "board_markers": 2,
+        "bookshelf": 1,
+        "clock": 1,
+        "display": 1,
+        "erasers": 4,
+        "folders": 2,
+        "glue_sticks": 1,
+        "markers": 2,
+        "notebooks": 3,
+        "paper_trays": 1,
+        "pencil_holders": 1,
+        "plant": 1,
+        "rulers": 1,
+        "scissors": 1,
+        "storage": 1,
+        "storage_bins": 1,
+        "student_chairs": 12,
+        "student_desks": 12,
+        "teacher_chair": 1,
+        "teacher_desk": 1,
+        "textbooks": 4,
+        "trash": 1,
+        "water_bottle": 1,
+        "whiteboard": 3,
+        "whiteboard_eraser": 1,
+        "worksheets": 1
+      },
+      "repair_instructions": [],
+      "room_id": "classroom_04",
+      "spatial_checks": {
+        "desk_chair_pairing": {
+          "expected_pair_count": 12,
+          "invalid_physical_evidence_object_ids": [],
+          "maximum_axis_delta_degrees": 45.0,
+          "maximum_center_distance_m": 1.6,
+          "maximum_lateral_offset_m": 0.75,
+          "maximum_pair_overlap_ratio": 0.65,
+          "maximum_same_type_overlap_ratio": 0.1,
+          "minimum_axial_offset_m": 0.1,
+          "minimum_center_distance_m": 0.2,
+          "pair_count": 12,
+          "pairs": [
+            {
+              "axial_offset_m": 1.121,
+              "axis_delta_degrees": 1.5347,
+              "bottom_delta_m": 0.0018,
+              "center_distance_m": 1.121,
+              "chair_object_id": "classroom_chair_3",
+              "desk_object_id": "student_desk_0",
+              "horizontal_overlap_ratio": 0.0,
+              "lateral_offset_m": 0.0019
+            },
+            {
+              "axial_offset_m": 0.6453,
+              "axis_delta_degrees": 0.0207,
+              "bottom_delta_m": 0.0018,
+              "center_distance_m": 0.6544,
+              "chair_object_id": "classroom_chair_2",
+              "desk_object_id": "student_desk_1",
+              "horizontal_overlap_ratio": 0.0,
+              "lateral_offset_m": 0.1086
+            },
+            {
+              "axial_offset_m": 1.0534,
+              "axis_delta_degrees": 1.6069,
+              "bottom_delta_m": 0.0039,
+              "center_distance_m": 1.0587,
+              "chair_object_id": "classroom_chair_0",
+              "desk_object_id": "student_desk_2",
+              "horizontal_overlap_ratio": 0.0,
+              "lateral_offset_m": 0.1057
+            },
+            {
+              "axial_offset_m": 1.2984,
+              "axis_delta_degrees": 0.7122,
+              "bottom_delta_m": 0.0018,
+              "center_distance_m": 1.3004,
+              "chair_object_id": "classroom_chair_1",
+              "desk_object_id": "student_desk_3",
+              "horizontal_overlap_ratio": 0.0,
+              "lateral_offset_m": 0.0722
+            },
+            {
+              "axial_offset_m": 1.2915,
+              "axis_delta_degrees": 2.7586,
+              "bottom_delta_m": 0.0018,
+              "center_distance_m": 1.301,
+              "chair_object_id": "classroom_chair_9",
+              "desk_object_id": "student_desk_4",
+              "horizontal_overlap_ratio": 0.0,
+              "lateral_offset_m": 0.1564
+            },
+            {
+              "axial_offset_m": 1.2024,
+              "axis_delta_degrees": 0.1185,
+              "bottom_delta_m": 0.0018,
+              "center_distance_m": 1.2027,
+              "chair_object_id": "classroom_chair_8",
+              "desk_object_id": "student_desk_5",
+              "horizontal_overlap_ratio": 0.0,
+              "lateral_offset_m": 0.0275
+            },
+            {
+              "axial_offset_m": 1.1879,
+              "axis_delta_degrees": 1.9681,
+              "bottom_delta_m": 0.0018,
+              "center_distance_m": 1.1918,
+              "chair_object_id": "classroom_chair_6",
+              "desk_object_id": "student_desk_6",
+              "horizontal_overlap_ratio": 0.0,
+              "lateral_offset_m": 0.0966
+            },
+            {
+              "axial_offset_m": 1.1096,
+              "axis_delta_degrees": 1.9496,
+              "bottom_delta_m": 0.0018,
+              "center_distance_m": 1.1097,
+              "chair_object_id": "classroom_chair_5",
+              "desk_object_id": "student_desk_7",
+              "horizontal_overlap_ratio": 0.0,
+              "lateral_offset_m": 0.015
+            },
+            {
+              "axial_offset_m": 1.1596,
+              "axis_delta_degrees": 0.1686,
+              "bottom_delta_m": 0.0018,
+              "center_distance_m": 1.1621,
+              "chair_object_id": "classroom_chair_b",
+              "desk_object_id": "student_desk_8",
+              "horizontal_overlap_ratio": 0.0,
+              "lateral_offset_m": 0.076
+            },
+            {
+              "axial_offset_m": 1.3928,
+              "axis_delta_degrees": 1.3768,
+              "bottom_delta_m": 0.0018,
+              "center_distance_m": 1.3928,
+              "chair_object_id": "classroom_chair_4",
+              "desk_object_id": "student_desk_9",
+              "horizontal_overlap_ratio": 0.0,
+              "lateral_offset_m": 0.0009
+            },
+            {
+              "axial_offset_m": 1.2795,
+              "axis_delta_degrees": 1.1856,
+              "bottom_delta_m": 0.0018,
+              "center_distance_m": 1.2814,
+              "chair_object_id": "classroom_chair_7",
+              "desk_object_id": "student_desk_a",
+              "horizontal_overlap_ratio": 0.0,
+              "lateral_offset_m": 0.0692
+            },
+            {
+              "axial_offset_m": 1.3012,
+              "axis_delta_degrees": 0.3249,
+              "bottom_delta_m": 0.0018,
+              "center_distance_m": 1.3012,
+              "chair_object_id": "classroom_chair_a",
+              "desk_object_id": "student_desk_b",
+              "horizontal_overlap_ratio": 0.0,
+              "lateral_offset_m": 0.0121
+            }
+          ],
+          "same_type_clearance_issues": [],
+          "status": "pass"
+        }
+      },
+      "status": "pass"
+    },
+    "unknown_bbox_count": 0
+  },
+  "repair_instructions": [],
+  "review_images": [
+    "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/classroom_04_oblique_a.png",
+    "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/classroom_04_oblique_b.png",
+    "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/classroom_04_top.png"
+  ],
+  "room_id": "classroom_04",
+  "scores": {
+    "clearance_and_access": 10,
+    "collision_risk": 10,
+    "object_relevance": 8,
+    "placement_realism": 10,
+    "prompt_alignment": 8
+  },
+  "status": "pass"
+}
