@@ -1,0 +1,61 @@
+{
+  "attestation": "6f1b5b91920c1730077b7eeb613c135bc02522751f627725832e468ecb0378b0",
+  "checkpoint_runtime_sha256": "2b39c7bd572c1e0e607eb13cd8ed68f3b5a1e76db004f9f323d6c52da4ef9f1a",
+  "config_sha256": "74beff550ec1df422305a8e82ead5e96efed028a7c60fe24c4bda28c9581db3b",
+  "input_scene_content_hash": "90f0e699a984e5a0d995b653033a0961076424df73a2fe39f24184a6258ffc7f",
+  "room_id": "classroom_06",
+  "schema_version": 1,
+  "selections": [
+    {
+      "context_furniture_ids": [],
+      "furniture_id": "desk_0",
+      "prompt_constraints": "Prompt: \"Add believable school-use details including ... pencil/marker holders ... storage bins and paper trays\"",
+      "style_notes": "Teacher workstation; organized, work-ready; keep to 4–6 small items, leave writing space clear.",
+      "suggested_items": "REQUIRED: pencil/marker holder, paper tray(s). Optional: lesson planner/gradebook, stapler, sticky notes, coffee mug, laptop"
+    },
+    {
+      "context_furniture_ids": [],
+      "furniture_id": "classroom_storage_cabinet_0",
+      "prompt_constraints": "Use separate physical objects for the colored marker, board marker, and whiteboard eraser; keep them low and stable on the cabinet support.",
+      "style_notes": "Top surface only; low-profile and stable; 1–3 items with clear edges.",
+      "suggested_items": "REQUIRED: extra paper tray(s), one separate colored classroom marker, one dry-erase board marker, and one whiteboard eraser. Optional: stack of worksheets, tissue box"
+    },
+    {
+      "context_furniture_ids": [],
+      "furniture_id": "cubby_bookshelf_0",
+      "prompt_constraints": "Preserve labeled storage, textbooks, separate folder/worksheet, and two backpacks. Do not use open bins, filled-container composites, caddies, or loose glue/scissors in this cubby. Every base must be centered fully inside a compartment with no leaning, hanging, or overhang.",
+      "style_notes": "Use broad-base lidded totes and flat book/paper stacks in separate cubbies; keep backpacks in the lower row and preserve empty space and aisle access.",
+      "suggested_items": "REQUIRED: lidded low-profile labeled storage totes with broad flat bases; textbooks in short flat stacks; one folder and one separate worksheet laid flat; two backpacks fully supported inside lower cubbies. Optional: one closed rectangular pencil box"
+    },
+    {
+      "context_furniture_ids": [],
+      "furniture_id": "student_desk_0",
+      "prompt_constraints": "Use separate compact notebook, eraser, and water bottle objects with clear support.",
+      "style_notes": "Student surface; minimal set, 2–4 items; no clutter.",
+      "suggested_items": "REQUIRED: notebook, pencil eraser, water bottle. Optional: worksheet"
+    },
+    {
+      "context_furniture_ids": [],
+      "furniture_id": "student_desk_1",
+      "prompt_constraints": "Prompt: \"Add believable school-use details including textbooks, notebooks ... erasers/rulers\"",
+      "style_notes": "Keep book stack low; 2–4 items.",
+      "suggested_items": "REQUIRED: textbook, notebook, ruler. Optional: pencil case"
+    },
+    {
+      "context_furniture_ids": [],
+      "furniture_id": "student_desk_2",
+      "prompt_constraints": "Prompt: \"Add believable school-use details including ... folders/worksheets ... water bottles\"",
+      "style_notes": "Papers should be aligned; 2–4 items.",
+      "suggested_items": "REQUIRED: folder/worksheets. Optional: pencil/eraser, water bottle"
+    },
+    {
+      "context_furniture_ids": [],
+      "furniture_id": "student_desk_7",
+      "prompt_constraints": "This flat desk is the required glue/scissors evidence target rerouted from the cubby. Use separate visible objects with full broad contact, clear gaps, and generous distance from every desk edge.",
+      "style_notes": "Minimal safe-looking craft set: notebook flat, scissors closed and flat, capped glue horizontal, with the writing area and chair approach clear.",
+      "suggested_items": "REQUIRED: one closed notebook, one capped glue stick laid horizontally, and one pair of closed school scissors laid flat. Optional: one pencil"
+    }
+  ],
+  "selections_sha256": "a0a8d659731ac667599880a1089b4982c735e72035a3d153820f4a07536f0464",
+  "status": "pass"
+}
