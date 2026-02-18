@@ -1,0 +1,831 @@
+{
+  "contract_profile": "school_reference_20260710",
+  "critical_issues": [],
+  "metrics": {
+    "authorized_exterior_object_ids": [],
+    "contract_profile": "school_reference_20260710",
+    "factory_spatial_contract": null,
+    "max_collision_hulls": 32,
+    "object_count": 32,
+    "object_footprint_density": 0.2938,
+    "overflow_object_count": 0,
+    "room_depth": 4.0,
+    "room_width": 4.0,
+    "semantic_inventory": {
+      "canonical_requirements": "Create a clean compact boys school toilet with at least two toilet fixtures/stalls, at least two urinals, at least two sinks and mirrors, stall partitions, soap dispenser, paper-towel dispenser or hand dryer, trash bin, tiled floor/walls, and unblocked access.",
+      "counts": {
+        "drying": 1,
+        "mirrors": 2,
+        "partitions": 2,
+        "sinks": 2,
+        "soap": 1,
+        "toilets": 2,
+        "trash": 1,
+        "urinals": 2
+      },
+      "critical_issues": [],
+      "fixture_multiplicity_evidence": {
+        "urinal_station_0": {
+          "component_count": 2,
+          "component_object_ids": [
+            "urinal_station_0#urinal_left",
+            "urinal_station_0#urinal_right"
+          ],
+          "dimension_contract_status": "pass",
+          "measured_final_scene_dimensions_m": [
+            1.2999999523162842,
+            0.3866511285305023,
+            1.1221588850021362
+          ],
+          "parent_description": "School restroom urinal station with two white urinals, a central privacy divider panel, and a low stainless splash guard base (floor-standing)",
+          "parent_object_id": "urinal_station_0",
+          "policy": "verified_double_urinals_fixture_components",
+          "requirement_key": "urinals",
+          "status": "pass"
+        },
+        "vanity_0": {
+          "component_count": 2,
+          "component_object_ids": [
+            "vanity_0#sink_basin_left",
+            "vanity_0#sink_basin_right"
+          ],
+          "dimension_contract_status": "pass",
+          "measured_final_scene_dimensions_m": [
+            1.600000023841858,
+            0.5279305577278137,
+            0.9388718605041504
+          ],
+          "parent_description": "Double sink light-wood school restroom vanity with two white basins",
+          "parent_object_id": "vanity_0",
+          "policy": "verified_double_sinks_fixture_components",
+          "requirement_key": "sinks",
+          "status": "pass"
+        }
+      },
+      "invalid_physical_candidates": {},
+      "matched_object_ids": {
+        "drying": [
+          "boys_toilet_hand_dryer_contract_0"
+        ],
+        "mirrors": [
+          "mirror_1",
+          "mirror_0"
+        ],
+        "partitions": [
+          "privacy_screen_divider_2",
+          "privacy_screen_divider_0"
+        ],
+        "sinks": [
+          "vanity_0#sink_basin_right",
+          "vanity_0#sink_basin_left"
+        ],
+        "soap": [
+          "soap_dispenser_0"
+        ],
+        "toilets": [
+          "toilet_1",
+          "toilet_0"
+        ],
+        "trash": [
+          "trash_bin_0"
+        ],
+        "urinals": [
+          "urinal_station_0#urinal_right",
+          "urinal_station_0#urinal_left"
+        ]
+      },
+      "physical_object_evidence": {
+        "boys_toilet_hand_dryer_contract_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.18,
+              0.04,
+              0.52
+            ],
+            "minimum": [
+              -0.18,
+              -0.15,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/contract_evidence/boys_toilet_hand_dryer_contract_0_mesh_v1/accepted_contract_mesh.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/generated_assets/contract_evidence/boys_toilet_hand_dryer_contract_0_mesh_v1/accepted_contract_mesh.gltf"
+          ],
+          "rotation_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "status": "pass",
+          "translation": [
+            1.04,
+            1.88,
+            1.02
+          ],
+          "world_bounds": [
+            0.8600000000000001,
+            1.22,
+            1.73,
+            1.92,
+            1.02,
+            1.54
+          ]
+        },
+        "hand_hygiene_station_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.17499999701976776,
+              0.11960308998823166,
+              1.196494698524475
+            ],
+            "minimum": [
+              -0.17499999701976776,
+              -0.11960308998823166,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/hand_hygiene_station_1783996602255899211_7d56b600da124bee8c8adbdcbff4a050_1783996634528514578_65180cc43f224e0ea89fc24935733fd1/hand_hygiene_station.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/generated_assets/furniture/sdf/hand_hygiene_station_1783996602255899211_7d56b600da124bee8c8adbdcbff4a050_1783996634528514578_65180cc43f224e0ea89fc24935733fd1/hand_hygiene_station.gltf"
+          ],
+          "rotation_wxyz": [
+            0.002723857531495223,
+            0.0008428574682058923,
+            -0.0018923458841146287,
+            -0.9999941445921028
+          ],
+          "status": "pass",
+          "translation": [
+            1.5977035971346991,
+            1.8221218239014296,
+            -3.503201739041327e-05
+          ],
+          "world_bounds": [
+            1.4200259955447256,
+            1.7733519269326956,
+            1.7015674624905772,
+            1.947199028551419,
+            -0.0007814336855450956,
+            1.1971957989444357
+          ]
+        },
+        "mirror_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.38842520117759705,
+              0.028958559036254883,
+              0.44999998807907104
+            ],
+            "minimum": [
+              -0.38842520117759705,
+              -0.0,
+              -0.44999998807907104
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/wall_mounted/sdf/mirror_1784000954292310377_525ee7a7549d41228d64d75af520de27_1784000986737113008_7188a80a73174f1991cc7b6163c33b82/mirror.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/generated_assets/wall_mounted/sdf/mirror_1784000954292310377_525ee7a7549d41228d64d75af520de27_1784000986737113008_7188a80a73174f1991cc7b6163c33b82/mirror.gltf"
+          ],
+          "rotation_wxyz": [
+            6.123176215653185e-17,
+            -0.004344228176945331,
+            -2.6600725658309196e-19,
+            0.9999905637962524
+          ],
+          "status": "pass",
+          "translation": [
+            -0.478800955820456,
+            1.95,
+            1.5591800773154902
+          ],
+          "world_bounds": [
+            -0.8711212643918267,
+            -0.08648064724908539,
+            1.921041440963745,
+            1.95,
+            1.1058222907608404,
+            2.0125378638701403
+          ]
+        },
+        "mirror_1": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.38842520117759705,
+              0.028958559036254883,
+              0.44999998807907104
+            ],
+            "minimum": [
+              -0.38842520117759705,
+              -0.0,
+              -0.44999998807907104
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/wall_mounted/sdf/mirror_1784000954292310377_525ee7a7549d41228d64d75af520de27_1784000986737113008_7188a80a73174f1991cc7b6163c33b82/mirror.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/generated_assets/wall_mounted/sdf/mirror_1784000954292310377_525ee7a7549d41228d64d75af520de27_1784000986737113008_7188a80a73174f1991cc7b6163c33b82/mirror.gltf"
+          ],
+          "rotation_wxyz": [
+            6.123231372511106e-17,
+            0.0009256405032558618,
+            5.667913397367187e-20,
+            0.9999995715947376
+          ],
+          "status": "pass",
+          "translation": [
+            0.44372444476335104,
+            1.95,
+            1.5594854113173302
+          ],
+          "world_bounds": [
+            0.05446683312524542,
+            0.8329820564014567,
+            1.921041440963745,
+            1.95,
+            1.1087671104782149,
+            2.0102037121564456
+          ]
+        },
+        "privacy_screen_divider_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.4274931925535202,
+              0.17550000697374343,
+              1.4857291209697723
+            ],
+            "minimum": [
+              -0.4274931925535202,
+              -0.17550000697374343,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937_1783998029620032282_5a5aef64cae74e68adca642ad59f210f/privacy_screen_divider.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/generated_assets/furniture/sdf/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937_1783998029620032282_5a5aef64cae74e68adca642ad59f210f/privacy_screen_divider.gltf"
+          ],
+          "rotation_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "status": "pass",
+          "translation": [
+            -1.5,
+            1.36,
+            0.002
+          ],
+          "world_bounds": [
+            -1.9274931925535201,
+            -1.0725068074464799,
+            1.1844999930262567,
+            1.5355000069737434,
+            0.002,
+            1.4877291209697723
+          ]
+        },
+        "privacy_screen_divider_2": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.4274931925535202,
+              0.17550000697374343,
+              1.4857291209697723
+            ],
+            "minimum": [
+              -0.4274931925535202,
+              -0.17550000697374343,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937_1783998029620032282_5a5aef64cae74e68adca642ad59f210f/privacy_screen_divider.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/generated_assets/furniture/sdf/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937_1783998029620032282_5a5aef64cae74e68adca642ad59f210f/privacy_screen_divider.gltf"
+          ],
+          "rotation_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "status": "pass",
+          "translation": [
+            -1.5,
+            0.23,
+            0.002
+          ],
+          "world_bounds": [
+            -1.9274931925535201,
+            -1.0725068074464799,
+            0.05449999302625658,
+            0.40550000697374344,
+            0.002,
+            1.4877291209697723
+          ]
+        },
+        "privacy_screen_divider_3": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.4274931925535202,
+              0.17550000697374343,
+              1.4857291209697723
+            ],
+            "minimum": [
+              -0.4274931925535202,
+              -0.17550000697374343,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937_1783998029620032282_5a5aef64cae74e68adca642ad59f210f/privacy_screen_divider.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/generated_assets/furniture/sdf/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937_1783998029620032282_5a5aef64cae74e68adca642ad59f210f/privacy_screen_divider.gltf"
+          ],
+          "rotation_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "status": "pass",
+          "translation": [
+            -1.5,
+            -0.9,
+            0.002
+          ],
+          "world_bounds": [
+            -1.9274931925535201,
+            -1.0725068074464799,
+            -1.0755000069737435,
+            -0.7244999930262566,
+            0.002,
+            1.4877291209697723
+          ]
+        },
+        "privacy_screen_divider_4": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.4274931925535202,
+              0.17550000697374343,
+              1.4857291209697723
+            ],
+            "minimum": [
+              -0.4274931925535202,
+              -0.17550000697374343,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937_1783998029620032282_5a5aef64cae74e68adca642ad59f210f/privacy_screen_divider.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/generated_assets/furniture/sdf/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937_1783998029620032282_5a5aef64cae74e68adca642ad59f210f/privacy_screen_divider.gltf"
+          ],
+          "rotation_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "status": "pass",
+          "translation": [
+            -0.62,
+            0.23,
+            0.002
+          ],
+          "world_bounds": [
+            -1.0474931925535202,
+            -0.1925068074464798,
+            0.05449999302625658,
+            0.40550000697374344,
+            0.002,
+            1.4877291209697723
+          ]
+        },
+        "soap_dispenser_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.05559748783707619,
+              0.10000000149011612,
+              0.11051756143569946
+            ],
+            "minimum": [
+              -0.05559748783707619,
+              -2.4587366336071186e-17,
+              -0.11051756143569946
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/wall_mounted/sdf/soap_dispenser_1784001488208210130_6bc1ad8aff674f538e7b5c1420325fac_1784001526214531219_5cbce04f1c9745ddbc2c5b45de8060df/soap_dispenser.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/generated_assets/wall_mounted/sdf/soap_dispenser_1784001488208210130_6bc1ad8aff674f538e7b5c1420325fac_1784001526214531219_5cbce04f1c9745ddbc2c5b45de8060df/soap_dispenser.gltf"
+          ],
+          "rotation_wxyz": [
+            6.122975000728079e-17,
+            -0.009197412707887811,
+            -5.631791016575998e-19,
+            0.9999577029052183
+          ],
+          "status": "pass",
+          "translation": [
+            -0.4643483348376525,
+            1.95,
+            0.9892906859073737
+          ],
+          "world_bounds": [
+            -0.5219692816848661,
+            -0.4067273879904389,
+            1.8499999985098838,
+            1.95,
+            0.8777691595384943,
+            1.100812212276253
+          ]
+        },
+        "soap_dispenser_1": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.05559748783707619,
+              0.10000000149011612,
+              0.11051756143569946
+            ],
+            "minimum": [
+              -0.05559748783707619,
+              -2.4587366336071186e-17,
+              -0.11051756143569946
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/wall_mounted/sdf/soap_dispenser_1784001488208210130_6bc1ad8aff674f538e7b5c1420325fac_1784001526214531219_5cbce04f1c9745ddbc2c5b45de8060df/soap_dispenser.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/generated_assets/wall_mounted/sdf/soap_dispenser_1784001488208210130_6bc1ad8aff674f538e7b5c1420325fac_1784001526214531219_5cbce04f1c9745ddbc2c5b45de8060df/soap_dispenser.gltf"
+          ],
+          "rotation_wxyz": [
+            6.123233217324602e-17,
+            -0.0005042307914582834,
+            -3.087523123954616e-20,
+            0.9999998728756464
+          ],
+          "status": "pass",
+          "translation": [
+            0.48619365743755383,
+            1.95,
+            0.9734692268219822
+          ],
+          "world_bounds": [
+            0.4304847451708775,
+            0.5419025697042301,
+            1.8499999985098838,
+            1.95,
+            0.8628956536607106,
+            1.0840427999832538
+          ]
+        },
+        "soap_dispenser_stand_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.12366265058517456,
+              0.125,
+              0.7183693647384644
+            ],
+            "minimum": [
+              -0.12366265058517456,
+              -0.125,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/soap_dispenser_stand_1783997456359838975_74f694967bbb4ef4868aeeb661d4bc3f_1783997492696480703_b5e6ff14bd994d7b97cef66df5b29323/soap_dispenser_stand.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/generated_assets/furniture/sdf/soap_dispenser_stand_1783997456359838975_74f694967bbb4ef4868aeeb661d4bc3f_1783997492696480703_b5e6ff14bd994d7b97cef66df5b29323/soap_dispenser_stand.gltf"
+          ],
+          "rotation_wxyz": [
+            0.0029489294856498423,
+            -0.00020269284036605298,
+            1.1750800647173258e-05,
+            -0.9999956312866672
+          ],
+          "status": "pass",
+          "translation": [
+            0.7698694790995343,
+            1.1922181022156302,
+            0.000768860666868389
+          ],
+          "world_bounds": [
+            0.6454717609069651,
+            0.8945584624600793,
+            1.0664749100412199,
+            1.3179452704107821,
+            0.0007156512694230584,
+            0.7191913755768606
+          ]
+        },
+        "toilet_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.20000000298023224,
+              0.3040575087070465,
+              0.6981542110443115
+            ],
+            "minimum": [
+              -0.20000000298023224,
+              -0.3040575087070465,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/toilet_1783996233703025590_c36d10f7793548a983256b5076f6521c_1783996274512886517_042000bab26242408f87146c75a37580/toilet.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/generated_assets/furniture/sdf/toilet_1783996233703025590_c36d10f7793548a983256b5076f6521c_1783996274512886517_042000bab26242408f87146c75a37580/toilet.gltf"
+          ],
+          "rotation_wxyz": [
+            0.7071066145671373,
+            0.00015379706799718636,
+            6.075204101174959e-05,
+            -0.7071069284705485
+          ],
+          "status": "pass",
+          "translation": [
+            -1.6359693580602155,
+            0.8413868473327761,
+            0.002195399748933426
+          ],
+          "world_bounds": [
+            -1.9401188159716185,
+            -1.3319117671927927,
+            0.6411748797973698,
+            1.0413869821557138,
+            0.002094706540898142,
+            0.700450265820136
+          ]
+        },
+        "toilet_1": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.20000000298023224,
+              0.3040575087070465,
+              0.6981542110443115
+            ],
+            "minimum": [
+              -0.20000000298023224,
+              -0.3040575087070465,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/toilet_1783996233703025590_c36d10f7793548a983256b5076f6521c_1783996274512886517_042000bab26242408f87146c75a37580/toilet.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/generated_assets/furniture/sdf/toilet_1783996233703025590_c36d10f7793548a983256b5076f6521c_1783996274512886517_042000bab26242408f87146c75a37580/toilet.gltf"
+          ],
+          "rotation_wxyz": [
+            0.7071066145010408,
+            0.0001537970680028731,
+            6.075204099737541e-05,
+            -0.7071069285366449
+          ],
+          "status": "pass",
+          "translation": [
+            -1.6359693568176095,
+            -0.3803643556291404,
+            -0.0002974607711203755
+          ],
+          "world_bounds": [
+            -1.9401188147664419,
+            -1.3319117659127968,
+            -0.5805763232213729,
+            -0.18036422074935948,
+            -0.00039815397915566496,
+            0.6979574053000822
+          ]
+        },
+        "trash_bin_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.12879188358783722,
+              0.1599999964237213,
+              0.385342538356781
+            ],
+            "minimum": [
+              -0.12879188358783722,
+              -0.1599999964237213,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/trash_bin_1783996778470052291_3b8fddc5d644435d8222f197165ee9e3_1783996822417929250_d64c3fe9c06b45d7993058178c513fad/trash_bin.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/generated_assets/furniture/sdf/trash_bin_1783996778470052291_3b8fddc5d644435d8222f197165ee9e3_1783996822417929250_d64c3fe9c06b45d7993058178c513fad/trash_bin.gltf"
+          ],
+          "rotation_wxyz": [
+            0.9999992384259367,
+            3.1258992505495044e-05,
+            -0.0009046815860399369,
+            -0.0008388811894287911
+          ],
+          "status": "pass",
+          "translation": [
+            0.609576756701409,
+            -1.7244766331659522,
+            0.0006673872147096626
+          ],
+          "world_bounds": [
+            0.4798195882033016,
+            0.7386366809236142,
+            -1.8847159993149079,
+            -1.5642607729490872,
+            0.00042411713139316876,
+            0.386252564135497
+          ]
+        },
+        "urinal_station_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.6499999761581421,
+              0.19332556426525116,
+              1.1221588850021362
+            ],
+            "minimum": [
+              -0.6499999761581421,
+              -0.19332556426525116,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/urinal_station_1783995110852370780_0d7de3781fbd405b96a3fda3b5a10034_1783995163313831210_ab7d04f1af9743949220df14ab46baee/urinal_station.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/generated_assets/furniture/sdf/urinal_station_1783995110852370780_0d7de3781fbd405b96a3fda3b5a10034_1783995163313831210_ab7d04f1af9743949220df14ab46baee/urinal_station.gltf"
+          ],
+          "rotation_wxyz": [
+            0.7074279086526734,
+            0.002522449651800856,
+            0.002750983077366304,
+            0.7067756528058725
+          ],
+          "status": "pass",
+          "translation": [
+            1.7474748160898226,
+            0.5552112322893991,
+            -0.00043076176132905426
+          ],
+          "world_bounds": [
+            1.5535559190022408,
+            1.9497626130097927,
+            -0.0949669942320911,
+            1.205748272657043,
+            -0.0020848094845115966,
+            1.1233509061358946
+          ]
+        },
+        "vanity_0": {
+          "issues": [],
+          "local_bounds": {
+            "maximum": [
+              0.800000011920929,
+              0.26396527886390686,
+              0.9388718605041504
+            ],
+            "minimum": [
+              -0.800000011920929,
+              -0.26396527886390686,
+              0.0
+            ]
+          },
+          "mesh_paths": [
+            "generated_assets/furniture/sdf/vanity_1783995359487764453_3336437df54c4eb2a8e29af5eb646242_1783995399196662835_dfbb933473934c0691994d52e54288f4/vanity.gltf"
+          ],
+          "resolved_mesh_paths": [
+            "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/generated_assets/furniture/sdf/vanity_1783995359487764453_3336437df54c4eb2a8e29af5eb646242_1783995399196662835_dfbb933473934c0691994d52e54288f4/vanity.gltf"
+          ],
+          "rotation_wxyz": [
+            7.809266323063e-06,
+            0.00023342629681566966,
+            0.0005377948693487449,
+            0.9999998281139142
+          ],
+          "status": "pass",
+          "translation": [
+            -0.01816083284811967,
+            1.6766220349221612,
+            -2.4962225726590098e-05
+          ],
+          "world_bounds": [
+            -0.8181648139665432,
+            0.7822814708442444,
+            1.4126442130993773,
+            1.941609694087561,
+            -0.0006823567812222937,
+            0.9395036474324516
+          ]
+        }
+      },
+      "profile": "school_reference_20260710",
+      "prompt_binding": {
+        "effective_prompt_sha256": "ac8d297cc9a2d605f41b4bcd7abd52aac29bfd0f195875840342ee1e6a7da86f",
+        "expected_room_prompt_sha256": "64224f9f9f41ccac84a93ae4e5ad834a2c52e04623f0ec4a959f50dc07c78416",
+        "issues": [],
+        "room_prompt_sha256": "64224f9f9f41ccac84a93ae4e5ad834a2c52e04623f0ec4a959f50dc07c78416",
+        "status": "pass"
+      },
+      "raw_matched_object_ids": {
+        "drying": [
+          "boys_toilet_hand_dryer_contract_0",
+          "hand_hygiene_station_0"
+        ],
+        "mirrors": [
+          "mirror_0",
+          "mirror_1"
+        ],
+        "partitions": [
+          "privacy_screen_divider_0",
+          "privacy_screen_divider_2",
+          "privacy_screen_divider_3",
+          "privacy_screen_divider_4"
+        ],
+        "sinks": [
+          "vanity_0#sink_basin_left",
+          "vanity_0#sink_basin_right"
+        ],
+        "soap": [
+          "soap_dispenser_0",
+          "soap_dispenser_1",
+          "soap_dispenser_stand_0"
+        ],
+        "toilets": [
+          "toilet_0",
+          "toilet_1"
+        ],
+        "trash": [
+          "trash_bin_0"
+        ],
+        "urinals": [
+          "urinal_station_0#urinal_left",
+          "urinal_station_0#urinal_right"
+        ]
+      },
+      "raw_semantic_counts": {
+        "drying": 2,
+        "mirrors": 2,
+        "partitions": 4,
+        "sinks": 2,
+        "soap": 3,
+        "toilets": 2,
+        "trash": 1,
+        "urinals": 2
+      },
+      "repair_instructions": [],
+      "room_id": "boys_toilet",
+      "spatial_checks": {},
+      "status": "pass"
+    },
+    "unknown_bbox_count": 0
+  },
+  "repair_instructions": [],
+  "review_images": [
+    "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/boys_toilet_oblique_a.png",
+    "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/boys_toilet_oblique_b.png",
+    "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/boys_toilet_top.png"
+  ],
+  "room_id": "boys_toilet",
+  "scores": {
+    "clearance_and_access": 10,
+    "collision_risk": 10,
+    "object_relevance": 8,
+    "placement_realism": 10,
+    "prompt_alignment": 8
+  },
+  "status": "pass"
+}
