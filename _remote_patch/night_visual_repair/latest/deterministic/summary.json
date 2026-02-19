@@ -1,0 +1,16 @@
+{
+  "contract_profile": "school_reference_20260710",
+  "failed_rooms": [],
+  "gate_dir": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/quality_gates/room_self_exam_deterministic",
+  "passed_rooms": [
+    "classroom_01"
+  ],
+  "production_mode": true,
+  "prompt_binding": {
+    "effective_prompt_sha256": "ac8d297cc9a2d605f41b4bcd7abd52aac29bfd0f195875840342ee1e6a7da86f",
+    "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/quality_gates/room_prompt_binding.json",
+    "sha256": "1d237196da20507455a2b75abc7a9059ab19139fff20ec77c449c4529aed5c2e"
+  },
+  "room_count": 1,
+  "status": "pass"
+}
