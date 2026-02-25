@@ -1,0 +1,3429 @@
+{
+  "objects": {
+    "boys_toilet_hand_dryer_contract_0": {
+      "bbox_max": [
+        0.18,
+        0.04,
+        0.52
+      ],
+      "bbox_min": [
+        -0.18,
+        -0.15,
+        0.0
+      ],
+      "description": "Clearly recognizable wall-mounted electric hand dryer with air outlet and blue airflow marks",
+      "geometry_path": null,
+      "image_path": null,
+      "immutable": false,
+      "metadata": {
+        "asset_source": "architectural_contract_repair",
+        "collision_policy": "collisionless_wall_finish_above_robot_contact_volume",
+        "deterministic_mesh_contract": "real hashable mesh companion for accepted visible contract geometry",
+        "deterministic_mesh_evidence": {
+          "members": [
+            {
+              "geometry_path": "generated_assets/contract_evidence/boys_toilet_hand_dryer_contract_0_mesh_v1/accepted_contract_mesh.gltf"
+            }
+          ],
+          "purpose": "hashable mesh evidence only; never instantiated as duplicate scene geometry"
+        },
+        "semantic_role": "hand_drying_fixture"
+      },
+      "name": "wall_mounted_hand_dryer",
+      "object_id": "boys_toilet_hand_dryer_contract_0",
+      "object_type": "wall_mounted",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/architectural/wall_mounted_hand_dryer_contract_v1/hand_dryer.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translation": [
+          1.04,
+          1.88,
+          1.02
+        ]
+      }
+    },
+    "boys_toilet_warm_sconce_contract_0": {
+      "bbox_max": [
+        0.18,
+        0.04,
+        0.46
+      ],
+      "bbox_min": [
+        -0.18,
+        -0.15,
+        0.0
+      ],
+      "description": "Visible amber wall sconce providing a warm neutral restroom lighting cue",
+      "geometry_path": null,
+      "image_path": null,
+      "immutable": false,
+      "metadata": {
+        "asset_source": "architectural_contract_repair",
+        "collision_policy": "collisionless_high_wall_fixture",
+        "lighting_type": "warm_amber_wall_sconce"
+      },
+      "name": "warm_restroom_wall_sconce",
+      "object_id": "boys_toilet_warm_sconce_contract_0",
+      "object_type": "wall_mounted",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/architectural/warm_restroom_sconce_contract_v1/warm_sconce.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translation": [
+          -1.15,
+          1.91,
+          2.18
+        ]
+      }
+    },
+    "boys_toilet_warm_sconce_contract_1": {
+      "bbox_max": [
+        0.18,
+        0.04,
+        0.46
+      ],
+      "bbox_min": [
+        -0.18,
+        -0.15,
+        0.0
+      ],
+      "description": "Visible amber wall sconce providing a warm neutral restroom lighting cue",
+      "geometry_path": null,
+      "image_path": null,
+      "immutable": false,
+      "metadata": {
+        "asset_source": "architectural_contract_repair",
+        "collision_policy": "collisionless_high_wall_fixture",
+        "lighting_type": "warm_amber_wall_sconce"
+      },
+      "name": "warm_restroom_wall_sconce",
+      "object_id": "boys_toilet_warm_sconce_contract_1",
+      "object_type": "wall_mounted",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/architectural/warm_restroom_sconce_contract_v1/warm_sconce.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translation": [
+          1.2,
+          1.91,
+          2.18
+        ]
+      }
+    },
+    "bulletin_board_0": {
+      "bbox_max": [
+        0.3205917179584503,
+        0.026037830859422684,
+        0.44999998807907104
+      ],
+      "bbox_min": [
+        -0.3205917179584503,
+        -0.0,
+        -0.44999998807907104
+      ],
+      "description": "Wall-mounted cork bulletin board with thin aluminum frame, about 70cm wide and 90cm tall",
+      "geometry_path": "generated_assets/wall_mounted/sdf/bulletin_board_1784001110811485784_3542d64781bf461ea82969853f7850d9_1784001148609426853_2db12873a1554f9296f8e9eed32b211f/bulletin_board.gltf",
+      "image_path": "generated_assets/wall_mounted/images/bulletin_board_1784001110811485784_3542d64781bf461ea82969853f7850d9.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "03b21be6c9030c38393d047b39fb711d55bfce0cd7751a2aa95d454d3b9379f9",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            0.9159763400139415,
+            1.0
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.6411834359169006,
+            0.8999999761581421,
+            0.026037830859422684
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.6411834359169006,
+            0.026037830859422684,
+            0.8999999761581421
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.7130903899669647,
+            1.000932514667511,
+            0.028957901522517204
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.641183438009759,
+            0.9,
+            0.026037830711217104
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "430863609c0f217b06a61e85025c51311873ecc3be3349d5d624a713cf59a445",
+          "requested_gltf_dimensions_m": [
+            0.7,
+            0.9,
+            0.05
+          ],
+          "requested_scene_dimensions_m": [
+            0.7,
+            0.05,
+            0.9
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "26ef766f358726a8714480b055d9b277edf694ac8632b3f28bc4538ca2a4b8ae",
+          "sdf_visual_uri": "bulletin_board.gltf",
+          "source_geometry_sha256": "6f760b6f6c26ac18d0ecb0c56680a7b35c426fa1203d95eb496c1a8cffb7f663",
+          "source_gltf_dimensions_m": [
+            0.7130903899669647,
+            1.000932514667511,
+            0.028957901522517204
+          ],
+          "status": "pass",
+          "uniform_scale": 0.8991615186953551,
+          "visual_mesh_sha256": "a30744ec31e25be9d2d7c21f6673da02880e03a66de390852dcd7bca72f7993c",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1784001159.9697185
+      },
+      "name": "bulletin_board",
+      "object_id": "bulletin_board_0",
+      "object_type": "wall_mounted",
+      "placement_info": {
+        "parent_surface_id": "boys_toilet_south",
+        "placement_method": "wall_placement",
+        "position_2d": [
+          1.3166032779814452,
+          1.712708868816959
+        ],
+        "rotation_2d": 0.014262680420764935
+      },
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/wall_mounted/sdf/bulletin_board_1784001110811485784_3542d64781bf461ea82969853f7850d9_1784001148609426853_2db12873a1554f9296f8e9eed32b211f/bulletin_board.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          0.9999745721011656,
+          -4.366649469187755e-19,
+          0.007131279765280869,
+          -6.12307829476219e-17
+        ],
+        "translation": [
+          0.6833967220185548,
+          -1.95,
+          1.712708868816959
+        ]
+      }
+    },
+    "ceiling_panel_light_0": {
+      "bbox_max": [
+        0.3100000023841858,
+        0.24634331464767456,
+        0.0
+      ],
+      "bbox_min": [
+        -0.3100000023841858,
+        -0.24634331464767456,
+        -0.023294219747185707
+      ],
+      "description": "Moisture-rated 600x600mm flush LED ceiling panel light, white frame, diffuse lens, neutral warm white 3500K",
+      "geometry_path": "generated_assets/ceiling_mounted/sdf/ceiling_panel_light_1784002447164502466_9d29d6b835f3420b8ce4fa423127210e_1784002478655784375_d11acd2e6fc84ae380bf38d55c93ab5b/ceiling_panel_light.gltf",
+      "image_path": "generated_assets/ceiling_mounted/images/ceiling_panel_light_1784002447164502466_9d29d6b835f3420b8ce4fa423127210e.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "2e863c14e24ca1be81dba349c777db32624befcc4514be4e1cfb8ff11e8342c3",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            1.0,
+            0.7946558623767567
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.6200000047683716,
+            0.023294219747185707,
+            0.4926866292953491
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.6200000047683716,
+            0.4926866292953491,
+            0.023294219747185707
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            1.0007176995277405,
+            0.03759828768670559,
+            0.7952261865139008
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.62,
+            0.02329422011498186,
+            0.49268663467358914
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "e2bd46cf794c3901092108cc4c0d5f86783b21a69a7f60454891d5e141837928",
+          "requested_gltf_dimensions_m": [
+            0.62,
+            0.06,
+            0.62
+          ],
+          "requested_scene_dimensions_m": [
+            0.62,
+            0.62,
+            0.06
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "bcc3d12d856737a49d9e752293b016713f529a13c3305cebe15616681c290336",
+          "sdf_visual_uri": "ceiling_panel_light.gltf",
+          "source_geometry_sha256": "fdcbd7f5bcc0e3c6b7c4ea88e104bbe382004b52aa381117680bf7c1db1577e4",
+          "source_gltf_dimensions_m": [
+            1.0007176995277405,
+            0.03759828768670559,
+            0.7952261865139008
+          ],
+          "status": "pass",
+          "uniform_scale": 0.6195553454211821,
+          "visual_mesh_sha256": "cd9af53ed24daec7e6a5c0df9029fc14dc822883f437b301b4af4f44fe828813",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1784002493.637185
+      },
+      "name": "ceiling_panel_light",
+      "object_id": "ceiling_panel_light_0",
+      "object_type": "ceiling_mounted",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/ceiling_mounted/sdf/ceiling_panel_light_1784002447164502466_9d29d6b835f3420b8ce4fa423127210e_1784002478655784375_d11acd2e6fc84ae380bf38d55c93ab5b/ceiling_panel_light.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translation": [
+          0.0,
+          1.08,
+          3.2
+        ]
+      }
+    },
+    "ceiling_panel_light_1": {
+      "bbox_max": [
+        0.3100000023841858,
+        0.24634331464767456,
+        0.0
+      ],
+      "bbox_min": [
+        -0.3100000023841858,
+        -0.24634331464767456,
+        -0.023294219747185707
+      ],
+      "description": "Moisture-rated 600x600mm flush LED ceiling panel light, white frame, diffuse lens, neutral warm white 3500K",
+      "geometry_path": "generated_assets/ceiling_mounted/sdf/ceiling_panel_light_1784002447164502466_9d29d6b835f3420b8ce4fa423127210e_1784002478655784375_d11acd2e6fc84ae380bf38d55c93ab5b/ceiling_panel_light.gltf",
+      "image_path": "generated_assets/ceiling_mounted/images/ceiling_panel_light_1784002447164502466_9d29d6b835f3420b8ce4fa423127210e.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "2e863c14e24ca1be81dba349c777db32624befcc4514be4e1cfb8ff11e8342c3",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            1.0,
+            0.7946558623767567
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.6200000047683716,
+            0.023294219747185707,
+            0.4926866292953491
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.6200000047683716,
+            0.4926866292953491,
+            0.023294219747185707
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            1.0007176995277405,
+            0.03759828768670559,
+            0.7952261865139008
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.62,
+            0.02329422011498186,
+            0.49268663467358914
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "e2bd46cf794c3901092108cc4c0d5f86783b21a69a7f60454891d5e141837928",
+          "requested_gltf_dimensions_m": [
+            0.62,
+            0.06,
+            0.62
+          ],
+          "requested_scene_dimensions_m": [
+            0.62,
+            0.62,
+            0.06
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "bcc3d12d856737a49d9e752293b016713f529a13c3305cebe15616681c290336",
+          "sdf_visual_uri": "ceiling_panel_light.gltf",
+          "source_geometry_sha256": "fdcbd7f5bcc0e3c6b7c4ea88e104bbe382004b52aa381117680bf7c1db1577e4",
+          "source_gltf_dimensions_m": [
+            1.0007176995277405,
+            0.03759828768670559,
+            0.7952261865139008
+          ],
+          "status": "pass",
+          "uniform_scale": 0.6195553454211821,
+          "visual_mesh_sha256": "cd9af53ed24daec7e6a5c0df9029fc14dc822883f437b301b4af4f44fe828813",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1784002493.637185
+      },
+      "name": "ceiling_panel_light",
+      "object_id": "ceiling_panel_light_1",
+      "object_type": "ceiling_mounted",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/ceiling_mounted/sdf/ceiling_panel_light_1784002447164502466_9d29d6b835f3420b8ce4fa423127210e_1784002478655784375_d11acd2e6fc84ae380bf38d55c93ab5b/ceiling_panel_light.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translation": [
+          0.0,
+          -1.0,
+          3.2
+        ]
+      }
+    },
+    "east_wall": {
+      "bbox_max": [
+        0.025,
+        2.0,
+        1.6
+      ],
+      "bbox_min": [
+        -0.025,
+        -2.0,
+        -1.6
+      ],
+      "description": "Room east_wall",
+      "geometry_path": null,
+      "image_path": null,
+      "immutable": true,
+      "metadata": {},
+      "name": "east_wall",
+      "object_id": "east_wall",
+      "object_type": "wall",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": null,
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translation": [
+          1.975,
+          0.0,
+          1.6
+        ]
+      }
+    },
+    "exhaust_fan_0": {
+      "bbox_max": [
+        0.17499999701976776,
+        0.14677545428276062,
+        0.0
+      ],
+      "bbox_min": [
+        -0.17499999701976776,
+        -0.14677545428276062,
+        -0.0299757681787014
+      ],
+      "description": "Ceiling-mounted restroom exhaust ventilation grille/fan, square or slightly rectangular white metal grille with slats, low-profile flush mount",
+      "geometry_path": "generated_assets/ceiling_mounted/sdf/exhaust_fan_1784003011999211846_39c95e960de9441da6cc29e9f6163691_1784003047192743500_7f20ad943a9d491499d80d51713f0870/exhaust_fan.gltf",
+      "image_path": "generated_assets/ceiling_mounted/images/exhaust_fan_1784003011999211846_39c95e960de9441da6cc29e9f6163691.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "d31e2596b10dc983025858b8bb8466f9180c37c62faf91c9ee550f603c97d049",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            1.0,
+            0.8387168499991451
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.3499999940395355,
+            0.0299757681787014,
+            0.29355090856552124
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.3499999940395355,
+            0.29355090856552124,
+            0.0299757681787014
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            1.0004252791404724,
+            0.0856814756989479,
+            0.8390735387802124
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.35,
+            0.029975768425600728,
+            0.29355089749970076
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "23cdc1eedb5c417a3efd98dd0dd0da5bf79b042f1354f4a1bfb0b7cd4dfb323b",
+          "requested_gltf_dimensions_m": [
+            0.35,
+            0.08,
+            0.35
+          ],
+          "requested_scene_dimensions_m": [
+            0.35,
+            0.35,
+            0.08
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "f51f89276233f50476e6848b98745b6ce1943169229f11d6f4350406f3abee74",
+          "sdf_visual_uri": "exhaust_fan.gltf",
+          "source_geometry_sha256": "cd4e6be04204dbef8c5c5cca62dfd95ad856e37e7c191f2ea1c30cb4a09ee6ce",
+          "source_gltf_dimensions_m": [
+            1.0004252791404724,
+            0.0856814756989479,
+            0.8390735387802124
+          ],
+          "status": "pass",
+          "uniform_scale": 0.3498512155757467,
+          "visual_mesh_sha256": "604d4cd06af0f30f181c2fb701878e8911f4a2034cafcffc43d86829d5927dcd",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1784003065.5275168
+      },
+      "name": "exhaust_fan",
+      "object_id": "exhaust_fan_0",
+      "object_type": "ceiling_mounted",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/ceiling_mounted/sdf/exhaust_fan_1784003011999211846_39c95e960de9441da6cc29e9f6163691_1784003047192743500_7f20ad943a9d491499d80d51713f0870/exhaust_fan.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translation": [
+          1.1,
+          1.1,
+          3.2
+        ]
+      }
+    },
+    "floating_shelf_0": {
+      "bbox_max": [
+        0.30000001192092896,
+        0.1233949214220047,
+        0.030522717162966728
+      ],
+      "bbox_min": [
+        -0.30000001192092896,
+        -2.49705594091976e-17,
+        -0.030522717162966728
+      ],
+      "description": "Small floating wooden shelf natural oak, about 60cm wide and 10cm tall",
+      "geometry_path": "generated_assets/wall_mounted/sdf/floating_shelf_1784001608444937052_80d3a8da21c64f40b1140e7f2a382566_1784001639571041501_017c2916a1484fa684da56f6102f781c/floating_shelf.gltf",
+      "image_path": "generated_assets/wall_mounted/images/floating_shelf_1784001608444937052_80d3a8da21c64f40b1140e7f2a382566.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "d88082bc8752d0019b7dab63eabf9b229b3a0958f06a7471da147545b38de515",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            0.6169745997439997,
+            1.0
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.6000000238418579,
+            0.061045434325933456,
+            0.12339492142200473
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.6000000238418579,
+            0.12339492142200473,
+            0.061045434325933456
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            1.000378787517548,
+            0.10178092867136002,
+            0.20573610067367565
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.6,
+            0.06104543395443077,
+            0.12339491994879995
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "16d8a9114116400a85d2be3e9888798635fc60b200ef9af27541b3076152ab72",
+          "requested_gltf_dimensions_m": [
+            0.6,
+            0.1,
+            0.2
+          ],
+          "requested_scene_dimensions_m": [
+            0.6,
+            0.2,
+            0.1
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "c31fa03023abe13cf412da2000d77089af777e181677ece95ccc6d2397a345bf",
+          "sdf_visual_uri": "floating_shelf.gltf",
+          "source_geometry_sha256": "ac10545956d14a20456510757547c05dd75bdd05160eba94306500530e20e4c1",
+          "source_gltf_dimensions_m": [
+            1.000378787517548,
+            0.10178092867136002,
+            0.20573610067367565
+          ],
+          "status": "pass",
+          "uniform_scale": 0.5997728135448646,
+          "visual_mesh_sha256": "eb56859ebbfc98fec46f07e8325f25fcca0c565b006ec61d01f4a7de1f2ad1be",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1784001655.8506591
+      },
+      "name": "floating_shelf",
+      "object_id": "floating_shelf_0",
+      "object_type": "wall_mounted",
+      "placement_info": {
+        "parent_surface_id": "boys_toilet_south",
+        "placement_method": "wall_placement",
+        "position_2d": [
+          2.8718041077954806,
+          2.462355619899697
+        ],
+        "rotation_2d": 0.0020298842876768463
+      },
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/wall_mounted/sdf/floating_shelf_1784001608444937052_80d3a8da21c64f40b1140e7f2a382566_1784001639571041501_017c2916a1484fa684da56f6102f781c/floating_shelf.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          0.9999994849462666,
+          -6.214727171884358e-20,
+          0.0010149419695885038,
+          -6.123230841942235e-17
+        ],
+        "translation": [
+          -0.8718041077954806,
+          -1.95,
+          2.462355619899697
+        ]
+      }
+    },
+    "hand_hygiene_station_0": {
+      "bbox_max": [
+        0.17499999701976776,
+        0.11960308998823166,
+        1.196494698524475
+      ],
+      "bbox_min": [
+        -0.17499999701976776,
+        -0.11960308998823166,
+        0.0
+      ],
+      "description": "Slim stainless floor-standing hand hygiene station with a paper-towel dispenser and a hand-dryer outlet on the front",
+      "geometry_path": "generated_assets/furniture/sdf/hand_hygiene_station_1783996602255899211_7d56b600da124bee8c8adbdcbff4a050_1783996634528514578_65180cc43f224e0ea89fc24935733fd1/hand_hygiene_station.gltf",
+      "image_path": "generated_assets/furniture/images/hand_hygiene_station_1783996602255899211_7d56b600da124bee8c8adbdcbff4a050.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "2c8be03877729cf87e0e33efeb2bacf88ccee5a87d9b53085d25dd2898477e5f",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            1.0,
+            0.8546390888390475
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.3499999940395355,
+            1.196494698524475,
+            0.23920617997646332
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.3499999940395355,
+            0.23920617997646332,
+            1.196494698524475
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.2927752286195756,
+            1.0008686184883118,
+            0.20009612292051324
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.35,
+            1.1964947243746664,
+            0.2392061765347624
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "12a8cc5ddce01e1c644c9ed4707affd09b15ce2cbf3a4910f5bed289f0e55e3d",
+          "requested_gltf_dimensions_m": [
+            0.35,
+            1.4,
+            0.25
+          ],
+          "requested_scene_dimensions_m": [
+            0.35,
+            0.25,
+            1.4
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "46319595f1dc16027f3f6349f7a41af620f4af3a685677015f0c810426dbf5bc",
+          "sdf_visual_uri": "hand_hygiene_station.gltf",
+          "source_geometry_sha256": "072703c3a3c2ca5b2b13e537fd4085da38126d51345095cec8db3e60f4ce6e2a",
+          "source_gltf_dimensions_m": [
+            0.2927752286195756,
+            1.0008686184883118,
+            0.20009612292051324
+          ],
+          "status": "pass",
+          "uniform_scale": 1.1954563289054099,
+          "visual_mesh_sha256": "45498e71cb4ba362ea8a929894c28c499302714843ce5d8b96c54d99c30aea0f",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1783996643.5439029
+      },
+      "name": "hand_hygiene_station",
+      "object_id": "hand_hygiene_station_0",
+      "object_type": "furniture",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/furniture/sdf/hand_hygiene_station_1783996602255899211_7d56b600da124bee8c8adbdcbff4a050_1783996634528514578_65180cc43f224e0ea89fc24935733fd1/hand_hygiene_station.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          0.0027238575314952225,
+          0.0008428574682058922,
+          -0.0018923458841146284,
+          -0.9999941445921027
+        ],
+        "translation": [
+          1.5977035971346991,
+          1.8221218239014296,
+          -3.503201739041327e-05
+        ]
+      }
+    },
+    "hand_sanitizer_dispenser_0": {
+      "bbox_max": [
+        0.05999999865889549,
+        0.08027218282222748,
+        0.1229432225227356
+      ],
+      "bbox_min": [
+        -0.05999999865889549,
+        -0.0,
+        -0.1229432225227356
+      ],
+      "description": "Wall-mounted hand sanitizer dispenser, white plastic, about 12cm wide and 25cm tall",
+      "geometry_path": "generated_assets/wall_mounted/sdf/hand_sanitizer_dispenser_1784001526461952970_294e66bb72894ceaa6353516b4513144_1784001563808604303_b0710ba144fc49ac8880250b56e4581c/hand_sanitizer_dispenser.gltf",
+      "image_path": "generated_assets/wall_mounted/images/hand_sanitizer_dispenser_1784001526461952970_294e66bb72894ceaa6353516b4513144.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "fe411e7c60d9b14dbdd506b65d795eaaefb3a30c81f759c887e7760baedd1996",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            1.0,
+            0.9835457952955501
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.11999999731779099,
+            0.2458864450454712,
+            0.08027218282222748
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.11999999731779099,
+            0.08027218282222748,
+            0.2458864450454712
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.48800817131996155,
+            0.9999549686908722,
+            0.32644566893577576
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.12,
+            0.24588644882388752,
+            0.08027218102995468
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "ea5bbc2aedd7914dfe444acfb896ec99f6ab7625865fcaf6401ba8c5f9651fd5",
+          "requested_gltf_dimensions_m": [
+            0.12,
+            0.25,
+            0.1
+          ],
+          "requested_scene_dimensions_m": [
+            0.12,
+            0.1,
+            0.25
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "fecb44e27b840023d1743da69bdea3c1aa8f648c438842dbe25842d332a97b26",
+          "sdf_visual_uri": "hand_sanitizer_dispenser.gltf",
+          "source_geometry_sha256": "a47b553a02fcde8a44a2db9092220a90b2693b490f14d3b890384879f57aac9c",
+          "source_gltf_dimensions_m": [
+            0.48800817131996155,
+            0.9999549686908722,
+            0.32644566893577576
+          ],
+          "status": "pass",
+          "uniform_scale": 0.24589752191121048,
+          "visual_mesh_sha256": "2abc643e3e9a7d789b969b006a7ed07ec8b1569153d176289d541cb2f69b0e17",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1784001573.2429504
+      },
+      "name": "hand_sanitizer_dispenser",
+      "object_id": "hand_sanitizer_dispenser_0",
+      "object_type": "wall_mounted",
+      "placement_info": {
+        "parent_surface_id": "boys_toilet_east",
+        "placement_method": "wall_placement",
+        "position_2d": [
+          2.6230863967000158,
+          1.2450001328702684
+        ],
+        "rotation_2d": -0.00875502261439385
+      },
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/wall_mounted/sdf/hand_sanitizer_dispenser_1784001526461952970_294e66bb72894ceaa6353516b4513144_1784001563808604303_b0710ba144fc49ac8880250b56e4581c/hand_sanitizer_dispenser.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          0.7071000061933095,
+          0.003095358044163587,
+          -0.0030953580441635846,
+          0.7071000061933096
+        ],
+        "translation": [
+          1.95,
+          -0.6230863967000158,
+          1.2450001328702684
+        ]
+      }
+    },
+    "mirror_0": {
+      "bbox_max": [
+        0.38842520117759705,
+        0.028958559036254883,
+        0.44999998807907104
+      ],
+      "bbox_min": [
+        -0.38842520117759705,
+        -0.0,
+        -0.44999998807907104
+      ],
+      "description": "Rectangular wall mirror with thin brushed aluminum frame, about 80cm wide and 90cm tall, school restroom style",
+      "geometry_path": "generated_assets/wall_mounted/sdf/mirror_1784000954292310377_525ee7a7549d41228d64d75af520de27_1784000986737113008_7188a80a73174f1991cc7b6163c33b82/mirror.gltf",
+      "image_path": "generated_assets/wall_mounted/images/mirror_1784000954292310377_525ee7a7549d41228d64d75af520de27.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "050de5a1d88f5b370413e6ce84f0f6cf829eb3b277294cf1a3b38c26e9c2f911",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            0.9710629875826857,
+            1.0
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.7768504023551941,
+            0.8999999761581421,
+            0.028958559036254883
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.7768504023551941,
+            0.028958559036254883,
+            0.8999999761581421
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.8637970387935638,
+            1.0007297992706299,
+            0.03219965845346451
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.7768503900661486,
+            0.9,
+            0.028958558673119923
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "464d3fd7529d10356d55a73a4f3713f70ce4c970c1b9c8861c6cab21381ca905",
+          "requested_gltf_dimensions_m": [
+            0.8,
+            0.9,
+            0.04
+          ],
+          "requested_scene_dimensions_m": [
+            0.8,
+            0.04,
+            0.9
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "f05f5a3597dd3bee8b7c843c71044dd13fb6d0cd8208d36574fc50e61b65ab4e",
+          "sdf_visual_uri": "mirror.gltf",
+          "source_geometry_sha256": "998d41485e737aec4c37db947a288d45f94c5c09c0ad46bf860fd949a3772d37",
+          "source_gltf_dimensions_m": [
+            0.8637970387935638,
+            1.0007297992706299,
+            0.03219965845346451
+          ],
+          "status": "pass",
+          "uniform_scale": 0.8993436596531396,
+          "visual_mesh_sha256": "9ce8330eed752d518d3de6248f29473248923152891889153fe305925ee26dbb",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1784001001.1636841
+      },
+      "name": "mirror",
+      "object_id": "mirror_0",
+      "object_type": "wall_mounted",
+      "placement_info": {
+        "parent_surface_id": "boys_toilet_north",
+        "placement_method": "wall_placement",
+        "position_2d": [
+          1.521199044179544,
+          1.5591800773154902
+        ],
+        "rotation_2d": 0.008688483682675286
+      },
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/wall_mounted/sdf/mirror_1784000954292310377_525ee7a7549d41228d64d75af520de27_1784000986737113008_7188a80a73174f1991cc7b6163c33b82/mirror.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          6.123176215653184e-17,
+          -0.00434422817694533,
+          -2.660072565830919e-19,
+          0.9999905637962523
+        ],
+        "translation": [
+          -0.478800955820456,
+          1.95,
+          1.5591800773154902
+        ]
+      }
+    },
+    "mirror_1": {
+      "bbox_max": [
+        0.38842520117759705,
+        0.028958559036254883,
+        0.44999998807907104
+      ],
+      "bbox_min": [
+        -0.38842520117759705,
+        -0.0,
+        -0.44999998807907104
+      ],
+      "description": "Rectangular wall mirror with thin brushed aluminum frame, about 80cm wide and 90cm tall, school restroom style",
+      "geometry_path": "generated_assets/wall_mounted/sdf/mirror_1784000954292310377_525ee7a7549d41228d64d75af520de27_1784000986737113008_7188a80a73174f1991cc7b6163c33b82/mirror.gltf",
+      "image_path": "generated_assets/wall_mounted/images/mirror_1784000954292310377_525ee7a7549d41228d64d75af520de27.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "050de5a1d88f5b370413e6ce84f0f6cf829eb3b277294cf1a3b38c26e9c2f911",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            0.9710629875826857,
+            1.0
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.7768504023551941,
+            0.8999999761581421,
+            0.028958559036254883
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.7768504023551941,
+            0.028958559036254883,
+            0.8999999761581421
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.8637970387935638,
+            1.0007297992706299,
+            0.03219965845346451
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.7768503900661486,
+            0.9,
+            0.028958558673119923
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "464d3fd7529d10356d55a73a4f3713f70ce4c970c1b9c8861c6cab21381ca905",
+          "requested_gltf_dimensions_m": [
+            0.8,
+            0.9,
+            0.04
+          ],
+          "requested_scene_dimensions_m": [
+            0.8,
+            0.04,
+            0.9
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "f05f5a3597dd3bee8b7c843c71044dd13fb6d0cd8208d36574fc50e61b65ab4e",
+          "sdf_visual_uri": "mirror.gltf",
+          "source_geometry_sha256": "998d41485e737aec4c37db947a288d45f94c5c09c0ad46bf860fd949a3772d37",
+          "source_gltf_dimensions_m": [
+            0.8637970387935638,
+            1.0007297992706299,
+            0.03219965845346451
+          ],
+          "status": "pass",
+          "uniform_scale": 0.8993436596531396,
+          "visual_mesh_sha256": "9ce8330eed752d518d3de6248f29473248923152891889153fe305925ee26dbb",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1784001001.1636841
+      },
+      "name": "mirror",
+      "object_id": "mirror_1",
+      "object_type": "wall_mounted",
+      "placement_info": {
+        "parent_surface_id": "boys_toilet_north",
+        "placement_method": "wall_placement",
+        "position_2d": [
+          2.443724444763351,
+          1.5594854113173302
+        ],
+        "rotation_2d": -0.0018512812708779429
+      },
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/wall_mounted/sdf/mirror_1784000954292310377_525ee7a7549d41228d64d75af520de27_1784000986737113008_7188a80a73174f1991cc7b6163c33b82/mirror.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          6.123231372511106e-17,
+          0.0009256405032558618,
+          5.667913397367187e-20,
+          0.9999995715947376
+        ],
+        "translation": [
+          0.44372444476335104,
+          1.95,
+          1.5594854113173302
+        ]
+      }
+    },
+    "north_wall": {
+      "bbox_max": [
+        2.0,
+        0.025,
+        1.6
+      ],
+      "bbox_min": [
+        -2.0,
+        -0.025,
+        -1.6
+      ],
+      "description": "Room north_wall",
+      "geometry_path": null,
+      "image_path": null,
+      "immutable": true,
+      "metadata": {},
+      "name": "north_wall",
+      "object_id": "north_wall",
+      "object_type": "wall",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": null,
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translation": [
+          0.0,
+          1.975,
+          1.6
+        ]
+      }
+    },
+    "planter_box_0": {
+      "bbox_max": [
+        0.16863544285297394,
+        0.18000000715255737,
+        0.07745111733675003
+      ],
+      "bbox_min": [
+        -0.16863544285297394,
+        -0.0,
+        -0.07745111733675003
+      ],
+      "description": "Wall-mounted planter box with small green foliage, matte white container, about 40cm wide",
+      "geometry_path": "generated_assets/wall_mounted/sdf/planter_box_1784001803879751203_bea4305a847d4d80b2c4d03fce57afad_1784001867606417158_00456ca42eb1468684f8c6181bdaf15a/planter_box.gltf",
+      "image_path": "generated_assets/wall_mounted/images/planter_box_1784001803879751203_bea4305a847d4d80b2c4d03fce57afad.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "cfa6ea925f92bb9ebcec54f438c636859c2462c818325982fb721989fc1ce6ae",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            0.774511157298533,
+            0.843177221212823
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.3372708857059479,
+            0.15490223467350006,
+            0.18000000715255737
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.3372708857059479,
+            0.18000000715255737,
+            0.15490223467350006
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.9993204772472382,
+            0.45896926522254944,
+            0.5333329737186432
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.3372708884851292,
+            0.1549022314597066,
+            0.18
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "aca79b67d27bb71eba73b055294846e91ffbcb83927420c4a42080022a1e6bee",
+          "requested_gltf_dimensions_m": [
+            0.4,
+            0.2,
+            0.18
+          ],
+          "requested_scene_dimensions_m": [
+            0.4,
+            0.18,
+            0.2
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "2bcbdef12a3475f80e5900a3bbf73f74d1f85c1d2909cc4714da881e748b8fdc",
+          "sdf_visual_uri": "planter_box.gltf",
+          "source_geometry_sha256": "aaa32b5e3f8e6410bcacd4e1345f2bd56ec64167a98b73737f10f2f4c33ee3aa",
+          "source_gltf_dimensions_m": [
+            0.9993204772472382,
+            0.45896926522254944,
+            0.5333329737186432
+          ],
+          "status": "pass",
+          "uniform_scale": 0.33750022756882453,
+          "visual_mesh_sha256": "9d8403d10129370c4a5a61f7282830bceed24d60df58bfc992fc4ff363d1da31",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1784001879.5493586
+      },
+      "name": "planter_box",
+      "object_id": "planter_box_0",
+      "object_type": "wall_mounted",
+      "placement_info": {
+        "parent_surface_id": "boys_toilet_east",
+        "placement_method": "wall_placement",
+        "position_2d": [
+          1.523751207729235,
+          2.60672812538461
+        ],
+        "rotation_2d": -0.001418473240792937
+      },
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/wall_mounted/sdf/planter_box_1784001803879751203_bea4305a847d4d80b2c4d03fce57afad_1784001867606417158_00456ca42eb1468684f8c6181bdaf15a/planter_box.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          0.7071066033433363,
+          0.0005015059817038654,
+          -0.0005015059817038654,
+          0.7071066033433363
+        ],
+        "translation": [
+          1.95,
+          0.476248792270765,
+          2.60672812538461
+        ]
+      }
+    },
+    "planter_box_1": {
+      "bbox_max": [
+        0.16863544285297394,
+        0.18000000715255737,
+        0.07745111733675003
+      ],
+      "bbox_min": [
+        -0.16863544285297394,
+        -0.0,
+        -0.07745111733675003
+      ],
+      "description": "Wall-mounted planter box with small green foliage, matte white container, about 40cm wide",
+      "geometry_path": "generated_assets/wall_mounted/sdf/planter_box_1784001803879751203_bea4305a847d4d80b2c4d03fce57afad_1784001867606417158_00456ca42eb1468684f8c6181bdaf15a/planter_box.gltf",
+      "image_path": "generated_assets/wall_mounted/images/planter_box_1784001803879751203_bea4305a847d4d80b2c4d03fce57afad.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "cfa6ea925f92bb9ebcec54f438c636859c2462c818325982fb721989fc1ce6ae",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            0.774511157298533,
+            0.843177221212823
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.3372708857059479,
+            0.15490223467350006,
+            0.18000000715255737
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.3372708857059479,
+            0.18000000715255737,
+            0.15490223467350006
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.9993204772472382,
+            0.45896926522254944,
+            0.5333329737186432
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.3372708884851292,
+            0.1549022314597066,
+            0.18
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "aca79b67d27bb71eba73b055294846e91ffbcb83927420c4a42080022a1e6bee",
+          "requested_gltf_dimensions_m": [
+            0.4,
+            0.2,
+            0.18
+          ],
+          "requested_scene_dimensions_m": [
+            0.4,
+            0.18,
+            0.2
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "2bcbdef12a3475f80e5900a3bbf73f74d1f85c1d2909cc4714da881e748b8fdc",
+          "sdf_visual_uri": "planter_box.gltf",
+          "source_geometry_sha256": "aaa32b5e3f8e6410bcacd4e1345f2bd56ec64167a98b73737f10f2f4c33ee3aa",
+          "source_gltf_dimensions_m": [
+            0.9993204772472382,
+            0.45896926522254944,
+            0.5333329737186432
+          ],
+          "status": "pass",
+          "uniform_scale": 0.33750022756882453,
+          "visual_mesh_sha256": "9d8403d10129370c4a5a61f7282830bceed24d60df58bfc992fc4ff363d1da31",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1784001879.5493586
+      },
+      "name": "planter_box",
+      "object_id": "planter_box_1",
+      "object_type": "wall_mounted",
+      "placement_info": {
+        "parent_surface_id": "boys_toilet_west",
+        "placement_method": "wall_placement",
+        "position_2d": [
+          0.609982664712124,
+          2.6079048416387622
+        ],
+        "rotation_2d": -0.0021816184837704987
+      },
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/wall_mounted/sdf/planter_box_1784001803879751203_bea4305a847d4d80b2c4d03fce57afad_1784001867606417158_00456ca42eb1468684f8c6181bdaf15a/planter_box.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          0.707106360505854,
+          -0.0007713184589572146,
+          -0.0007713184589572147,
+          -0.707106360505854
+        ],
+        "translation": [
+          -1.95,
+          -1.390017335287876,
+          2.6079048416387622
+        ]
+      }
+    },
+    "potted_plant_0": {
+      "bbox_max": [
+        0.17499999701976776,
+        0.17376165091991425,
+        0.4549334943294525
+      ],
+      "bbox_min": [
+        -0.17499999701976776,
+        -0.17376166582107544,
+        0.0
+      ],
+      "description": "Small potted green plant in a simple square planter",
+      "geometry_path": "generated_assets/furniture/sdf/potted_plant_1783996822418711375_780fee3fec9d4cdeab3405dcd2461ac5_1783996886807156094_37aacd898ad84f93b2d4619ca73899cb/potted_plant.gltf",
+      "image_path": "generated_assets/furniture/images/potted_plant_1783996822418711375_780fee3fec9d4cdeab3405dcd2461ac5.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "93e6770c491344eed18b36081dbba48deef9ef15c0fb9d186fb7a20bda8cd1b1",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            0.9929237746183129,
+            0.5054816494641514
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.3499999940395355,
+            0.4549334943294525,
+            0.3475233167409897
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.3499999940395355,
+            0.3475233167409897,
+            0.4549334943294525
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.7695532144772259,
+            1.0002729296684265,
+            0.7641076824883832
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.35,
+            0.4549334845177363,
+            0.3475233211164095
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "b0b485aed34ef2f4a27479d8ff68e50b91486b29495cd3efd7fc225b6bf3ebab",
+          "requested_gltf_dimensions_m": [
+            0.35,
+            0.9,
+            0.35
+          ],
+          "requested_scene_dimensions_m": [
+            0.35,
+            0.35,
+            0.9
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "a51c080b9435953f0be69ab0f795ca05e7b2aff44c4f4b929b8dae0081081121",
+          "sdf_visual_uri": "potted_plant.gltf",
+          "source_geometry_sha256": "f99119a973bd44dc8342966b1a8c13568f75d6e20fb8de0f7f5e525481080e8b",
+          "source_gltf_dimensions_m": [
+            0.7695532144772259,
+            1.0002729296684265,
+            0.7641076824883832
+          ],
+          "status": "pass",
+          "uniform_scale": 0.4548093535516742,
+          "visual_mesh_sha256": "d3f235a961aaccfdea696ac9a6370ea6a21088297166ba1c051d09f27a6353fb",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1783996905.7228458
+      },
+      "name": "potted_plant",
+      "object_id": "potted_plant_0",
+      "object_type": "furniture",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/furniture/sdf/potted_plant_1783996822418711375_780fee3fec9d4cdeab3405dcd2461ac5_1783996886807156094_37aacd898ad84f93b2d4619ca73899cb/potted_plant.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          0.9999882096780932,
+          -0.00018603602087173592,
+          -0.0003589813917405722,
+          -0.004839114357099626
+        ],
+        "translation": [
+          -1.697365061566832,
+          -1.5954073850373436,
+          0.0009133542921606541
+        ]
+      }
+    },
+    "privacy_screen_divider_0": {
+      "bbox_max": [
+        0.4274931925535202,
+        0.17550000697374343,
+        1.4857291209697723
+      ],
+      "bbox_min": [
+        -0.4274931925535202,
+        -0.17550000697374343,
+        0.0
+      ],
+      "description": "Durable freestanding privacy screen divider for restroom stalls (opaque light-gray), straight panel with base feet",
+      "geometry_path": "generated_assets/furniture/sdf/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937_1783998029620032282_5a5aef64cae74e68adca642ad59f210f/privacy_screen_divider.gltf",
+      "image_path": "generated_assets/furniture/images/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "618caa439056f6868b6a167f1590543fca0fa3b0210294b78c30b6b92b5ac72d",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            0.6089646769496908,
+            0.7054744477717562
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.7307575941085815,
+            1.269853949546814,
+            0.30000001192092896
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.7307575941085815,
+            0.30000001192092896,
+            1.269853949546814
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.576083838939667,
+            1.0010738968849182,
+            0.2365013360977174
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.730757612339629,
+            1.2698540059891612,
+            0.3
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "584a8e2fcc64c8a314f561d5149a98d1fdbfcdba2a5f4368e99c0c80604785ba",
+          "requested_gltf_dimensions_m": [
+            1.2,
+            1.8,
+            0.3
+          ],
+          "requested_scene_dimensions_m": [
+            1.2,
+            0.3,
+            1.8
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "eb7a72c65e5311d6b3a622d537ab2afd16bc8f7617a8eeac2dd656b2b11cb600",
+          "sdf_visual_uri": "privacy_screen_divider.gltf",
+          "source_geometry_sha256": "6b2ef139c4137c4ed2f742be04056a6475df236f94fc4ed3d86e3bcd93037e05",
+          "source_gltf_dimensions_m": [
+            0.576083838939667,
+            1.0010738968849182,
+            0.2365013360977174
+          ],
+          "status": "pass",
+          "uniform_scale": 1.2684917766217028,
+          "visual_mesh_sha256": "9bf3fd42e141c73fe2c7d40fa86bc001e064dccee2b749b4748fa3dffbb21bd5",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1783998042.274652,
+        "visual_contract_repair": "open_front_stall_row_with_unobstructed_access"
+      },
+      "name": "privacy_screen_divider",
+      "object_id": "privacy_screen_divider_0",
+      "object_type": "furniture",
+      "placement_info": null,
+      "scale_factor": 1.1700000000000002,
+      "sdf_path": "generated_assets/furniture/sdf/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937_1783998029620032282_5a5aef64cae74e68adca642ad59f210f/privacy_screen_divider.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translation": [
+          -1.5,
+          1.36,
+          0.002
+        ]
+      }
+    },
+    "privacy_screen_divider_2": {
+      "bbox_max": [
+        0.4274931925535202,
+        0.17550000697374343,
+        1.4857291209697723
+      ],
+      "bbox_min": [
+        -0.4274931925535202,
+        -0.17550000697374343,
+        0.0
+      ],
+      "description": "Durable freestanding privacy screen divider for restroom stalls (opaque light-gray), straight panel with base feet",
+      "geometry_path": "generated_assets/furniture/sdf/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937_1783998029620032282_5a5aef64cae74e68adca642ad59f210f/privacy_screen_divider.gltf",
+      "image_path": "generated_assets/furniture/images/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "618caa439056f6868b6a167f1590543fca0fa3b0210294b78c30b6b92b5ac72d",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            0.6089646769496908,
+            0.7054744477717562
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.7307575941085815,
+            1.269853949546814,
+            0.30000001192092896
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.7307575941085815,
+            0.30000001192092896,
+            1.269853949546814
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.576083838939667,
+            1.0010738968849182,
+            0.2365013360977174
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.730757612339629,
+            1.2698540059891612,
+            0.3
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "584a8e2fcc64c8a314f561d5149a98d1fdbfcdba2a5f4368e99c0c80604785ba",
+          "requested_gltf_dimensions_m": [
+            1.2,
+            1.8,
+            0.3
+          ],
+          "requested_scene_dimensions_m": [
+            1.2,
+            0.3,
+            1.8
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "eb7a72c65e5311d6b3a622d537ab2afd16bc8f7617a8eeac2dd656b2b11cb600",
+          "sdf_visual_uri": "privacy_screen_divider.gltf",
+          "source_geometry_sha256": "6b2ef139c4137c4ed2f742be04056a6475df236f94fc4ed3d86e3bcd93037e05",
+          "source_gltf_dimensions_m": [
+            0.576083838939667,
+            1.0010738968849182,
+            0.2365013360977174
+          ],
+          "status": "pass",
+          "uniform_scale": 1.2684917766217028,
+          "visual_mesh_sha256": "9bf3fd42e141c73fe2c7d40fa86bc001e064dccee2b749b4748fa3dffbb21bd5",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1783998042.274652,
+        "visual_contract_repair": "open_front_stall_row_with_unobstructed_access"
+      },
+      "name": "privacy_screen_divider",
+      "object_id": "privacy_screen_divider_2",
+      "object_type": "furniture",
+      "placement_info": null,
+      "scale_factor": 1.1700000000000002,
+      "sdf_path": "generated_assets/furniture/sdf/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937_1783998029620032282_5a5aef64cae74e68adca642ad59f210f/privacy_screen_divider.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translation": [
+          -1.5,
+          0.23,
+          0.002
+        ]
+      }
+    },
+    "privacy_screen_divider_3": {
+      "bbox_max": [
+        0.4274931925535202,
+        0.17550000697374343,
+        1.4857291209697723
+      ],
+      "bbox_min": [
+        -0.4274931925535202,
+        -0.17550000697374343,
+        0.0
+      ],
+      "description": "Durable freestanding privacy screen divider for restroom stalls (opaque light-gray), straight panel with base feet",
+      "geometry_path": "generated_assets/furniture/sdf/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937_1783998029620032282_5a5aef64cae74e68adca642ad59f210f/privacy_screen_divider.gltf",
+      "image_path": "generated_assets/furniture/images/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "618caa439056f6868b6a167f1590543fca0fa3b0210294b78c30b6b92b5ac72d",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            0.6089646769496908,
+            0.7054744477717562
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.7307575941085815,
+            1.269853949546814,
+            0.30000001192092896
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.7307575941085815,
+            0.30000001192092896,
+            1.269853949546814
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.576083838939667,
+            1.0010738968849182,
+            0.2365013360977174
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.730757612339629,
+            1.2698540059891612,
+            0.3
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "584a8e2fcc64c8a314f561d5149a98d1fdbfcdba2a5f4368e99c0c80604785ba",
+          "requested_gltf_dimensions_m": [
+            1.2,
+            1.8,
+            0.3
+          ],
+          "requested_scene_dimensions_m": [
+            1.2,
+            0.3,
+            1.8
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "eb7a72c65e5311d6b3a622d537ab2afd16bc8f7617a8eeac2dd656b2b11cb600",
+          "sdf_visual_uri": "privacy_screen_divider.gltf",
+          "source_geometry_sha256": "6b2ef139c4137c4ed2f742be04056a6475df236f94fc4ed3d86e3bcd93037e05",
+          "source_gltf_dimensions_m": [
+            0.576083838939667,
+            1.0010738968849182,
+            0.2365013360977174
+          ],
+          "status": "pass",
+          "uniform_scale": 1.2684917766217028,
+          "visual_mesh_sha256": "9bf3fd42e141c73fe2c7d40fa86bc001e064dccee2b749b4748fa3dffbb21bd5",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1783998042.274652,
+        "visual_contract_repair": "open_front_stall_row_with_unobstructed_access"
+      },
+      "name": "privacy_screen_divider",
+      "object_id": "privacy_screen_divider_3",
+      "object_type": "furniture",
+      "placement_info": null,
+      "scale_factor": 1.1700000000000002,
+      "sdf_path": "generated_assets/furniture/sdf/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937_1783998029620032282_5a5aef64cae74e68adca642ad59f210f/privacy_screen_divider.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translation": [
+          -1.5,
+          -0.9,
+          0.002
+        ]
+      }
+    },
+    "privacy_screen_divider_4": {
+      "bbox_max": [
+        0.4274931925535202,
+        0.17550000697374343,
+        1.4857291209697723
+      ],
+      "bbox_min": [
+        -0.4274931925535202,
+        -0.17550000697374343,
+        0.0
+      ],
+      "description": "Durable freestanding privacy screen divider for restroom stalls (opaque light-gray), straight panel with base feet",
+      "geometry_path": "generated_assets/furniture/sdf/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937_1783998029620032282_5a5aef64cae74e68adca642ad59f210f/privacy_screen_divider.gltf",
+      "image_path": "generated_assets/furniture/images/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "618caa439056f6868b6a167f1590543fca0fa3b0210294b78c30b6b92b5ac72d",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            0.6089646769496908,
+            0.7054744477717562
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.7307575941085815,
+            1.269853949546814,
+            0.30000001192092896
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.7307575941085815,
+            0.30000001192092896,
+            1.269853949546814
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.576083838939667,
+            1.0010738968849182,
+            0.2365013360977174
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.730757612339629,
+            1.2698540059891612,
+            0.3
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "584a8e2fcc64c8a314f561d5149a98d1fdbfcdba2a5f4368e99c0c80604785ba",
+          "requested_gltf_dimensions_m": [
+            1.2,
+            1.8,
+            0.3
+          ],
+          "requested_scene_dimensions_m": [
+            1.2,
+            0.3,
+            1.8
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "eb7a72c65e5311d6b3a622d537ab2afd16bc8f7617a8eeac2dd656b2b11cb600",
+          "sdf_visual_uri": "privacy_screen_divider.gltf",
+          "source_geometry_sha256": "6b2ef139c4137c4ed2f742be04056a6475df236f94fc4ed3d86e3bcd93037e05",
+          "source_gltf_dimensions_m": [
+            0.576083838939667,
+            1.0010738968849182,
+            0.2365013360977174
+          ],
+          "status": "pass",
+          "uniform_scale": 1.2684917766217028,
+          "visual_mesh_sha256": "9bf3fd42e141c73fe2c7d40fa86bc001e064dccee2b749b4748fa3dffbb21bd5",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1783998042.274652,
+        "visual_contract_repair": "open_front_stall_row_with_unobstructed_access"
+      },
+      "name": "privacy_screen_divider",
+      "object_id": "privacy_screen_divider_4",
+      "object_type": "furniture",
+      "placement_info": null,
+      "scale_factor": 1.1700000000000002,
+      "sdf_path": "generated_assets/furniture/sdf/privacy_screen_divider_1783997996158318616_c1fa74ee131d4daea6efaf10109ce937_1783998029620032282_5a5aef64cae74e68adca642ad59f210f/privacy_screen_divider.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translation": [
+          -0.62,
+          0.23,
+          0.002
+        ]
+      }
+    },
+    "recessed_light_0": {
+      "bbox_max": [
+        0.08133520185947418,
+        0.07488368451595306,
+        0.0
+      ],
+      "bbox_min": [
+        -0.08133520185947418,
+        -0.07488368451595306,
+        -0.07999999821186066
+      ],
+      "description": "Small round moisture-rated recessed LED downlight with white trim, soft warm white",
+      "geometry_path": "generated_assets/ceiling_mounted/sdf/recessed_light_1784002478656209935_58c8bc73d96b4c8ea89b8f4d166bb664_1784002518798283631_d7a02062de82401ab60da79103a9c238/recessed_light.gltf",
+      "image_path": "generated_assets/ceiling_mounted/images/recessed_light_1784002478656209935_58c8bc73d96b4c8ea89b8f4d166bb664.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "b6f0b71f5c1c9c9274f110b99fec18185c81104b973b62768a73ac8775f9bf62",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            0.9037244526026352,
+            0.8320409718521179
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.16267040371894836,
+            0.07999999821186066,
+            0.14976736903190613
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.16267040371894836,
+            0.14976736903190613,
+            0.07999999821186066
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            1.0002116560935974,
+            0.4918960779905319,
+            0.9208748042583466
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.16267040146847433,
+            0.08,
+            0.14976737493338121
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "d262f582475771ba052d85034ec5cdca867fd9c3dd88860084edf014c1e16935",
+          "requested_gltf_dimensions_m": [
+            0.18,
+            0.08,
+            0.18
+          ],
+          "requested_scene_dimensions_m": [
+            0.18,
+            0.18,
+            0.08
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "1baab594c5cb9ef1afab3b509d382287a615f98c653ae5e68ab9023cef7e60c7",
+          "sdf_visual_uri": "recessed_light.gltf",
+          "source_geometry_sha256": "dd79922dd94fcf4196ab84645b8419855a92640eb653f46306bc83051a6ed9af",
+          "source_gltf_dimensions_m": [
+            1.0002116560935974,
+            0.4918960779905319,
+            0.9208748042583466
+          ],
+          "status": "pass",
+          "uniform_scale": 0.16263597857257128,
+          "visual_mesh_sha256": "c061e8c88a9cb815530046cfa60aaf59752f3ea6776d80634fd933599a6ad3dc",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1784002531.4447024
+      },
+      "name": "recessed_light",
+      "object_id": "recessed_light_0",
+      "object_type": "ceiling_mounted",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/ceiling_mounted/sdf/recessed_light_1784002478656209935_58c8bc73d96b4c8ea89b8f4d166bb664_1784002518798283631_d7a02062de82401ab60da79103a9c238/recessed_light.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translation": [
+          1.39,
+          0.2,
+          3.2
+        ]
+      }
+    },
+    "recessed_light_1": {
+      "bbox_max": [
+        0.08133520185947418,
+        0.07488368451595306,
+        0.0
+      ],
+      "bbox_min": [
+        -0.08133520185947418,
+        -0.07488368451595306,
+        -0.07999999821186066
+      ],
+      "description": "Small round moisture-rated recessed LED downlight with white trim, soft warm white",
+      "geometry_path": "generated_assets/ceiling_mounted/sdf/recessed_light_1784002478656209935_58c8bc73d96b4c8ea89b8f4d166bb664_1784002518798283631_d7a02062de82401ab60da79103a9c238/recessed_light.gltf",
+      "image_path": "generated_assets/ceiling_mounted/images/recessed_light_1784002478656209935_58c8bc73d96b4c8ea89b8f4d166bb664.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "b6f0b71f5c1c9c9274f110b99fec18185c81104b973b62768a73ac8775f9bf62",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            0.9037244526026352,
+            0.8320409718521179
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.16267040371894836,
+            0.07999999821186066,
+            0.14976736903190613
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.16267040371894836,
+            0.14976736903190613,
+            0.07999999821186066
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            1.0002116560935974,
+            0.4918960779905319,
+            0.9208748042583466
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.16267040146847433,
+            0.08,
+            0.14976737493338121
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "d262f582475771ba052d85034ec5cdca867fd9c3dd88860084edf014c1e16935",
+          "requested_gltf_dimensions_m": [
+            0.18,
+            0.08,
+            0.18
+          ],
+          "requested_scene_dimensions_m": [
+            0.18,
+            0.18,
+            0.08
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "1baab594c5cb9ef1afab3b509d382287a615f98c653ae5e68ab9023cef7e60c7",
+          "sdf_visual_uri": "recessed_light.gltf",
+          "source_geometry_sha256": "dd79922dd94fcf4196ab84645b8419855a92640eb653f46306bc83051a6ed9af",
+          "source_gltf_dimensions_m": [
+            1.0002116560935974,
+            0.4918960779905319,
+            0.9208748042583466
+          ],
+          "status": "pass",
+          "uniform_scale": 0.16263597857257128,
+          "visual_mesh_sha256": "c061e8c88a9cb815530046cfa60aaf59752f3ea6776d80634fd933599a6ad3dc",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1784002531.4447024
+      },
+      "name": "recessed_light",
+      "object_id": "recessed_light_1",
+      "object_type": "ceiling_mounted",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/ceiling_mounted/sdf/recessed_light_1784002478656209935_58c8bc73d96b4c8ea89b8f4d166bb664_1784002518798283631_d7a02062de82401ab60da79103a9c238/recessed_light.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translation": [
+          -1.39,
+          0.2,
+          3.2
+        ]
+      }
+    },
+    "smoke_detector_0": {
+      "bbox_max": [
+        0.06997944414615631,
+        0.07000000029802322,
+        0.0
+      ],
+      "bbox_min": [
+        -0.06997944414615631,
+        -0.07000000029802322,
+        -0.03233013302087784
+      ],
+      "description": "Low-profile white ceiling-mounted smoke detector puck with small vents and LED indicator",
+      "geometry_path": "generated_assets/ceiling_mounted/sdf/smoke_detector_1784002568638276484_92215379f66e41a9bc03f41ecfdc9be6_1784002606338543217_0a6d523a62da4297a4bc170cc2a69927/smoke_detector.gltf",
+      "image_path": "generated_assets/ceiling_mounted/images/smoke_detector_1784002568638276484_92215379f66e41a9bc03f41ecfdc9be6.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "11d6244372caf70cd4e94c5c9a1a66036c1866cc88246001a8d925dae6063276",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            0.9997063650791335,
+            1.0
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.13995888829231262,
+            0.03233013302087784,
+            0.14000000059604645
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.13995888829231262,
+            0.14000000059604645,
+            0.03233013302087784
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            1.0000358223915105,
+            0.23100563138723373,
+            1.0003295540809636
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.1399588911110787,
+            0.032330133866658874,
+            0.14
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "8ac0695c055b8b085bbd48a51a6e16258f4523a7471b89ea0e5c29309165c038",
+          "requested_gltf_dimensions_m": [
+            0.14,
+            0.05,
+            0.14
+          ],
+          "requested_scene_dimensions_m": [
+            0.14,
+            0.14,
+            0.05
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "488613ce3c4aad46b99b9d30c52efd9cafe46f6d2c097210e4f08588731bf2be",
+          "sdf_visual_uri": "smoke_detector.gltf",
+          "source_geometry_sha256": "4f4d425a030b5922c69d6a4fe685554b29a20ce3c99959262ec544801c9b7f4b",
+          "source_gltf_dimensions_m": [
+            1.0000358223915105,
+            0.23100563138723373,
+            1.0003295540809636
+          ],
+          "status": "pass",
+          "uniform_scale": 0.13995387762848088,
+          "visual_mesh_sha256": "3501a5acaee6d80d2910093a6dc7361977b7c4f58be55aa16e05b89cda21ba26",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1784002621.677522
+      },
+      "name": "smoke_detector",
+      "object_id": "smoke_detector_0",
+      "object_type": "ceiling_mounted",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/ceiling_mounted/sdf/smoke_detector_1784002568638276484_92215379f66e41a9bc03f41ecfdc9be6_1784002606338543217_0a6d523a62da4297a4bc170cc2a69927/smoke_detector.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          0.9999509624162649,
+          0.0,
+          0.0,
+          0.009903169330344175
+        ],
+        "translation": [
+          -1.3305750076991876,
+          0.906441949600497,
+          3.2
+        ]
+      }
+    },
+    "soap_dispenser_0": {
+      "bbox_max": [
+        0.05559748783707619,
+        0.10000000149011612,
+        0.11051756143569946
+      ],
+      "bbox_min": [
+        -0.05559748783707619,
+        -2.4587366336071186e-17,
+        -0.11051756143569946
+      ],
+      "description": "Wall-mounted liquid soap dispenser, white plastic with clear window, about 12cm wide and 25cm tall",
+      "geometry_path": "generated_assets/wall_mounted/sdf/soap_dispenser_1784001488208210130_6bc1ad8aff674f538e7b5c1420325fac_1784001526214531219_5cbce04f1c9745ddbc2c5b45de8060df/soap_dispenser.gltf",
+      "image_path": "generated_assets/wall_mounted/images/soap_dispenser_1784001488208210130_6bc1ad8aff674f538e7b5c1420325fac.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "d91dc3690106eff969a185c1b48942897924028065224a630219bf18cbd2b28c",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            0.9266248053995589,
+            0.8841404802743006
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.11119497567415237,
+            0.22103512287139893,
+            0.10000000149011615
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.11119497567415237,
+            0.10000000149011615,
+            0.22103512287139893
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.502092093229294,
+            0.9980665445327759,
+            0.451542064547539
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.11119497664794707,
+            0.22103512006857515,
+            0.1
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "97454a97d8b371ec13d1f7ecd72d2f265b4688967f5ff2d22001221fd7a48f18",
+          "requested_gltf_dimensions_m": [
+            0.12,
+            0.25,
+            0.1
+          ],
+          "requested_scene_dimensions_m": [
+            0.12,
+            0.1,
+            0.25
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "ee890514b23e5028fdbec8a477290e309c1a58710a901ce7735ed5ddce55faa4",
+          "sdf_visual_uri": "soap_dispenser.gltf",
+          "source_geometry_sha256": "ce0ea5ec9afb7d027890a965bff1c69b6912ef22009570905e2cb657ea6c85b4",
+          "source_gltf_dimensions_m": [
+            0.502092093229294,
+            0.9980665445327759,
+            0.451542064547539
+          ],
+          "status": "pass",
+          "uniform_scale": 0.22146330951514676,
+          "visual_mesh_sha256": "bb126235c2a7e9be98d3977f0ecd1c23bce205e3868320d4b872f026a287fe60",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1784001536.7432406
+      },
+      "name": "soap_dispenser",
+      "object_id": "soap_dispenser_0",
+      "object_type": "wall_mounted",
+      "placement_info": {
+        "parent_surface_id": "boys_toilet_north",
+        "placement_method": "wall_placement",
+        "position_2d": [
+          1.5356516651623475,
+          0.9892906859073737
+        ],
+        "rotation_2d": 0.018395084769388288
+      },
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/wall_mounted/sdf/soap_dispenser_1784001488208210130_6bc1ad8aff674f538e7b5c1420325fac_1784001526214531219_5cbce04f1c9745ddbc2c5b45de8060df/soap_dispenser.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          6.122975000728079e-17,
+          -0.009197412707887811,
+          -5.631791016575998e-19,
+          0.9999577029052183
+        ],
+        "translation": [
+          -0.4643483348376525,
+          1.95,
+          0.9892906859073737
+        ]
+      }
+    },
+    "soap_dispenser_1": {
+      "bbox_max": [
+        0.05559748783707619,
+        0.10000000149011612,
+        0.11051756143569946
+      ],
+      "bbox_min": [
+        -0.05559748783707619,
+        -2.4587366336071186e-17,
+        -0.11051756143569946
+      ],
+      "description": "Wall-mounted liquid soap dispenser, white plastic with clear window, about 12cm wide and 25cm tall",
+      "geometry_path": "generated_assets/wall_mounted/sdf/soap_dispenser_1784001488208210130_6bc1ad8aff674f538e7b5c1420325fac_1784001526214531219_5cbce04f1c9745ddbc2c5b45de8060df/soap_dispenser.gltf",
+      "image_path": "generated_assets/wall_mounted/images/soap_dispenser_1784001488208210130_6bc1ad8aff674f538e7b5c1420325fac.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "d91dc3690106eff969a185c1b48942897924028065224a630219bf18cbd2b28c",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            0.9266248053995589,
+            0.8841404802743006
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.11119497567415237,
+            0.22103512287139893,
+            0.10000000149011615
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.11119497567415237,
+            0.10000000149011615,
+            0.22103512287139893
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.502092093229294,
+            0.9980665445327759,
+            0.451542064547539
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.11119497664794707,
+            0.22103512006857515,
+            0.1
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "97454a97d8b371ec13d1f7ecd72d2f265b4688967f5ff2d22001221fd7a48f18",
+          "requested_gltf_dimensions_m": [
+            0.12,
+            0.25,
+            0.1
+          ],
+          "requested_scene_dimensions_m": [
+            0.12,
+            0.1,
+            0.25
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "ee890514b23e5028fdbec8a477290e309c1a58710a901ce7735ed5ddce55faa4",
+          "sdf_visual_uri": "soap_dispenser.gltf",
+          "source_geometry_sha256": "ce0ea5ec9afb7d027890a965bff1c69b6912ef22009570905e2cb657ea6c85b4",
+          "source_gltf_dimensions_m": [
+            0.502092093229294,
+            0.9980665445327759,
+            0.451542064547539
+          ],
+          "status": "pass",
+          "uniform_scale": 0.22146330951514676,
+          "visual_mesh_sha256": "bb126235c2a7e9be98d3977f0ecd1c23bce205e3868320d4b872f026a287fe60",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1784001536.7432406
+      },
+      "name": "soap_dispenser",
+      "object_id": "soap_dispenser_1",
+      "object_type": "wall_mounted",
+      "placement_info": {
+        "parent_surface_id": "boys_toilet_north",
+        "placement_method": "wall_placement",
+        "position_2d": [
+          2.486193657437554,
+          0.9734692268219822
+        ],
+        "rotation_2d": 0.0010084616256499114
+      },
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/wall_mounted/sdf/soap_dispenser_1784001488208210130_6bc1ad8aff674f538e7b5c1420325fac_1784001526214531219_5cbce04f1c9745ddbc2c5b45de8060df/soap_dispenser.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          6.123233217324602e-17,
+          -0.0005042307914582834,
+          -3.087523123954616e-20,
+          0.9999998728756464
+        ],
+        "translation": [
+          0.48619365743755383,
+          1.95,
+          0.9734692268219822
+        ]
+      }
+    },
+    "soap_dispenser_stand_0": {
+      "bbox_max": [
+        0.12366265058517456,
+        0.125,
+        0.7183693647384644
+      ],
+      "bbox_min": [
+        -0.12366265058517456,
+        -0.125,
+        0.0
+      ],
+      "description": "Freestanding stainless hand soap dispenser stand (touchless)",
+      "geometry_path": "generated_assets/furniture/sdf/soap_dispenser_stand_1783997456359838975_74f694967bbb4ef4868aeeb661d4bc3f_1783997492696480703_b5e6ff14bd994d7b97cef66df5b29323/soap_dispenser_stand.gltf",
+      "image_path": "generated_assets/furniture/images/soap_dispenser_stand_1783997456359838975_74f694967bbb4ef4868aeeb661d4bc3f.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "34674814d4a92bcc3901cd7016f45a1348c7405ce21581262a1f2fd4c3631fd4",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            1.0,
+            0.6530630624406744
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.24732530117034912,
+            0.7183693647384644,
+            0.25
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.24732530117034912,
+            0.25,
+            0.7183693647384644
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.34452004730701463,
+            1.0006766319274902,
+            0.34824585914611833
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.2473253006882557,
+            0.7183693686847419,
+            0.25
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "5668899248a89d6b416ea3c74f85059125af52bacbab7db3b058c634a7df7d13",
+          "requested_gltf_dimensions_m": [
+            0.25,
+            1.1,
+            0.25
+          ],
+          "requested_scene_dimensions_m": [
+            0.25,
+            0.25,
+            1.1
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "9e754da011072c0bd2f0fb5c9d937cf931798ffef2ee35a723e6501522339af3",
+          "sdf_visual_uri": "soap_dispenser_stand.gltf",
+          "source_geometry_sha256": "4d0fdeee51ccb3438c8ef49ce844722532286f5b28a0b605f50c1b973dc4609f",
+          "source_gltf_dimensions_m": [
+            0.34452004730701463,
+            1.0006766319274902,
+            0.34824585914611833
+          ],
+          "status": "pass",
+          "uniform_scale": 0.7178836257033685,
+          "visual_mesh_sha256": "837182b246ff113b410ca056bf0626eda75a9ffe832204b8995a1940e9454ed1",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1783997502.1977441
+      },
+      "name": "soap_dispenser_stand",
+      "object_id": "soap_dispenser_stand_0",
+      "object_type": "furniture",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/furniture/sdf/soap_dispenser_stand_1783997456359838975_74f694967bbb4ef4868aeeb661d4bc3f_1783997492696480703_b5e6ff14bd994d7b97cef66df5b29323/soap_dispenser_stand.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          0.0029489294856498423,
+          -0.00020269284036605298,
+          1.1750800647173258e-05,
+          -0.9999956312866672
+        ],
+        "translation": [
+          0.7698694790995343,
+          1.1922181022156302,
+          0.000768860666868389
+        ]
+      }
+    },
+    "south_wall": {
+      "bbox_max": [
+        2.0,
+        0.025,
+        1.6
+      ],
+      "bbox_min": [
+        -2.0,
+        -0.025,
+        -1.6
+      ],
+      "description": "Room south_wall",
+      "geometry_path": null,
+      "image_path": null,
+      "immutable": true,
+      "metadata": {},
+      "name": "south_wall",
+      "object_id": "south_wall",
+      "object_type": "wall",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": null,
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translation": [
+          0.0,
+          -1.975,
+          1.6
+        ]
+      }
+    },
+    "sprinkler_head_0": {
+      "bbox_max": [
+        0.05000000074505806,
+        0.0499996617436409,
+        0.0
+      ],
+      "bbox_min": [
+        -0.05000000074505806,
+        -0.0499996617436409,
+        -0.045525237917900085
+      ],
+      "description": "Concealed-pendent style sprinkler head with small round escutcheon, white",
+      "geometry_path": "generated_assets/ceiling_mounted/sdf/sprinkler_head_1784002800008212725_a2757be9565f4955a5d91251d627373e_1784002844026748606_4bda6ab999b54370a26376eccb93b995/sprinkler_head.gltf",
+      "image_path": "generated_assets/ceiling_mounted/images/sprinkler_head_1784002800008212725_a2757be9565f4955a5d91251d627373e.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "589d97909ae1b31f070fd0243ec797f8660f68d318ffec86f64a1ebb25605f39",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            1.0,
+            0.9999932049812962
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.10000000149011612,
+            0.045525237917900085,
+            0.0999993234872818
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.10000000149011612,
+            0.0999993234872818,
+            0.045525237917900085
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.999954700515191,
+            0.45523175597190857,
+            0.999947905804298
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.1,
+            0.04552523786701204,
+            0.09999932049812962
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "d44a43cd09be8a410bdd6f6a1fe1ce3347e2b7db3c81d283a592075c07e6a930",
+          "requested_gltf_dimensions_m": [
+            0.1,
+            0.07,
+            0.1
+          ],
+          "requested_scene_dimensions_m": [
+            0.1,
+            0.1,
+            0.07
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "e543d12ad7dff651416bca3a5639e017f550b1d612cddb15175e1b98a8c34334",
+          "sdf_visual_uri": "sprinkler_head.gltf",
+          "source_geometry_sha256": "ea11d3e217209f8b742c3a13b0557eb4d51afe3b605f61fad6ae58679ef550ec",
+          "source_gltf_dimensions_m": [
+            0.999954700515191,
+            0.45523175597190857,
+            0.999947905804298
+          ],
+          "status": "pass",
+          "uniform_scale": 0.10000453015369454,
+          "visual_mesh_sha256": "00fdfde1cc9b1e640ea84aa783439dabc922c89d35a3d2d9be9fdc02eafa66be",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1784002854.5948348
+      },
+      "name": "sprinkler_head",
+      "object_id": "sprinkler_head_0",
+      "object_type": "ceiling_mounted",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/ceiling_mounted/sdf/sprinkler_head_1784002800008212725_a2757be9565f4955a5d91251d627373e_1784002844026748606_4bda6ab999b54370a26376eccb93b995/sprinkler_head.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          0.999994900378006,
+          0.0,
+          0.0,
+          -0.0031936214525153787
+        ],
+        "translation": [
+          0.05997304255378202,
+          0.004233296705468596,
+          3.2
+        ]
+      }
+    },
+    "toilet_0": {
+      "bbox_max": [
+        0.20000000298023224,
+        0.3040575087070465,
+        0.6981542110443115
+      ],
+      "bbox_min": [
+        -0.20000000298023224,
+        -0.3040575087070465,
+        0.0
+      ],
+      "description": "one white floor-mounted toilet inside (compact)",
+      "geometry_path": "generated_assets/furniture/sdf/toilet_1783996233703025590_c36d10f7793548a983256b5076f6521c_1783996274512886517_042000bab26242408f87146c75a37580/toilet.gltf",
+      "image_path": "generated_assets/furniture/images/toilet_1783996233703025590_c36d10f7793548a983256b5076f6521c.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "14ad95d243f1c7abe7d6a913c0b20f64a5b27fde240752ef31222e0b4fd21120",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            0.8687357131180748,
+            0.9308722542748863
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.4000000059604645,
+            0.6981542110443115,
+            0.608115017414093
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.4000000059604645,
+            0.608115017414093,
+            0.6981542110443115
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.5719101130962374,
+            0.9982036054134369,
+            0.8694677948951725
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.4,
+            0.6981541907061647,
+            0.6081149991826523
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "086604b3eb1352be25afe7ced60c9da268537ff51de9f778b558fd2144c2ca17",
+          "requested_gltf_dimensions_m": [
+            0.4,
+            0.75,
+            0.7
+          ],
+          "requested_scene_dimensions_m": [
+            0.4,
+            0.7,
+            0.75
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "a9a56954936a6bfd499bdc1c6998b35574688e9f04505ac6fb6534be49369836",
+          "sdf_visual_uri": "toilet.gltf",
+          "source_geometry_sha256": "97f946fdef9abed655a5a5130cd6b88fbd00d12e1aefd1cc0526bced05f8530a",
+          "source_gltf_dimensions_m": [
+            0.5719101130962374,
+            0.9982036054134369,
+            0.8694677948951725
+          ],
+          "status": "pass",
+          "uniform_scale": 0.6994106081364058,
+          "visual_mesh_sha256": "1336d19fc1005453ade204131f91faad82bff52939ac5853bf55500fdbe85458",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1783996284.9269488
+      },
+      "name": "toilet",
+      "object_id": "toilet_0",
+      "object_type": "furniture",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/furniture/sdf/toilet_1783996233703025590_c36d10f7793548a983256b5076f6521c_1783996274512886517_042000bab26242408f87146c75a37580/toilet.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          0.7071066145671372,
+          0.00015379706799718634,
+          6.075204101174958e-05,
+          -0.7071069284705483
+        ],
+        "translation": [
+          -1.6359693580602155,
+          0.8413868473327761,
+          0.002195399748933426
+        ]
+      }
+    },
+    "toilet_1": {
+      "bbox_max": [
+        0.20000000298023224,
+        0.3040575087070465,
+        0.6981542110443115
+      ],
+      "bbox_min": [
+        -0.20000000298023224,
+        -0.3040575087070465,
+        0.0
+      ],
+      "description": "one white floor-mounted toilet inside (compact)",
+      "geometry_path": "generated_assets/furniture/sdf/toilet_1783996233703025590_c36d10f7793548a983256b5076f6521c_1783996274512886517_042000bab26242408f87146c75a37580/toilet.gltf",
+      "image_path": "generated_assets/furniture/images/toilet_1783996233703025590_c36d10f7793548a983256b5076f6521c.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "14ad95d243f1c7abe7d6a913c0b20f64a5b27fde240752ef31222e0b4fd21120",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            0.8687357131180748,
+            0.9308722542748863
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.4000000059604645,
+            0.6981542110443115,
+            0.608115017414093
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.4000000059604645,
+            0.608115017414093,
+            0.6981542110443115
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.5719101130962374,
+            0.9982036054134369,
+            0.8694677948951725
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.4,
+            0.6981541907061647,
+            0.6081149991826523
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "086604b3eb1352be25afe7ced60c9da268537ff51de9f778b558fd2144c2ca17",
+          "requested_gltf_dimensions_m": [
+            0.4,
+            0.75,
+            0.7
+          ],
+          "requested_scene_dimensions_m": [
+            0.4,
+            0.7,
+            0.75
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "a9a56954936a6bfd499bdc1c6998b35574688e9f04505ac6fb6534be49369836",
+          "sdf_visual_uri": "toilet.gltf",
+          "source_geometry_sha256": "97f946fdef9abed655a5a5130cd6b88fbd00d12e1aefd1cc0526bced05f8530a",
+          "source_gltf_dimensions_m": [
+            0.5719101130962374,
+            0.9982036054134369,
+            0.8694677948951725
+          ],
+          "status": "pass",
+          "uniform_scale": 0.6994106081364058,
+          "visual_mesh_sha256": "1336d19fc1005453ade204131f91faad82bff52939ac5853bf55500fdbe85458",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1783996284.9269488
+      },
+      "name": "toilet",
+      "object_id": "toilet_1",
+      "object_type": "furniture",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/furniture/sdf/toilet_1783996233703025590_c36d10f7793548a983256b5076f6521c_1783996274512886517_042000bab26242408f87146c75a37580/toilet.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          0.7071066145010408,
+          0.0001537970680028731,
+          6.075204099737541e-05,
+          -0.7071069285366449
+        ],
+        "translation": [
+          -1.6359693568176095,
+          -0.3803643556291404,
+          -0.0002974607711203755
+        ]
+      }
+    },
+    "trash_bin_0": {
+      "bbox_max": [
+        0.12879188358783722,
+        0.1599999964237213,
+        0.385342538356781
+      ],
+      "bbox_min": [
+        -0.12879188358783722,
+        -0.1599999964237213,
+        0.0
+      ],
+      "description": "Small stainless pedal trash bin",
+      "geometry_path": "generated_assets/furniture/sdf/trash_bin_1783996778470052291_3b8fddc5d644435d8222f197165ee9e3_1783996822417929250_d64c3fe9c06b45d7993058178c513fad/trash_bin.gltf",
+      "image_path": "generated_assets/furniture/images/trash_bin_1783996778470052291_3b8fddc5d644435d8222f197165ee9e3.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "f1c9595a0ce1eadad2ad13db7a068ca2a8660d43cf11c4a19d0bcc0d812ac024",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            1.0,
+            0.7006228037028362
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.25758376717567444,
+            0.385342538356781,
+            0.3199999928474426
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.25758376717567444,
+            0.3199999928474426,
+            0.385342538356781
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.6650129556655884,
+            0.9948522746562958,
+            0.8261551558971405
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.2575837532380942,
+            0.38534254203656,
+            0.32
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "f331ab863f8d9df0c462d81d5759d0e88ec0be1bb382865a2a7752e7160abcd0",
+          "requested_gltf_dimensions_m": [
+            0.32,
+            0.55,
+            0.32
+          ],
+          "requested_scene_dimensions_m": [
+            0.32,
+            0.32,
+            0.55
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "d10f2929e53e904cb6fe55a935a81862208950e9af62a50b0983bfec09174de4",
+          "sdf_visual_uri": "trash_bin.gltf",
+          "source_geometry_sha256": "86756b5d6558f0645f5278e544c214a3736b11c32ee9a0dc3f37dd9d114f46e7",
+          "source_gltf_dimensions_m": [
+            0.6650129556655884,
+            0.9948522746562958,
+            0.8261551558971405
+          ],
+          "status": "pass",
+          "uniform_scale": 0.3873364436641502,
+          "visual_mesh_sha256": "8664b0e65d822145d637f5cda3175a4c5b4e7e4c3a5725840a9c4e6a3fcd68cb",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1783996835.0979085
+      },
+      "name": "trash_bin",
+      "object_id": "trash_bin_0",
+      "object_type": "furniture",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/furniture/sdf/trash_bin_1783996778470052291_3b8fddc5d644435d8222f197165ee9e3_1783996822417929250_d64c3fe9c06b45d7993058178c513fad/trash_bin.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          0.9999992384259366,
+          3.125899250549504e-05,
+          -0.0009046815860399368,
+          -0.000838881189428791
+        ],
+        "translation": [
+          0.609576756701409,
+          -1.7244766331659522,
+          0.0006673872147096626
+        ]
+      }
+    },
+    "urinal_station_0": {
+      "bbox_max": [
+        0.6499999761581421,
+        0.19332556426525116,
+        1.1221588850021362
+      ],
+      "bbox_min": [
+        -0.6499999761581421,
+        -0.19332556426525116,
+        0.0
+      ],
+      "description": "School restroom urinal station with two white urinals, a central privacy divider panel, and a low stainless splash guard base (floor-standing)",
+      "geometry_path": "generated_assets/furniture/sdf/urinal_station_1783995110852370780_0d7de3781fbd405b96a3fda3b5a10034_1783995163313831210_ab7d04f1af9743949220df14ab46baee/urinal_station.gltf",
+      "image_path": "generated_assets/furniture/images/urinal_station_1783995110852370780_0d7de3781fbd405b96a3fda3b5a10034.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "e41e366da435f8880bbfe873834040803f3b4834bd6a870d5d0e591b3339b989",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            0.9351324476475403,
+            1.0
+          ],
+          "measured_final_gltf_dimensions_m": [
+            1.2999999523162842,
+            1.1221588850021362,
+            0.3866511285305023
+          ],
+          "measured_final_scene_dimensions_m": [
+            1.2999999523162842,
+            0.3866511285305023,
+            1.1221588850021362
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.9993645846843724,
+            0.8626506924629211,
+            0.2972349673509599
+          ],
+          "planned_final_gltf_dimensions_m": [
+            1.3,
+            1.1221589371770484,
+            0.38665114161343395
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "8517edf8fefea57474544c57f2f81a3db7014172b48845e5f8cf94e77207933b",
+          "requested_gltf_dimensions_m": [
+            1.3,
+            1.2,
+            0.5
+          ],
+          "requested_scene_dimensions_m": [
+            1.3,
+            0.5,
+            1.2
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "0cf0c6ecc2d6da5322eedcf1b293561da48e57c002ab6d7f2b56f86838241554",
+          "sdf_visual_uri": "urinal_station.gltf",
+          "source_geometry_sha256": "f9f1ad4cc4f3e6f678b181f65a2e6fb3e499d23ca6e99d5acc779a5edb728b6e",
+          "source_gltf_dimensions_m": [
+            0.9993645846843724,
+            0.8626506924629211,
+            0.2972349673509599
+          ],
+          "status": "pass",
+          "uniform_scale": 1.3008265651224542,
+          "visual_mesh_sha256": "efda50eda5ebbb38036be85b339479c8237b52621f363562215804f5e9778b65",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1783995175.943933
+      },
+      "name": "urinal_station",
+      "object_id": "urinal_station_0",
+      "object_type": "furniture",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/furniture/sdf/urinal_station_1783995110852370780_0d7de3781fbd405b96a3fda3b5a10034_1783995163313831210_ab7d04f1af9743949220df14ab46baee/urinal_station.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          0.7074279086526732,
+          0.0025224496518008554,
+          0.0027509830773663037,
+          0.7067756528058724
+        ],
+        "translation": [
+          1.7474748160898226,
+          0.5552112322893991,
+          -0.00043076176132905426
+        ]
+      }
+    },
+    "vanity_0": {
+      "bbox_max": [
+        0.800000011920929,
+        0.26396527886390686,
+        0.9388718605041504
+      ],
+      "bbox_min": [
+        -0.800000011920929,
+        -0.26396527886390686,
+        0.0
+      ],
+      "description": "Double sink light-wood school restroom vanity with two white basins",
+      "geometry_path": "generated_assets/furniture/sdf/vanity_1783995359487764453_3336437df54c4eb2a8e29af5eb646242_1783995399196662835_dfbb933473934c0691994d52e54288f4/vanity.gltf",
+      "image_path": "generated_assets/furniture/images/vanity_1783995359487764453_3336437df54c4eb2a8e29af5eb646242.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "aac26e9cb0cb7e868cfdfbb50476769fc5cb533ee4b9518d454f8a2e53ee2063",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            1.0,
+            0.5074983130741448
+          ],
+          "measured_final_gltf_dimensions_m": [
+            1.600000023841858,
+            0.9388718605041504,
+            0.5279305577278137
+          ],
+          "measured_final_scene_dimensions_m": [
+            1.600000023841858,
+            0.5279305577278137,
+            0.9388718605041504
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            1.0002807378768925,
+            0.5869596600532532,
+            0.3300492167472841
+          ],
+          "planned_final_gltf_dimensions_m": [
+            1.6,
+            0.9388718791871681,
+            0.5279305366976353
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "da3c6bf92be98a27301fa9da538a005c358d046f8feb36a8016357256f823c6d",
+          "requested_gltf_dimensions_m": [
+            1.6,
+            1.85,
+            0.55
+          ],
+          "requested_scene_dimensions_m": [
+            1.6,
+            0.55,
+            1.85
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "7a94e721fb88df2c8b8d8dbd8f908b10c68c243f81a16b34dedc4a5fa255a79d",
+          "sdf_visual_uri": "vanity.gltf",
+          "source_geometry_sha256": "5456ac9bd0359701310e3e3181b05c04b128a924f0a371d05d863ff8893d2882",
+          "source_gltf_dimensions_m": [
+            1.0002807378768925,
+            0.5869596600532532,
+            0.3300492167472841
+          ],
+          "status": "pass",
+          "uniform_scale": 1.5995509454635892,
+          "visual_mesh_sha256": "a53598f1aa19a6dac87dc9e32ee8e03e9bffcc46256dc8655d2bf9431e054c04",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1783995409.9541357
+      },
+      "name": "vanity",
+      "object_id": "vanity_0",
+      "object_type": "furniture",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/furniture/sdf/vanity_1783995359487764453_3336437df54c4eb2a8e29af5eb646242_1783995399196662835_dfbb933473934c0691994d52e54288f4/vanity.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          7.809266323063e-06,
+          0.00023342629681566966,
+          0.0005377948693487449,
+          0.9999998281139142
+        ],
+        "translation": [
+          -0.01816083284811967,
+          1.6766220349221612,
+          -2.4962225726590098e-05
+        ]
+      }
+    },
+    "wall_clock_0": {
+      "bbox_max": [
+        0.17499999701976776,
+        0.019193090498447418,
+        0.17420630156993866
+      ],
+      "bbox_min": [
+        -0.17499999701976776,
+        -2.0881723017396325e-08,
+        -0.17420630156993866
+      ],
+      "description": "Round minimalist wall clock with white face and black numbers, about 35cm diameter",
+      "geometry_path": "generated_assets/wall_mounted/sdf/wall_clock_1784000988416862256_c3f9d5c08c2e4326b5c9f86dd0c3632d_1784001027445837397_c922d84c975a4285be4d4a5ab082873b/wall_clock.gltf",
+      "image_path": "generated_assets/wall_mounted/images/wall_clock_1784000988416862256_c3f9d5c08c2e4326b5c9f86dd0c3632d.png",
+      "immutable": false,
+      "metadata": {
+        "asset_source": "generated",
+        "dimension_contract": {
+          "asset_directory_sha256": "d078282a813ef2e3d14554499a9a99ef6787ff6cef72713c8fcad3b842440c51",
+          "asset_source": "generated",
+          "atol_m": 1e-06,
+          "major_axis_min_occupancy": 0.5,
+          "major_axis_occupancies": [
+            1.0,
+            0.9954645492917112
+          ],
+          "measured_final_gltf_dimensions_m": [
+            0.3499999940395355,
+            0.3484126031398773,
+            0.019193111380170436
+          ],
+          "measured_final_scene_dimensions_m": [
+            0.3499999940395355,
+            0.019193111380170436,
+            0.3484126031398773
+          ],
+          "orientation_recovery": "direct",
+          "oriented_source_gltf_dimensions_m": [
+            0.9990375339984894,
+            0.994506448507309,
+            0.054784683510661125
+          ],
+          "planned_final_gltf_dimensions_m": [
+            0.35,
+            0.3484125922520989,
+            0.01919311194644303
+          ],
+          "policy": "proportion_preserving_uniform_fit",
+          "receipt_sha256": "f5ab18eb3dac41bc4a1de80ad2ece942a87616571aab7121e587dc4bf54aa9c9",
+          "requested_gltf_dimensions_m": [
+            0.35,
+            0.35,
+            0.05
+          ],
+          "requested_scene_dimensions_m": [
+            0.35,
+            0.05,
+            0.35
+          ],
+          "rtol": 1e-05,
+          "schema_version": 1,
+          "sdf_sha256": "d80a0601d9e7d379506951c85fbe478e6435027101c55acd3f0f4afbda1747ec",
+          "sdf_visual_uri": "wall_clock.gltf",
+          "source_geometry_sha256": "80e0f515fe86d7f0ea235640121a8b462b7279961d2a7cb61c1fb1215129af13",
+          "source_gltf_dimensions_m": [
+            0.9990375339984894,
+            0.994506448507309,
+            0.054784683510661125
+          ],
+          "status": "pass",
+          "uniform_scale": 0.35033718763216076,
+          "visual_mesh_sha256": "856c853665892e4a5f91b0de52a77cb44a60ed5b72f536eb8c75698e449eefc9",
+          "yaw_rotation_degrees": 0
+        },
+        "generation_timestamp": 1784001041.3426716
+      },
+      "name": "wall_clock",
+      "object_id": "wall_clock_0",
+      "object_type": "wall_mounted",
+      "placement_info": {
+        "parent_surface_id": "boys_toilet_east",
+        "placement_method": "wall_placement",
+        "position_2d": [
+          3.3684140538430998,
+          2.649886921433837
+        ],
+        "rotation_2d": 0.010323231363597432
+      },
+      "scale_factor": 1.0,
+      "sdf_path": "generated_assets/wall_mounted/sdf/wall_clock_1784000988416862256_c3f9d5c08c2e4326b5c9f86dd0c3632d_1784001027445837397_c922d84c975a4285be4d4a5ab082873b/wall_clock.sdf",
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          0.7070973617402896,
+          -0.003649797243943799,
+          0.003649797243943799,
+          0.7070973617402898
+        ],
+        "translation": [
+          1.95,
+          -1.3684140538430998,
+          2.649886921433837
+        ]
+      }
+    },
+    "west_wall": {
+      "bbox_max": [
+        0.025,
+        2.0,
+        1.6
+      ],
+      "bbox_min": [
+        -0.025,
+        -2.0,
+        -1.6
+      ],
+      "description": "Room west_wall",
+      "geometry_path": null,
+      "image_path": null,
+      "immutable": true,
+      "metadata": {},
+      "name": "west_wall",
+      "object_id": "west_wall",
+      "object_type": "wall",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": null,
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translation": [
+          -1.975,
+          0.0,
+          1.6
+        ]
+      }
+    }
+  },
+  "room_geometry": {
+    "floor": {
+      "bbox_max": [
+        2.0,
+        2.0,
+        0.0
+      ],
+      "bbox_min": [
+        -2.0,
+        -2.0,
+        -0.1
+      ],
+      "description": "Floor surface",
+      "geometry_path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/floor_plans/boys_toilet/floors/floor.gltf",
+      "image_path": null,
+      "immutable": true,
+      "metadata": {},
+      "name": "Floor",
+      "object_id": "floor_boys_toilet",
+      "object_type": "floor",
+      "placement_info": null,
+      "scale_factor": 1.0,
+      "sdf_path": null,
+      "support_surfaces": [],
+      "transform": {
+        "rotation_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "translation": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "length": 4.0,
+    "openings": [
+      {
+        "center_world": [
+          2.0,
+          -1.4000000000000004,
+          1.05
+        ],
+        "clearance_bbox_max": [
+          2.0,
+          -0.9000000000000004,
+          2.1
+        ],
+        "clearance_bbox_min": [
+          1.2000000000000002,
+          -1.9000000000000004,
+          0.0
+        ],
+        "height": 2.1,
+        "opening_id": "door_girls_toilet_boys_toilet",
+        "opening_type": "door",
+        "position_along_wall": 0.09999999999999964,
+        "sill_height": 0.0,
+        "wall_direction": "east",
+        "wall_end": [
+          2.0,
+          2.0
+        ],
+        "wall_start": [
+          2.0,
+          -2.0
+        ],
+        "width": 1.0
+      }
+    ],
+    "sdf_path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_geometry/room_geometry_boys_toilet.sdf",
+    "wall_height": 3.2,
+    "wall_normals": {
+      "east_wall": [
+        -1.0,
+        0.0
+      ],
+      "north_wall": [
+        0.0,
+        -1.0
+      ],
+      "south_wall": [
+        0.0,
+        1.0
+      ],
+      "west_wall": [
+        1.0,
+        0.0
+      ]
+    },
+    "wall_thickness": 0.05,
+    "walls": [
+      {
+        "bbox_max": [
+          0.025,
+          2.0,
+          1.6
+        ],
+        "bbox_min": [
+          -0.025,
+          -2.0,
+          -1.6
+        ],
+        "description": "Room east_wall",
+        "geometry_path": null,
+        "image_path": null,
+        "immutable": true,
+        "metadata": {},
+        "name": "east_wall",
+        "object_id": "east_wall",
+        "object_type": "wall",
+        "placement_info": null,
+        "scale_factor": 1.0,
+        "sdf_path": null,
+        "support_surfaces": [],
+        "transform": {
+          "rotation_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "translation": [
+            1.975,
+            0.0,
+            1.6
+          ]
+        }
+      },
+      {
+        "bbox_max": [
+          2.0,
+          0.025,
+          1.6
+        ],
+        "bbox_min": [
+          -2.0,
+          -0.025,
+          -1.6
+        ],
+        "description": "Room north_wall",
+        "geometry_path": null,
+        "image_path": null,
+        "immutable": true,
+        "metadata": {},
+        "name": "north_wall",
+        "object_id": "north_wall",
+        "object_type": "wall",
+        "placement_info": null,
+        "scale_factor": 1.0,
+        "sdf_path": null,
+        "support_surfaces": [],
+        "transform": {
+          "rotation_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "translation": [
+            0.0,
+            1.975,
+            1.6
+          ]
+        }
+      },
+      {
+        "bbox_max": [
+          2.0,
+          0.025,
+          1.6
+        ],
+        "bbox_min": [
+          -2.0,
+          -0.025,
+          -1.6
+        ],
+        "description": "Room south_wall",
+        "geometry_path": null,
+        "image_path": null,
+        "immutable": true,
+        "metadata": {},
+        "name": "south_wall",
+        "object_id": "south_wall",
+        "object_type": "wall",
+        "placement_info": null,
+        "scale_factor": 1.0,
+        "sdf_path": null,
+        "support_surfaces": [],
+        "transform": {
+          "rotation_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "translation": [
+            0.0,
+            -1.975,
+            1.6
+          ]
+        }
+      },
+      {
+        "bbox_max": [
+          0.025,
+          2.0,
+          1.6
+        ],
+        "bbox_min": [
+          -0.025,
+          -2.0,
+          -1.6
+        ],
+        "description": "Room west_wall",
+        "geometry_path": null,
+        "image_path": null,
+        "immutable": true,
+        "metadata": {},
+        "name": "west_wall",
+        "object_id": "west_wall",
+        "object_type": "wall",
+        "placement_info": null,
+        "scale_factor": 1.0,
+        "sdf_path": null,
+        "support_surfaces": [],
+        "transform": {
+          "rotation_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "translation": [
+            -1.975,
+            0.0,
+            1.6
+          ]
+        }
+      }
+    ],
+    "width": 4.0
+  },
+  "text_description": "[SCENESMITH_SCHOOL_CONTRACT_V1 room_id=boys_toilet profile=school_reference_20260710]\nImmutable effective prompt SHA-256: ac8d297cc9a2d605f41b4bcd7abd52aac29bfd0f195875840342ee1e6a7da86f\n\nUse warm cream/beige/off-white walls, light wood furniture and flooring, soft daylight, warm ceiling light, organized school displays, realistic scale, greenery, and clear humanoid/robot circulation. Nothing may float, visibly interpenetrate, block a door, or eliminate a usable walking/turning path.\n\nROOM-SPECIFIC REQUIRED CONTENTS:\nCreate a clean compact boys school toilet with at least two toilet fixtures/stalls, at least two urinals, at least two sinks and mirrors, stall partitions, soap dispenser, paper-towel dispenser or hand dryer, trash bin, tiled floor/walls, and unblocked access.\n\n--- FLOOR-PLANNER CONTEXT (SECONDARY) ---\nCompact boys school restroom west of the shared public foyer.",
+  "timestamp": 1784045027.0740006
+}
