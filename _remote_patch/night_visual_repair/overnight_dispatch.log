@@ -1,0 +1,70 @@
+2026-07-15T02:50:09.8616661+08:00 supervisor_started
+2026-07-15T02:50:11.2013040+08:00 mount_unavailable exit=
+2026-07-15T02:50:41.9531761+08:00 mount_unavailable exit=
+2026-07-15T02:51:13.3412325+08:00 mount_unavailable exit=
+2026-07-15T02:51:24.0150542+08:00 supervisor_started
+2026-07-15T02:51:42.0845358+08:00 mount_unavailable exit=124
+2026-07-15T02:52:30.1165135+08:00 mount_unavailable exit=124
+2026-07-15T02:53:18.1498001+08:00 mount_unavailable exit=124
+2026-07-15T02:53:48.8728878+08:00 mount_unavailable exit=
+2026-07-15T02:54:36.9086772+08:00 mount_unavailable exit=124
+2026-07-15T02:55:24.9380123+08:00 mount_unavailable exit=124
+2026-07-15T02:56:12.9672474+08:00 mount_unavailable exit=124
+2026-07-15T02:56:23.7417318+08:00 supervisor_started
+2026-07-15T02:56:41.8057054+08:00 mount_unavailable exit=124
+2026-07-15T03:00:55.2864157+08:00 supervisor_started
+2026-07-15T03:01:08.8399759+08:00 deployment_verified
+2026-07-15T03:02:08.8667373+08:00 bridge_helper_failed exit=124
+2026-07-15T03:03:47.4233361+08:00 supervisor_started
+2026-07-15T03:04:05.4935710+08:00 mount_unavailable exit=124
+2026-07-15T03:04:54.9288268+08:00 supervisor_started
+2026-07-15T03:04:55.7287927+08:00 mount_healthy gateway=36.103.203.6
+2026-07-15T03:06:00.2957580+08:00 supervisor_started
+2026-07-15T03:06:18.3595134+08:00 mount_unavailable gateway=36.103.203.6 exit=124
+2026-07-15T03:06:19.1593829+08:00 mount_healthy gateway=36.103.203.5
+2026-07-15T03:06:49.2059451+08:00 supervisor_error Remote staging failed: timeout
+2026-07-15T03:07:05.8494492+08:00 supervisor_started
+2026-07-15T03:07:23.9206016+08:00 mount_unavailable gateway=36.103.203.6 exit=124
+2026-07-15T03:07:41.9415139+08:00 mount_unavailable gateway=36.103.203.5 exit=124
+2026-07-15T03:08:13.0801707+08:00 supervisor_started
+2026-07-15T03:08:31.1709356+08:00 mount_unavailable gateway=36.103.203.6 exit=124
+2026-07-15T03:08:36.9230248+08:00 mount_healthy gateway=36.103.203.5
+2026-07-15T03:08:36.9289547+08:00 bridge_owned_by_parallel_watchdog
+2026-07-15T03:11:57.5134590+08:00 supervisor_started
+2026-07-15T03:11:58.8441038+08:00 mount_healthy gateway=36.103.203.6
+2026-07-15T03:11:58.8501648+08:00 bridge_owned_by_parallel_watchdog
+2026-07-15T03:13:58.8935259+08:00 supervisor_error Dispatch failed:  timeout
+2026-07-15T03:14:29.2581827+08:00 supervisor_started
+2026-07-15T03:14:47.3290865+08:00 mount_unavailable gateway=36.103.203.6 exit=124
+2026-07-15T03:14:48.1082231+08:00 mount_healthy gateway=36.103.203.5
+2026-07-15T03:15:23.9391835+08:00 supervisor_started
+2026-07-15T03:15:24.9599732+08:00 mount_healthy gateway=36.103.203.6
+2026-07-15T03:15:55.0044016+08:00 supervisor_error Remote staging failed: timeout
+2026-07-15T03:16:25.3583154+08:00 supervisor_started
+2026-07-15T03:16:26.1051645+08:00 mount_healthy gateway=36.103.203.6
+2026-07-15T03:16:38.6125430+08:00 deployment_verified_v3
+2026-07-15T03:16:38.6167914+08:00 bridge_owned_by_parallel_watchdog
+2026-07-15T03:16:39.8403865+08:00 dispatch_complete JOBID|STATE|TIME|TRES_PER_NODE|NAME|NODELIST(REASON);170128_[0-6]|PENDING|0:00|gres/gpu:1|visual_completion_v2|(None);170127|PENDING|0:00|gres/gpu:1|resume_library|(Priority);170126|PENDING|0:00|gres/gpu:1|resume_classroom_06|(Priority);170125|PENDING|0:00|gres/gpu:1|resume_storage_room|(Priority);170124|PENDING|0:00|gres/gpu:1|resume_classroom_05|(Priority);
+2026-07-15T03:17:44.6234185+08:00 supervisor_started
+2026-07-15T03:17:45.3782144+08:00 mount_healthy gateway=36.103.203.6
+2026-07-15T03:17:45.3832161+08:00 bridge_owned_by_parallel_watchdog
+2026-07-15T03:19:45.4259248+08:00 supervisor_error Dispatch failed:  timeout
+2026-07-15T03:22:58.3134828+08:00 supervisor_started
+2026-07-15T03:22:59.6647227+08:00 mount_healthy gateway=36.103.203.6
+2026-07-15T03:23:29.6886295+08:00 supervisor_error Remote staging failed: timeout
+2026-07-15T03:24:00.0625233+08:00 supervisor_started
+2026-07-15T03:24:01.7042541+08:00 mount_healthy gateway=36.103.203.6
+2026-07-15T03:24:26.9084545+08:00 supervisor_error Atomic deployment failed: /data/run01/scvj260/codex_factory/.overnight_v2_stage_20260715_032401/repair_visual_completion_v2.py: FAILED open or read
+/data/run01/scvj260/codex_factory/.overnight_v2_stage_20260715_032401/paracloud_visual_completion_v2.sbatch: OK
+/data/run01/scvj260/codex_factory/.overnight_v2_stage_20260715_032401/render_room_review_views.py: OK
+/data/run01/scvj260/codex_factory/.overnight_v2_stage_20260715_032401/cutaway_evidence_contract.py: OK
+/data/run01/scvj260/codex_factory/.overnight_v2_stage_20260715_032401/room1_baseline_ba67.json: FAILED open or read
+/data/run01/scvj260/codex_factory/.overnight_v2_stage_20260715_032401/rebind_one_manipuland_plan.py: OK
+/data/run01/scvj260/codex_factory/.overnight_v2_stage_20260715_032401/paracloud_manipuland_resume.sbatch: OK
+/data/run01/scvj260/codex_factory/.overnight_v2_stage_20260715_032401/submit_post_room_pipeline_after_all_gates.sh: OK
+ sha256sum: /data/run01/scvj260/codex_factory/.overnight_v2_stage_20260715_032401/repair_visual_completion_v2.py: No such file or directory
+sha256sum: /data/run01/scvj260/codex_factory/.overnight_v2_stage_20260715_032401/room1_baseline_ba67.json: No such file or directory
+sha256sum: WARNING: 2 listed files could not be read
+
+2026-07-15T03:24:57.2733168+08:00 supervisor_started
+2026-07-15T03:24:58.5993351+08:00 mount_healthy gateway=36.103.203.6
