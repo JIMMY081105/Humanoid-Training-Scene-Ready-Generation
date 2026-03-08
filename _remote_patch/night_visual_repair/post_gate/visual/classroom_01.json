@@ -1,0 +1,470 @@
+{
+  "contract_profile": "school_reference_20260710",
+  "critical_issues": [
+    "Required classroom supplies are not all verifiably present in the rendered views: glue sticks and scissors are not clearly visible in any view (fail-closed).",
+    "Whiteboard eraser is not clearly visible on or near the whiteboard in any view (fail-closed).",
+    "Daylight/warm interior lighting target is not clearly achieved: windows are present but do not show convincing exterior daylight contribution, and interior lighting reads flat in the provided views.",
+    "Overall visual finish realism does not match the reference target (materials/lighting appear simplified and less architectural-realistic).",
+    "Visual checklist requirement failed (daylight_and_warm_lighting): Windows are visible, but exterior daylight and warm interior light contribution are not convincingly readable (flat lighting; no clear daylight spill).",
+    "Visual checklist requirement failed (inventory:glue_sticks): Glue sticks are not clearly identifiable in any provided view.",
+    "Visual checklist requirement failed (inventory:scissors): Scissors are not clearly identifiable in any provided view.",
+    "Visual checklist requirement failed (inventory:whiteboard_eraser): A distinct whiteboard eraser is not clearly visible on the board tray or nearby surfaces.",
+    "Visual checklist requirement failed (reference_style): While colors are warm, the overall rendering/material/lighting finish appears simplified and does not clearly match the realistic architectural reference style."
+  ],
+  "deterministic_gate_status": "pass",
+  "evidence": {
+    "algorithm": "sha256",
+    "cutaway_evidence": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/classroom_01_cutaway_evidence.json",
+      "sha256": "eb5b6ba8f256b824320850b14e86d9848708c2f49c105706f5c790a8cfc2aeb2"
+    },
+    "deterministic_gate": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/quality_gates/room_self_exam_deterministic/classroom_01.json",
+      "sha256": "dc9f8fe8db7c5fa949df70f5d7fdc394c8a9099a1d11d4eb5554e11bce9a3d2f"
+    },
+    "effective_prompt": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/inputs/full_quality_school_reference_20260710/prompt.txt",
+      "sha256": "ac8d297cc9a2d605f41b4bcd7abd52aac29bfd0f195875840342ee1e6a7da86f"
+    },
+    "house_layout": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/house_layout.json",
+      "sha256": "b2dc434653d5dca178c3a90f0bbb21e21640452158b81e0ceba227099c265d48"
+    },
+    "input_manifest": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/inputs/full_quality_school_reference_20260710/input_manifest.json",
+      "sha256": "7a285b19c7e5e1622ed70ad72226815fa24084587875bcb658823b5edcdfc61e"
+    },
+    "prompt_binding": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/quality_gates/room_prompt_binding.json",
+      "sha256": "1d237196da20507455a2b75abc7a9059ab19139fff20ec77c449c4529aed5c2e"
+    },
+    "reference_image": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/inputs/full_quality_school_reference_20260710/reference.png",
+      "sha256": "7ba62c39ac98cd2b21d9a5a97fd6f9b90d7efaf447d5ac9a6148524b5a8dbe48"
+    },
+    "review_images": [
+      {
+        "path": "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/classroom_01_top.png",
+        "sha256": "d4dea9888a0a7f905e2892c6ecbbd13ddd5e5fe19efab144f93a2eafec13f3f8"
+      },
+      {
+        "path": "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/classroom_01_oblique_a.png",
+        "sha256": "07457a10f5b176ef5999b550a503cc41be6744fa92a66e8e2f9d6e88ae7ef551"
+      },
+      {
+        "path": "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/classroom_01_oblique_b.png",
+        "sha256": "dc66e68cb596e1cdb426b1d5786dbe96359681d8f099abb4acddb65fcc8bd67b"
+      }
+    ],
+    "scene_state": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_01/scene_states/final_scene/scene_state.json",
+      "sha256": "ba67d001e747d230c79cedd406f2d54409adb8a5d735f2ce09a8603977cc3557"
+    },
+    "schema_version": 1,
+    "source_blend": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_classroom_01/scene_states/final_scene/scene.blend",
+      "sha256": "3ad5f7717c8c4e8c15884b97e0af170bb945afe5af9f1a9abee6838645bbee7f"
+    },
+    "vlm_request": {
+      "algorithm": "sha256",
+      "backend": "openai",
+      "generated_view_indices": [
+        1,
+        2,
+        3
+      ],
+      "messages_sha256": "5ac3df1eb04fc69f7c97f078b03bf170c699ef73e21be5a87dccf005c868f3d7",
+      "model": "gpt-5.2",
+      "reference_image_sha256": "7ba62c39ac98cd2b21d9a5a97fd6f9b90d7efaf447d5ac9a6148524b5a8dbe48",
+      "request_sha256": "ec882ff816b013625249cf8faf80d6d408f2be7450a14953ec0c87ab3e0c3c20",
+      "requirement_keys": [
+        "articulated_teacher_filing_cabinet",
+        "clear_circulation",
+        "collision_free_support",
+        "daylight_and_warm_lighting",
+        "inventory:backpack",
+        "inventory:board_markers",
+        "inventory:bookshelf",
+        "inventory:clock",
+        "inventory:display",
+        "inventory:erasers",
+        "inventory:folders",
+        "inventory:glue_sticks",
+        "inventory:markers",
+        "inventory:notebooks",
+        "inventory:paper_trays",
+        "inventory:pencil_holders",
+        "inventory:plant",
+        "inventory:rulers",
+        "inventory:scissors",
+        "inventory:storage",
+        "inventory:storage_bins",
+        "inventory:student_chairs",
+        "inventory:student_desks",
+        "inventory:teacher_chair",
+        "inventory:teacher_desk",
+        "inventory:textbooks",
+        "inventory:trash",
+        "inventory:water_bottle",
+        "inventory:whiteboard",
+        "inventory:whiteboard_eraser",
+        "inventory:worksheets",
+        "reference_style",
+        "room_specific_arrangement",
+        "warm_materials"
+      ],
+      "review_image_sha256": [
+        "d4dea9888a0a7f905e2892c6ecbbd13ddd5e5fe19efab144f93a2eafec13f3f8",
+        "07457a10f5b176ef5999b550a503cc41be6744fa92a66e8e2f9d6e88ae7ef551",
+        "dc66e68cb596e1cdb426b1d5786dbe96359681d8f099abb4acddb65fcc8bd67b"
+      ],
+      "room_id": "classroom_01",
+      "schema_id": "scenesmith_canonical_vlm_request_v1",
+      "schema_version": 1,
+      "score_keys": [
+        "object_relevance",
+        "placement_realism",
+        "clearance_and_access",
+        "collision_risk",
+        "prompt_alignment"
+      ],
+      "threshold": 7.0
+    }
+  },
+  "reference_image": "/data/run01/scvj260/codex_factory/room1_execution/inputs/full_quality_school_reference_20260710/reference.png",
+  "repair_instructions": [
+    "Place clearly identifiable scissors and at least one glue stick in obvious locations (e.g., teacher desk supply area and/or student desk caddies) and ensure they are visible in standard room renders.",
+    "Place a clearly identifiable whiteboard eraser on the whiteboard tray (or adjacent ledge) and ensure it is visible.",
+    "Improve window/exterior treatment so visible daylight reads as natural illumination (brighter window contribution, clearer glazing/exterior cues) and add warm ceiling light contribution.",
+    "Upgrade materials/lighting to better match the warm, realistic architectural reference (less flat shading; more realistic wall/floor/wood response).",
+    "Raise these combined scores to the pass threshold: object_relevance, prompt_alignment"
+  ],
+  "review_images": [
+    "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/classroom_01_top.png",
+    "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/classroom_01_oblique_a.png",
+    "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/classroom_01_oblique_b.png"
+  ],
+  "room_id": "classroom_01",
+  "room_prompt": "[SCENESMITH_SCHOOL_CONTRACT_V1 room_id=classroom_01 profile=school_reference_20260710]\nImmutable effective prompt SHA-256: ac8d297cc9a2d605f41b4bcd7abd52aac29bfd0f195875840342ee1e6a7da86f\n\nUse warm cream/beige/off-white walls, light wood furniture and flooring, soft daylight, warm ceiling light, organized school displays, realistic scale, greenery, and clear humanoid/robot circulation. Nothing may float, visibly interpenetrate, block a door, or eliminate a usable walking/turning path.\n\nROOM-SPECIFIC REQUIRED CONTENTS:\nCreate exactly 12 student desks and exactly 12 corresponding student chairs. Orient them toward a strong front teaching wall/whiteboard with clear aisles. Include a teacher desk and teacher chair, storage cabinet, bookshelf or cubbies, bulletin board/educational posters, classroom clock, trash bin, at least one plant, and visible exterior daylight/windows. Add believable school-use details including textbooks, notebooks, folders/worksheets, pencil/marker holders, erasers/rulers, glue/scissors, water bottles, backpacks, storage bins and paper trays without clutter. Use a balanced moderate-density row or cluster layout. Include one functional teacher filing cabinet with operable drawers as an articulated furniture role.\n\n--- FLOOR-PLANNER CONTEXT (SECONDARY) ---\nReference west-wing lower classroom with balanced teaching rows.",
+  "scores": {
+    "clearance_and_access": 9.0,
+    "collision_risk": 9.0,
+    "object_relevance": 6.0,
+    "placement_realism": 8.0,
+    "prompt_alignment": 5.0
+  },
+  "status": "fail",
+  "threshold": 7.0,
+  "visual_assessment": {
+    "critical_issues": [
+      "Required classroom supplies are not all verifiably present in the rendered views: glue sticks and scissors are not clearly visible in any view (fail-closed).",
+      "Whiteboard eraser is not clearly visible on or near the whiteboard in any view (fail-closed).",
+      "Daylight/warm interior lighting target is not clearly achieved: windows are present but do not show convincing exterior daylight contribution, and interior lighting reads flat in the provided views.",
+      "Overall visual finish realism does not match the reference target (materials/lighting appear simplified and less architectural-realistic)."
+    ],
+    "observations": [
+      "View 1 shows a 12-desk/12-chair layout oriented toward the front teaching wall with wide open aisles and a clear door approach zone.",
+      "View 2 shows the cubby/bookshelf area with school supplies and a backpack stored in a cubby.",
+      "View 3 shows the teaching wall with a large whiteboard, bulletin board, and wall clock, plus a teacher desk area with trash bin and a multi-drawer cabinet."
+    ],
+    "repair_instructions": [
+      "Place clearly identifiable scissors and at least one glue stick in obvious locations (e.g., teacher desk supply area and/or student desk caddies) and ensure they are visible in standard room renders.",
+      "Place a clearly identifiable whiteboard eraser on the whiteboard tray (or adjacent ledge) and ensure it is visible.",
+      "Improve window/exterior treatment so visible daylight reads as natural illumination (brighter window contribution, clearer glazing/exterior cues) and add warm ceiling light contribution.",
+      "Upgrade materials/lighting to better match the warm, realistic architectural reference (less flat shading; more realistic wall/floor/wood response)."
+    ],
+    "requirement_evidence": {
+      "articulated_teacher_filing_cabinet": {
+        "label": "Teacher filing cabinet with visibly operable drawer fronts is present.",
+        "observation": "A multi-drawer cabinet (filing-cabinet-like) is visible beside/behind the teacher desk, but drawer operability is only implied by drawer fronts (still acceptable as the best visible match).",
+        "status": "pass",
+        "view_indices": [
+          3
+        ]
+      },
+      "clear_circulation": {
+        "label": "Door clearance, aisles, and humanoid/robot circulation are visibly usable.",
+        "observation": "Door area and main aisles around desk rows are visibly open, with a large clear floor area on the right side and paths between desk columns.",
+        "status": "pass",
+        "view_indices": [
+          1,
+          3
+        ]
+      },
+      "collision_free_support": {
+        "label": "Objects are supported, correctly scaled, and visibly free of collisions/floating.",
+        "observation": "No obvious floating or severe interpenetration is visible; desks/chairs and small items appear supported on floors/surfaces in the shown views.",
+        "status": "pass",
+        "view_indices": [
+          1,
+          2,
+          3
+        ]
+      },
+      "daylight_and_warm_lighting": {
+        "label": "Natural daylight and warm interior lighting are visible.",
+        "observation": "Windows are visible, but exterior daylight and warm interior light contribution are not convincingly readable (flat lighting; no clear daylight spill).",
+        "status": "fail",
+        "view_indices": [
+          3
+        ]
+      },
+      "inventory:backpack": {
+        "label": "Required inventory is visibly represented: backpack.",
+        "observation": "A backpack is visible stored in the cubby shelf.",
+        "status": "pass",
+        "view_indices": [
+          2
+        ]
+      },
+      "inventory:board_markers": {
+        "label": "Required inventory is visibly represented: board markers.",
+        "observation": "Colored dry-erase markers are visible on the rolling whiteboard tray/stand area.",
+        "status": "pass",
+        "view_indices": [
+          3
+        ]
+      },
+      "inventory:bookshelf": {
+        "label": "Required inventory is visibly represented: bookshelf/cubby.",
+        "observation": "A cubby/bookshelf storage unit is visible.",
+        "status": "pass",
+        "view_indices": [
+          2
+        ]
+      },
+      "inventory:clock": {
+        "label": "Required inventory is visibly represented: classroom clock.",
+        "observation": "A wall clock is visible above the bulletin board area.",
+        "status": "pass",
+        "view_indices": [
+          3
+        ]
+      },
+      "inventory:display": {
+        "label": "Required inventory is visibly represented: educational display/poster.",
+        "observation": "A bulletin board/educational display is visible on the teaching wall.",
+        "status": "pass",
+        "view_indices": [
+          3
+        ]
+      },
+      "inventory:erasers": {
+        "label": "Required inventory is visibly represented: general erasers.",
+        "observation": "A small eraser-like object (pink block) is visible on a student desk.",
+        "status": "pass",
+        "view_indices": [
+          2
+        ]
+      },
+      "inventory:folders": {
+        "label": "Required inventory is visibly represented: folders.",
+        "observation": "Colored file folders are visible on top of the cubby/bookshelf area.",
+        "status": "pass",
+        "view_indices": [
+          2
+        ]
+      },
+      "inventory:glue_sticks": {
+        "label": "Required inventory is visibly represented: glue sticks.",
+        "observation": "Glue sticks are not clearly identifiable in any provided view.",
+        "status": "fail",
+        "view_indices": [
+          1,
+          2,
+          3
+        ]
+      },
+      "inventory:markers": {
+        "label": "Required inventory is visibly represented: general classroom markers.",
+        "observation": "Marker/pen items are visible on top of the cubby/bookshelf area.",
+        "status": "pass",
+        "view_indices": [
+          2
+        ]
+      },
+      "inventory:notebooks": {
+        "label": "Required inventory is visibly represented: notebooks.",
+        "observation": "Notebook/book-like items are visible in the cubbies and on student desks.",
+        "status": "pass",
+        "view_indices": [
+          1,
+          2
+        ]
+      },
+      "inventory:paper_trays": {
+        "label": "Required inventory is visibly represented: paper trays.",
+        "observation": "A tray-like bin is visible on the shelf top (paper-tray role).",
+        "status": "pass",
+        "view_indices": [
+          2
+        ]
+      },
+      "inventory:pencil_holders": {
+        "label": "Required inventory is visibly represented: pencil holders.",
+        "observation": "A pencil cup/holder is visible on a student desk (with writing utensils).",
+        "status": "pass",
+        "view_indices": [
+          2
+        ]
+      },
+      "inventory:plant": {
+        "label": "Required inventory is visibly represented: plant/greenery.",
+        "observation": "A potted plant is visible in the room corner.",
+        "status": "pass",
+        "view_indices": [
+          1
+        ]
+      },
+      "inventory:rulers": {
+        "label": "Required inventory is visibly represented: rulers.",
+        "observation": "Long ruler-like sticks are visible among supplies on the cubby top surface.",
+        "status": "pass",
+        "view_indices": [
+          2
+        ]
+      },
+      "inventory:scissors": {
+        "label": "Required inventory is visibly represented: scissors.",
+        "observation": "Scissors are not clearly identifiable in any provided view.",
+        "status": "fail",
+        "view_indices": [
+          1,
+          2,
+          3
+        ]
+      },
+      "inventory:storage": {
+        "label": "Required inventory is visibly represented: storage cabinet/shelf.",
+        "observation": "A storage cabinet/side unit is visible along the right side of the room (small cabinet-like furniture).",
+        "status": "pass",
+        "view_indices": [
+          1
+        ]
+      },
+      "inventory:storage_bins": {
+        "label": "Required inventory is visibly represented: classroom storage bins.",
+        "observation": "A storage bin/container (blue bin) is visible on top of the cubby/bookshelf area.",
+        "status": "pass",
+        "view_indices": [
+          2
+        ]
+      },
+      "inventory:student_chairs": {
+        "label": "Required inventory is visibly represented: student chairs.",
+        "observation": "Student chairs are visible paired with desks across the layout.",
+        "status": "pass",
+        "view_indices": [
+          1
+        ]
+      },
+      "inventory:student_desks": {
+        "label": "Required inventory is visibly represented: student desks.",
+        "observation": "Student desks are visible in a 3x4 arrangement facing the teaching wall.",
+        "status": "pass",
+        "view_indices": [
+          1
+        ]
+      },
+      "inventory:teacher_chair": {
+        "label": "Required inventory is visibly represented: teacher chair.",
+        "observation": "A teacher chair (office chair) is visible at the teacher desk.",
+        "status": "pass",
+        "view_indices": [
+          3
+        ]
+      },
+      "inventory:teacher_desk": {
+        "label": "Required inventory is visibly represented: teacher desk/station.",
+        "observation": "A teacher desk/station is visible at the front-left teaching area.",
+        "status": "pass",
+        "view_indices": [
+          3
+        ]
+      },
+      "inventory:textbooks": {
+        "label": "Required inventory is visibly represented: textbooks.",
+        "observation": "Book/textbook-like items are visible stored in the cubbies.",
+        "status": "pass",
+        "view_indices": [
+          2
+        ]
+      },
+      "inventory:trash": {
+        "label": "Required inventory is visibly represented: trash bin.",
+        "observation": "A trash bin is visible near the teacher desk.",
+        "status": "pass",
+        "view_indices": [
+          3
+        ]
+      },
+      "inventory:water_bottle": {
+        "label": "Required inventory is visibly represented: water bottle.",
+        "observation": "A water bottle is visible on top of the cubby/bookshelf area.",
+        "status": "pass",
+        "view_indices": [
+          2
+        ]
+      },
+      "inventory:whiteboard": {
+        "label": "Required inventory is visibly represented: whiteboard/teaching board.",
+        "observation": "A large front teaching whiteboard is visible on the wall.",
+        "status": "pass",
+        "view_indices": [
+          3
+        ]
+      },
+      "inventory:whiteboard_eraser": {
+        "label": "Required inventory is visibly represented: whiteboard eraser.",
+        "observation": "A distinct whiteboard eraser is not clearly visible on the board tray or nearby surfaces.",
+        "status": "fail",
+        "view_indices": [
+          3
+        ]
+      },
+      "inventory:worksheets": {
+        "label": "Required inventory is visibly represented: worksheets.",
+        "observation": "Loose paper sheets resembling worksheets are visible on the teacher desk surface.",
+        "status": "pass",
+        "view_indices": [
+          1,
+          3
+        ]
+      },
+      "reference_style": {
+        "label": "Warm, welcoming reference-school style is visibly matched.",
+        "observation": "While colors are warm, the overall rendering/material/lighting finish appears simplified and does not clearly match the realistic architectural reference style.",
+        "status": "fail",
+        "view_indices": [
+          1,
+          3
+        ]
+      },
+      "room_specific_arrangement": {
+        "label": "The room-specific arrangement and identity are visibly realized.",
+        "observation": "Desks/chairs are oriented toward the front teaching wall/whiteboard with clear aisles and a defined teacher zone.",
+        "status": "pass",
+        "view_indices": [
+          1,
+          3
+        ]
+      },
+      "warm_materials": {
+        "label": "Cream/beige walls and light wood materials are visibly present.",
+        "observation": "Warm beige/cream walls and light wood desks/furniture are visible.",
+        "status": "pass",
+        "view_indices": [
+          1,
+          3
+        ]
+      }
+    },
+    "scores": {
+      "clearance_and_access": 9.0,
+      "collision_risk": 9.0,
+      "object_relevance": 6.0,
+      "placement_realism": 8.0,
+      "prompt_alignment": 5.0
+    }
+  }
+}
