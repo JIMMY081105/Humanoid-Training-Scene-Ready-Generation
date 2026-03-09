@@ -1,0 +1,252 @@
+{
+  "contract_profile": "school_reference_20260710",
+  "critical_issues": [
+    "Multiple bench/shelf-like rectangular elements appear to be floating/cantilevered with no visible supports, violating the no-floating/simulation-ready requirement (views 2-3).",
+    "Lighting requirement is not met: no visible warm ceiling lights and no convincing natural daylight cues (no sun/shadowing/brightness from windows), resulting in flat illumination (views 2-3).",
+    "Room does not convincingly match the reference\u2019s finished, detailed, welcoming school corridor style; it reads sparse and overly blocky with placeholder-like furniture/forms (views 1-3).",
+    "Room-specific requirement 'clear path to ... library' is not verifiable from the provided views (no visible library doorway/threshold connection from this corridor in these renders) (views 1-3).",
+    "Visual checklist requirement failed (collision_free_support): Several long rectangular elements appear to float/cantilever off the wall with no visible support structure, indicating non-physical placement risk.",
+    "Visual checklist requirement failed (daylight_and_warm_lighting): Lighting reads flat with no visible warm ceiling fixtures and no clear daylight effect (no directional light/shadowing or bright window spill) despite window-like panels.",
+    "Visual checklist requirement failed (reference_style): The corridor looks overly simplified/blocky and under-finished compared to the reference\u2019s detailed, warm, modern school interior character.",
+    "Visual checklist requirement failed (room_specific_arrangement): The required 'clear path to ... library' cannot be confirmed because a library doorway/threshold connection is not visible in the provided corridor views."
+  ],
+  "deterministic_gate_status": "pass",
+  "evidence": {
+    "algorithm": "sha256",
+    "cutaway_evidence": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/main_corridor_cutaway_evidence.json",
+      "sha256": "3e5af55758f02684188c56f26c84109eefe2524847fbe3ea86b282abce45b4ba"
+    },
+    "deterministic_gate": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/quality_gates/room_self_exam_deterministic/main_corridor.json",
+      "sha256": "3a740c8cd5648879f413af39e0384d68804d3d3178896d50eac9ffcc6c8dfeca"
+    },
+    "effective_prompt": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/inputs/full_quality_school_reference_20260710/prompt.txt",
+      "sha256": "ac8d297cc9a2d605f41b4bcd7abd52aac29bfd0f195875840342ee1e6a7da86f"
+    },
+    "house_layout": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/house_layout.json",
+      "sha256": "b2dc434653d5dca178c3a90f0bbb21e21640452158b81e0ceba227099c265d48"
+    },
+    "input_manifest": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/inputs/full_quality_school_reference_20260710/input_manifest.json",
+      "sha256": "7a285b19c7e5e1622ed70ad72226815fa24084587875bcb658823b5edcdfc61e"
+    },
+    "prompt_binding": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/quality_gates/room_prompt_binding.json",
+      "sha256": "1d237196da20507455a2b75abc7a9059ab19139fff20ec77c449c4529aed5c2e"
+    },
+    "reference_image": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/inputs/full_quality_school_reference_20260710/reference.png",
+      "sha256": "7ba62c39ac98cd2b21d9a5a97fd6f9b90d7efaf447d5ac9a6148524b5a8dbe48"
+    },
+    "review_images": [
+      {
+        "path": "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/main_corridor_top.png",
+        "sha256": "51aa0befc080861377d50cdb613ff5400bd780ec634a8bc27d64a1977217e446"
+      },
+      {
+        "path": "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/main_corridor_oblique_a.png",
+        "sha256": "bc0010857ea98ab0e77bb5da193dfa074b2656a4b85997cbb24e59955c22b38c"
+      },
+      {
+        "path": "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/main_corridor_oblique_b.png",
+        "sha256": "19f158a1a5fdae8e8f38c486fe700197d7c295a56bab70b027c4d491394739c7"
+      }
+    ],
+    "scene_state": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_main_corridor/scene_states/final_scene/scene_state.json",
+      "sha256": "0b2c29d84c1d5a66090ce3558ba3122505dcfeb96390e512a377b1cd09d11320"
+    },
+    "schema_version": 1,
+    "source_blend": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_main_corridor/scene_states/final_scene/scene.blend",
+      "sha256": "179a2a10dbaa94baaabd70dfb29f8b1f562bb8b595b151b58b45c41fb9cbad28"
+    },
+    "vlm_request": {
+      "algorithm": "sha256",
+      "backend": "openai",
+      "generated_view_indices": [
+        1,
+        2,
+        3
+      ],
+      "messages_sha256": "4a615466dced9ca5b4795227d73d2fab0b23785718802dd71c68779dca46e583",
+      "model": "gpt-5.2",
+      "reference_image_sha256": "7ba62c39ac98cd2b21d9a5a97fd6f9b90d7efaf447d5ac9a6148524b5a8dbe48",
+      "request_sha256": "20c0d78cf95fa47c0aa50defd28ef9d20313b39fa68a5fdba216be8e16b17796",
+      "requirement_keys": [
+        "clear_circulation",
+        "collision_free_support",
+        "daylight_and_warm_lighting",
+        "inventory:benches",
+        "inventory:displays",
+        "inventory:plants",
+        "inventory:signage",
+        "reference_style",
+        "room_specific_arrangement",
+        "warm_materials"
+      ],
+      "review_image_sha256": [
+        "51aa0befc080861377d50cdb613ff5400bd780ec634a8bc27d64a1977217e446",
+        "bc0010857ea98ab0e77bb5da193dfa074b2656a4b85997cbb24e59955c22b38c",
+        "19f158a1a5fdae8e8f38c486fe700197d7c295a56bab70b027c4d491394739c7"
+      ],
+      "room_id": "main_corridor",
+      "schema_id": "scenesmith_canonical_vlm_request_v1",
+      "schema_version": 1,
+      "score_keys": [
+        "object_relevance",
+        "placement_realism",
+        "clearance_and_access",
+        "collision_risk",
+        "prompt_alignment"
+      ],
+      "threshold": 7.0
+    }
+  },
+  "reference_image": "/data/run01/scvj260/codex_factory/room1_execution/inputs/full_quality_school_reference_20260710/reference.png",
+  "repair_instructions": [
+    "Replace the floating/cantilevered rectangular blocks with physically supported seating (legs/base) or properly wall-bracketed fixtures; ensure no element clips into doors/walls and all supports are visible.",
+    "Add visible warm ceiling lighting fixtures and adjust exposure/shadows to show warm interior light plus clear daylight contribution from windows.",
+    "Increase corridor realism to match the reference: higher-fidelity benches, bulletin/display detailing, and more complete school-finish elements (trim, wall detail, consistent materials).",
+    "Make the library connection evident from the corridor (visible library door/portal or clearly indicated opening and wayfinding in-frame) while preserving a wide wheelchair/robot turning path.",
+    "Raise these combined scores to the pass threshold: object_relevance, placement_realism, clearance_and_access, collision_risk, prompt_alignment"
+  ],
+  "review_images": [
+    "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/main_corridor_top.png",
+    "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/main_corridor_oblique_a.png",
+    "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/main_corridor_oblique_b.png"
+  ],
+  "room_id": "main_corridor",
+  "room_prompt": "[SCENESMITH_SCHOOL_CONTRACT_V1 room_id=main_corridor profile=school_reference_20260710]\nImmutable effective prompt SHA-256: ac8d297cc9a2d605f41b4bcd7abd52aac29bfd0f195875840342ee1e6a7da86f\n\nUse warm cream/beige/off-white walls, light wood furniture and flooring, soft daylight, warm ceiling light, organized school displays, realistic scale, greenery, and clear humanoid/robot circulation. Nothing may float, visibly interpenetrate, block a door, or eliminate a usable walking/turning path.\n\nROOM-SPECIFIC REQUIRED CONTENTS:\nCreate the broad open central circulation/lobby spine with clear sightlines and door clearance. Include at least two benches/seating elements, at least four plants/planters, at least two bulletin/display areas, welcoming school signage, and a clear path to the bottom-center double entrance and library. Preserve wheelchair and humanoid turning space.\n\n--- FLOOR-PLANNER CONTEXT (SECONDARY) ---\nBroad central circulation spine connecting every functional room.",
+  "scores": {
+    "clearance_and_access": 6.0,
+    "collision_risk": 3.0,
+    "object_relevance": 6.0,
+    "placement_realism": 4.0,
+    "prompt_alignment": 6.0
+  },
+  "status": "fail",
+  "threshold": 7.0,
+  "visual_assessment": {
+    "critical_issues": [
+      "Multiple bench/shelf-like rectangular elements appear to be floating/cantilevered with no visible supports, violating the no-floating/simulation-ready requirement (views 2-3).",
+      "Lighting requirement is not met: no visible warm ceiling lights and no convincing natural daylight cues (no sun/shadowing/brightness from windows), resulting in flat illumination (views 2-3).",
+      "Room does not convincingly match the reference\u2019s finished, detailed, welcoming school corridor style; it reads sparse and overly blocky with placeholder-like furniture/forms (views 1-3).",
+      "Room-specific requirement 'clear path to ... library' is not verifiable from the provided views (no visible library doorway/threshold connection from this corridor in these renders) (views 1-3)."
+    ],
+    "observations": [
+      "Several long beige rectangular elements protrude from walls and appear suspended above the floor without brackets/legs (views 2-3).",
+      "Two conventional benches with legs are visible near the central rug area (view 3), but additional block-like 'seating' pieces look non-physical (views 2-3).",
+      "Windows are present as bright rectangles, but the scene lacks convincing daylighting and visible warm ceiling luminaires (views 2-3).",
+      "A bulletin board with posted papers and a freestanding display/board are visible, but overall corridor dressing still feels minimal vs. the reference (view 3)."
+    ],
+    "repair_instructions": [
+      "Replace the floating/cantilevered rectangular blocks with physically supported seating (legs/base) or properly wall-bracketed fixtures; ensure no element clips into doors/walls and all supports are visible.",
+      "Add visible warm ceiling lighting fixtures and adjust exposure/shadows to show warm interior light plus clear daylight contribution from windows.",
+      "Increase corridor realism to match the reference: higher-fidelity benches, bulletin/display detailing, and more complete school-finish elements (trim, wall detail, consistent materials).",
+      "Make the library connection evident from the corridor (visible library door/portal or clearly indicated opening and wayfinding in-frame) while preserving a wide wheelchair/robot turning path."
+    ],
+    "requirement_evidence": {
+      "clear_circulation": {
+        "label": "Door clearance, aisles, and humanoid/robot circulation are visibly usable.",
+        "observation": "A broad open floor area exists around the central rug and toward the entrance zone, with no obvious floor-level blockage preventing passage.",
+        "status": "pass",
+        "view_indices": [
+          1,
+          2
+        ]
+      },
+      "collision_free_support": {
+        "label": "Objects are supported, correctly scaled, and visibly free of collisions/floating.",
+        "observation": "Several long rectangular elements appear to float/cantilever off the wall with no visible support structure, indicating non-physical placement risk.",
+        "status": "fail",
+        "view_indices": [
+          2,
+          3
+        ]
+      },
+      "daylight_and_warm_lighting": {
+        "label": "Natural daylight and warm interior lighting are visible.",
+        "observation": "Lighting reads flat with no visible warm ceiling fixtures and no clear daylight effect (no directional light/shadowing or bright window spill) despite window-like panels.",
+        "status": "fail",
+        "view_indices": [
+          2,
+          3
+        ]
+      },
+      "inventory:benches": {
+        "label": "Required inventory is visibly represented: benches/seating.",
+        "observation": "At least two benches with legs/frames are visible near the central area and along the wall.",
+        "status": "pass",
+        "view_indices": [
+          2,
+          3
+        ]
+      },
+      "inventory:displays": {
+        "label": "Required inventory is visibly represented: bulletin/display areas.",
+        "observation": "A wall bulletin board with posted items and a freestanding display board are visible.",
+        "status": "pass",
+        "view_indices": [
+          3
+        ]
+      },
+      "inventory:plants": {
+        "label": "Required inventory is visibly represented: plants/planters.",
+        "observation": "Multiple potted plants/planters are visible around the corridor (corners and near the central rug area), meeting the minimum count in-view.",
+        "status": "pass",
+        "view_indices": [
+          2,
+          3
+        ]
+      },
+      "inventory:signage": {
+        "label": "Required inventory is visibly represented: welcome/school signage.",
+        "observation": "A freestanding sign stand is visible in the entrance area, indicating corridor signage.",
+        "status": "pass",
+        "view_indices": [
+          2
+        ]
+      },
+      "reference_style": {
+        "label": "Warm, welcoming reference-school style is visibly matched.",
+        "observation": "The corridor looks overly simplified/blocky and under-finished compared to the reference\u2019s detailed, warm, modern school interior character.",
+        "status": "fail",
+        "view_indices": [
+          1,
+          2,
+          3
+        ]
+      },
+      "room_specific_arrangement": {
+        "label": "The room-specific arrangement and identity are visibly realized.",
+        "observation": "The required 'clear path to ... library' cannot be confirmed because a library doorway/threshold connection is not visible in the provided corridor views.",
+        "status": "fail",
+        "view_indices": [
+          1,
+          2,
+          3
+        ]
+      },
+      "warm_materials": {
+        "label": "Cream/beige walls and light wood materials are visibly present.",
+        "observation": "Cream/beige walls with light wood flooring/trim are visible throughout the corridor views.",
+        "status": "pass",
+        "view_indices": [
+          2,
+          3
+        ]
+      }
+    },
+    "scores": {
+      "clearance_and_access": 6.0,
+      "collision_risk": 3.0,
+      "object_relevance": 6.0,
+      "placement_realism": 4.0,
+      "prompt_alignment": 6.0
+    }
+  }
+}
