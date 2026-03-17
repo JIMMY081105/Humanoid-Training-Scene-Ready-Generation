@@ -1,0 +1,62 @@
+{
+  "attestation": "6e1943844099d129d152d979af83c504bacc6217aa0c7583dadfcec2a60284ec",
+  "checkpoint_runtime_sha256": "2b39c7bd572c1e0e607eb13cd8ed68f3b5a1e76db004f9f323d6c52da4ef9f1a",
+  "config_sha256": "3e21b6bbfa49ada997e8b5ec5af295af3fe2c97acf3fa3005f6a9ea0a0ac56e4",
+  "input_scene_content_hash": "08ddb1a0c75ea3eb0cb0ce89a523a456eda0ccf8f5a80bc0b783907e3e86eac1",
+  "room_id": "classroom_04",
+  "schema_version": 1,
+  "selections": [
+    {
+      "context_furniture_ids": [
+        "swivel_chair_0"
+      ],
+      "furniture_id": "desk_0",
+      "prompt_constraints": "Prompt requires paper trays, folders/worksheets, board markers and a whiteboard eraser. Stage the board tools together on the teacher desk rather than relying on the generated trayless wall boards.",
+      "style_notes": "Teacher workspace should look organized and in-use; keep to a neat cluster on one side (5–7 items total).",
+      "suggested_items": "REQUIRED: paper trays, folders/worksheets, dry-erase markers, whiteboard eraser. Optional: gradebook/notebook, pen cup, stapler"
+    },
+    {
+      "context_furniture_ids": [],
+      "furniture_id": "collaboration_table_0",
+      "prompt_constraints": "Prompt: \"Add believable school-use details including... glue/scissors... folders/worksheets... pencil/marker holders... without clutter.\"",
+      "style_notes": "Central shared-supplies station; keep items in a tidy caddy/cluster, leave most tabletop clear.",
+      "suggested_items": "REQUIRED: shared pencil/marker holder, glue, scissors, worksheets. Optional: small stack of colored paper, a couple of rulers"
+    },
+    {
+      "context_furniture_ids": [
+        "classroom_chair_1"
+      ],
+      "furniture_id": "student_desk_0",
+      "prompt_constraints": "Prompt: \"Add believable school-use details including textbooks, notebooks... pencil/marker holders, erasers/rulers...\"",
+      "style_notes": "Student surface: minimal (2–4 small items), placed toward the back corner to keep writing space clear.",
+      "suggested_items": "REQUIRED: notebook, pencil. Optional: eraser, ruler"
+    },
+    {
+      "context_furniture_ids": [
+        "classroom_chair_9"
+      ],
+      "furniture_id": "student_desk_1",
+      "prompt_constraints": "Prompt: \"Add believable school-use details including textbooks, notebooks, folders/worksheets...\"",
+      "style_notes": "Keep a single closed book + 1–2 supplies; avoid clutter across all desks.",
+      "suggested_items": "REQUIRED: textbook. Optional: notebook, pencil, folder"
+    },
+    {
+      "context_furniture_ids": [
+        "classroom_chair_3"
+      ],
+      "furniture_id": "student_desk_3",
+      "prompt_constraints": "Prompt: \"Add believable school-use details including... water bottles...\"",
+      "style_notes": "Bottle near a desk corner, leaving center workspace open.",
+      "suggested_items": "REQUIRED: water bottle. Optional: notebook, pencil"
+    },
+    {
+      "context_furniture_ids": [],
+      "furniture_id": "cubby_bookshelf_0",
+      "prompt_constraints": "Prompt: \"Add believable school-use details including textbooks... backpacks, storage bins... without clutter.\"",
+      "style_notes": "Use a few cubbies for bins and a few for books/backpacks; leave some cubbies empty for a tidy, realistic look.",
+      "suggested_items": "REQUIRED: textbooks, labeled storage bins, backpacks. Optional: labeled folders/binders, spare notebooks"
+    }
+  ],
+  "selections_sha256": "177306e5d9f600fd866b3c9ad36aff49679c438b90b4ae234a1a6bc2b0201587",
+  "status": "pass"
+}
