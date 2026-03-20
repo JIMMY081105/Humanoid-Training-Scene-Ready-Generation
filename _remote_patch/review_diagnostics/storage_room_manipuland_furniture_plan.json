@@ -1,0 +1,61 @@
+{
+  "attestation": "4c2ec5a8e02d5c593f742af140cccd4c90957368fa89d6ae23366a47ff79a64c",
+  "checkpoint_runtime_sha256": "2b39c7bd572c1e0e607eb13cd8ed68f3b5a1e76db004f9f323d6c52da4ef9f1a",
+  "config_sha256": "75254593da3b2672c3d22a917c93b6f6046ebd2eea3944fee8cf7fd31b1f0b8a",
+  "input_scene_content_hash": "25b32aa4b80f15e6f6285ddc85eed6dd6c0092c5a51ed8ffda12c68331a2d5fc",
+  "room_id": "storage_room",
+  "schema_version": 1,
+  "selections": [
+    {
+      "context_furniture_ids": [],
+      "furniture_id": "shelving_unit_0",
+      "prompt_constraints": "Prompt requires boxes, paper/textbook/art supplies and spare classroom materials. Use only sealed low-profile archive/file boxes; exclude the unstable open storage-box asset rejected by strict forward simulation.",
+      "style_notes": "Distribute flat boxes and book stacks across separate shelves with clear front edges; dense but reachable and physically stable.",
+      "suggested_items": "REQUIRED: flat sealed cardboard archive/file boxes and low textbook stacks. Optional: lidded low-profile tote, art paper packs"
+    },
+    {
+      "context_furniture_ids": [],
+      "furniture_id": "shelving_unit_1",
+      "prompt_constraints": "Room must include \"paper/textbook/art supplies\" and general school storage realism.",
+      "style_notes": "Use uniform stacks (paper, binders) for a tidy look; avoid overhanging items.",
+      "suggested_items": "REQUIRED: reams of copy paper, binders/folders. Optional: printer ink/toner box, clipboards"
+    },
+    {
+      "context_furniture_ids": [],
+      "furniture_id": "shelving_unit_2",
+      "prompt_constraints": "Room must include \"art supplies\" and \"spare classroom materials\".",
+      "style_notes": "Moderate density; group by category (art vs. general supplies) and keep some negative space for access.",
+      "suggested_items": "REQUIRED: art supply boxes (markers/crayons/paint), construction paper packs. Optional: glue bottles, scissors caddy"
+    },
+    {
+      "context_furniture_ids": [],
+      "furniture_id": "bin_organizer_rack_0",
+      "prompt_constraints": "Room-specific requirement: \"at least four labeled bins\" (this rack provides them; they should look in-use).",
+      "style_notes": "Clear labels visible; contents should be small, sorted, and not overflowing.",
+      "suggested_items": "REQUIRED: 4 labeled pull-out bins containing small classroom supplies (erasers, dry-erase markers, glue sticks, scissors). Optional: tape rolls, sticky notes"
+    },
+    {
+      "context_furniture_ids": [],
+      "furniture_id": "storage_cabinet_0",
+      "prompt_constraints": "Room-specific requirement: \"functional articulated school-supply utility cabinet with two hinged doors\" plus cleaning supplies presence.",
+      "style_notes": "Keep hazardous-looking chemicals contained/organized; avoid clutter around door swing area and doorways.",
+      "suggested_items": "REQUIRED: cleaning/maintenance consumables stored as labeled boxes (trash bags, paper towels). Optional: unopened cleaning spray bottles (if cabinet doors can be shown open), spare gloves"
+    },
+    {
+      "context_furniture_ids": [],
+      "furniture_id": "workbench_table_0",
+      "prompt_constraints": "Storage room realism implies an active sorting/packing surface with \"paper\" and supply handling.",
+      "style_notes": "Functional staging area; 5–8 small items max, leave clear working space at center.",
+      "suggested_items": "REQUIRED: packing/sorting items (box cutter, packing tape, label roll/marker), small stack of papers/forms. Optional: clipboard, inventory sheet binder"
+    },
+    {
+      "context_furniture_ids": [],
+      "furniture_id": "tool_chest_0",
+      "prompt_constraints": "Room-specific requirement includes \"maintenance tools\"; tool chest is the most realistic anchor for them.",
+      "style_notes": "Minimal surface clutter; a few tools staged on top, the rest implied to be in drawers.",
+      "suggested_items": "REQUIRED: maintenance tools on top (tape measure, screwdriver, adjustable wrench, work gloves). Optional: small parts tray (screws/anchors)"
+    }
+  ],
+  "selections_sha256": "18593afc8cea01338a60f085785108fa85fac8f54a3c9933ffb57359d41159d8",
+  "status": "pass"
+}
