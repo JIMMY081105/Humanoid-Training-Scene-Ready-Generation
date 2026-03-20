@@ -1,0 +1,2929 @@
+{
+  "classification": {
+    "combined_envelope": [],
+    "content": [
+      {
+        "bounds": {
+          "center": [
+            -1.15,
+            1.820001,
+            2.42
+          ],
+          "dimensions": [
+            0.2,
+            0.16,
+            0.24
+          ],
+          "maximum": [
+            -1.05,
+            1.900001,
+            2.54
+          ],
+          "minimum": [
+            -1.25,
+            1.740001,
+            2.3
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "mesh0",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "mesh0",
+          "renderer_node"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            1.04,
+            1.754,
+            1.13
+          ],
+          "dimensions": [
+            0.23,
+            0.018,
+            0.055
+          ],
+          "maximum": [
+            1.155,
+            1.763,
+            1.1575
+          ],
+          "minimum": [
+            0.925,
+            1.745,
+            1.1025
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "mesh1",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "mesh1",
+          "renderer_node"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            -1.15,
+            1.780001,
+            2.24
+          ],
+          "dimensions": [
+            0.34,
+            0.02,
+            0.07
+          ],
+          "maximum": [
+            -0.98,
+            1.790001,
+            2.275
+          ],
+          "minimum": [
+            -1.32,
+            1.770001,
+            2.205
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "mesh2",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "mesh2",
+          "renderer_node"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            1.04,
+            1.753,
+            1.39
+          ],
+          "dimensions": [
+            0.075,
+            0.019,
+            0.075
+          ],
+          "maximum": [
+            1.0775,
+            1.762501,
+            1.4275
+          ],
+          "minimum": [
+            1.0025,
+            1.7435,
+            1.3525
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "mesh3",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "mesh3",
+          "renderer_node"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            0.95,
+            1.74,
+            1.055
+          ],
+          "dimensions": [
+            0.100602,
+            0.039274,
+            0.018
+          ],
+          "maximum": [
+            1.000301,
+            1.759637,
+            1.064
+          ],
+          "minimum": [
+            0.899699,
+            1.720363,
+            1.046
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "mesh4",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "mesh4",
+          "renderer_node"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            1.04,
+            1.73,
+            1.035
+          ],
+          "dimensions": [
+            0.1,
+            0.015,
+            0.018
+          ],
+          "maximum": [
+            1.09,
+            1.7375,
+            1.044
+          ],
+          "minimum": [
+            0.99,
+            1.7225,
+            1.026
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "mesh5",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "mesh5",
+          "renderer_node"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            1.13,
+            1.74,
+            1.055
+          ],
+          "dimensions": [
+            0.100602,
+            0.039274,
+            0.018
+          ],
+          "maximum": [
+            1.180301,
+            1.759637,
+            1.064
+          ],
+          "minimum": [
+            1.079699,
+            1.720363,
+            1.046
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "mesh6",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "mesh6",
+          "renderer_node"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            -1.15,
+            1.920001,
+            2.4
+          ],
+          "dimensions": [
+            0.24,
+            0.05,
+            0.44
+          ],
+          "maximum": [
+            -1.03,
+            1.945001,
+            2.62
+          ],
+          "minimum": [
+            -1.27,
+            1.895001,
+            2.18
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "mesh7",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "mesh7",
+          "renderer_node"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            1.04,
+            1.825,
+            1.27
+          ],
+          "dimensions": [
+            0.34,
+            0.13,
+            0.5
+          ],
+          "maximum": [
+            1.21,
+            1.89,
+            1.52
+          ],
+          "minimum": [
+            0.87,
+            1.76,
+            1.02
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "mesh8",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "mesh8",
+          "renderer_node"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            1.2,
+            1.920001,
+            2.4
+          ],
+          "dimensions": [
+            0.24,
+            0.05,
+            0.44
+          ],
+          "maximum": [
+            1.32,
+            1.945001,
+            2.62
+          ],
+          "minimum": [
+            1.08,
+            1.895001,
+            2.18
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "mesh9",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "mesh9",
+          "renderer_node"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            1.2,
+            1.820001,
+            2.42
+          ],
+          "dimensions": [
+            0.2,
+            0.16,
+            0.24
+          ],
+          "maximum": [
+            1.3,
+            1.900001,
+            2.54
+          ],
+          "minimum": [
+            1.1,
+            1.740001,
+            2.3
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "mesh10",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "mesh10",
+          "renderer_node"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            1.2,
+            1.780001,
+            2.24
+          ],
+          "dimensions": [
+            0.34,
+            0.02,
+            0.07
+          ],
+          "maximum": [
+            1.37,
+            1.790001,
+            2.275
+          ],
+          "minimum": [
+            1.03,
+            1.770001,
+            2.205
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "mesh11",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "mesh11",
+          "renderer_node"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            0.683397,
+            -1.936981,
+            1.712709
+          ],
+          "dimensions": [
+            0.653954,
+            0.026038,
+            0.909053
+          ],
+          "maximum": [
+            1.010374,
+            -1.923962,
+            2.167236
+          ],
+          "minimum": [
+            0.35642,
+            -1.95,
+            1.258182
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.005",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_005",
+          "world_005"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            0.0,
+            1.08,
+            3.188353
+          ],
+          "dimensions": [
+            0.62,
+            0.492687,
+            0.023294
+          ],
+          "maximum": [
+            0.31,
+            1.326344,
+            3.2
+          ],
+          "minimum": [
+            -0.31,
+            0.833657,
+            3.176706
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.006",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_006",
+          "world_006"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            0.0,
+            -1.0,
+            3.188353
+          ],
+          "dimensions": [
+            0.62,
+            0.492687,
+            0.023294
+          ],
+          "maximum": [
+            0.31,
+            -0.753656,
+            3.2
+          ],
+          "minimum": [
+            -0.31,
+            -1.246343,
+            3.176706
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.007",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_007",
+          "world_007"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            1.1,
+            1.1,
+            3.185012
+          ],
+          "dimensions": [
+            0.35,
+            0.293551,
+            0.029976
+          ],
+          "maximum": [
+            1.275,
+            1.246776,
+            3.2
+          ],
+          "minimum": [
+            0.925,
+            0.953225,
+            3.170024
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.008",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_008",
+          "world_008"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            -0.871804,
+            -1.888302,
+            2.462355
+          ],
+          "dimensions": [
+            0.600123,
+            0.123395,
+            0.062263
+          ],
+          "maximum": [
+            -0.571743,
+            -1.826605,
+            2.493487
+          ],
+          "minimum": [
+            -1.171865,
+            -1.95,
+            2.431224
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.009",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_009",
+          "world_009"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            1.596689,
+            1.824383,
+            0.598207
+          ],
+          "dimensions": [
+            0.353326,
+            0.245631,
+            1.197977
+          ],
+          "maximum": [
+            1.773352,
+            1.947199,
+            1.197196
+          ],
+          "minimum": [
+            1.420026,
+            1.701568,
+            -0.000782
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.010",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_010",
+          "world_010"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            1.909864,
+            -0.623086,
+            1.245
+          ],
+          "dimensions": [
+            0.080272,
+            0.122148,
+            0.246927
+          ],
+          "maximum": [
+            1.95,
+            -0.562012,
+            1.368464
+          ],
+          "minimum": [
+            1.869728,
+            -0.68416,
+            1.121536
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.011",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_011",
+          "world_011"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            -0.478801,
+            1.935521,
+            1.55918
+          ],
+          "dimensions": [
+            0.784641,
+            0.028959,
+            0.906716
+          ],
+          "maximum": [
+            -0.086481,
+            1.95,
+            2.012538
+          ],
+          "minimum": [
+            -0.871121,
+            1.921041,
+            1.105822
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.012",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_012",
+          "world_012"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            0.443724,
+            1.935521,
+            1.559485
+          ],
+          "dimensions": [
+            0.778515,
+            0.028959,
+            0.901437
+          ],
+          "maximum": [
+            0.832982,
+            1.95,
+            2.010204
+          ],
+          "minimum": [
+            0.054467,
+            1.921042,
+            1.108767
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.013",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_013",
+          "world_013"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            1.86,
+            0.476249,
+            2.606728
+          ],
+          "dimensions": [
+            0.18,
+            0.33749,
+            0.155381
+          ],
+          "maximum": [
+            1.95,
+            0.644994,
+            2.684418
+          ],
+          "minimum": [
+            1.77,
+            0.307504,
+            2.529038
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.014",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_014",
+          "world_014"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            -1.86,
+            -1.390017,
+            2.607905
+          ],
+          "dimensions": [
+            0.18,
+            0.337608,
+            0.155638
+          ],
+          "maximum": [
+            -1.77,
+            -1.221213,
+            2.685724
+          ],
+          "minimum": [
+            -1.95,
+            -1.558821,
+            2.530086
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.015",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_015",
+          "world_015"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            -1.697528,
+            -1.595322,
+            0.22838
+          ],
+          "dimensions": [
+            0.353673,
+            0.351065,
+            0.455313
+          ],
+          "maximum": [
+            -1.520692,
+            -1.419789,
+            0.456037
+          ],
+          "minimum": [
+            -1.874364,
+            -1.770854,
+            0.000723
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.016",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_016",
+          "world_016"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            -1.5,
+            1.36,
+            0.744865
+          ],
+          "dimensions": [
+            0.854986,
+            0.351,
+            1.485729
+          ],
+          "maximum": [
+            -1.072507,
+            1.5355,
+            1.487729
+          ],
+          "minimum": [
+            -1.927493,
+            1.1845,
+            0.002
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.017",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_017",
+          "world_017"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            -1.5,
+            0.23,
+            0.744865
+          ],
+          "dimensions": [
+            0.854986,
+            0.351,
+            1.485729
+          ],
+          "maximum": [
+            -1.072507,
+            0.4055,
+            1.487729
+          ],
+          "minimum": [
+            -1.927493,
+            0.0545,
+            0.002
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.018",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_018",
+          "world_018"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            -1.5,
+            -0.9,
+            0.744865
+          ],
+          "dimensions": [
+            0.854986,
+            0.351,
+            1.485729
+          ],
+          "maximum": [
+            -1.072507,
+            -0.7245,
+            1.487729
+          ],
+          "minimum": [
+            -1.927493,
+            -1.0755,
+            0.002
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.019",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_019",
+          "world_019"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            -0.62,
+            0.23,
+            0.744865
+          ],
+          "dimensions": [
+            0.854986,
+            0.351,
+            1.485729
+          ],
+          "maximum": [
+            -0.192507,
+            0.4055,
+            1.487729
+          ],
+          "minimum": [
+            -1.047493,
+            0.0545,
+            0.002
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.020",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_020",
+          "world_020"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            1.39,
+            0.2,
+            3.16
+          ],
+          "dimensions": [
+            0.16267,
+            0.149767,
+            0.08
+          ],
+          "maximum": [
+            1.471335,
+            0.274884,
+            3.2
+          ],
+          "minimum": [
+            1.308665,
+            0.125116,
+            3.12
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.021",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_021",
+          "world_021"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            -1.39,
+            0.2,
+            3.16
+          ],
+          "dimensions": [
+            0.16267,
+            0.149767,
+            0.08
+          ],
+          "maximum": [
+            -1.308665,
+            0.274884,
+            3.2
+          ],
+          "minimum": [
+            -1.471335,
+            0.125116,
+            3.12
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.022",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_022",
+          "world_022"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            -1.330575,
+            0.906442,
+            3.183835
+          ],
+          "dimensions": [
+            0.142704,
+            0.142744,
+            0.03233
+          ],
+          "maximum": [
+            -1.259223,
+            0.977814,
+            3.2
+          ],
+          "minimum": [
+            -1.401927,
+            0.83507,
+            3.16767
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.023",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_023",
+          "world_023"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            -0.464348,
+            1.9,
+            0.989291
+          ],
+          "dimensions": [
+            0.115242,
+            0.1,
+            0.223043
+          ],
+          "maximum": [
+            -0.406727,
+            1.95,
+            1.100812
+          ],
+          "minimum": [
+            -0.521969,
+            1.85,
+            0.877769
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.024",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_024",
+          "world_024"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            0.486194,
+            1.9,
+            0.973469
+          ],
+          "dimensions": [
+            0.111418,
+            0.1,
+            0.221147
+          ],
+          "maximum": [
+            0.541903,
+            1.95,
+            1.084043
+          ],
+          "minimum": [
+            0.430485,
+            1.85,
+            0.862896
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.025",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_025",
+          "world_025"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            0.770015,
+            1.19221,
+            0.359953
+          ],
+          "dimensions": [
+            0.249087,
+            0.251471,
+            0.718476
+          ],
+          "maximum": [
+            0.894558,
+            1.317945,
+            0.719191
+          ],
+          "minimum": [
+            0.645472,
+            1.066475,
+            0.000716
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.026",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_026",
+          "world_026"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            0.059973,
+            0.004233,
+            3.177237
+          ],
+          "dimensions": [
+            0.100637,
+            0.100636,
+            0.045525
+          ],
+          "maximum": [
+            0.110291,
+            0.054551,
+            3.2
+          ],
+          "minimum": [
+            0.009655,
+            -0.046085,
+            3.154475
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.027",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_027",
+          "world_027"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            -1.636015,
+            0.841281,
+            0.351272
+          ],
+          "dimensions": [
+            0.608207,
+            0.400212,
+            0.698355
+          ],
+          "maximum": [
+            -1.331912,
+            1.041387,
+            0.70045
+          ],
+          "minimum": [
+            -1.940119,
+            0.641175,
+            0.002095
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.028",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_028",
+          "world_028"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            -1.636015,
+            -0.38047,
+            0.34878
+          ],
+          "dimensions": [
+            0.608207,
+            0.400212,
+            0.698355
+          ],
+          "maximum": [
+            -1.331912,
+            -0.180364,
+            0.697957
+          ],
+          "minimum": [
+            -1.940119,
+            -0.580576,
+            -0.000398
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.029",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_029",
+          "world_029"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            0.609228,
+            -1.724488,
+            0.193338
+          ],
+          "dimensions": [
+            0.258817,
+            0.320455,
+            0.385828
+          ],
+          "maximum": [
+            0.738637,
+            -1.564261,
+            0.386253
+          ],
+          "minimum": [
+            0.47982,
+            -1.884716,
+            0.000424
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.030",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_030",
+          "world_030"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            1.751659,
+            0.555391,
+            0.560633
+          ],
+          "dimensions": [
+            0.396206,
+            1.300715,
+            1.125436
+          ],
+          "maximum": [
+            1.949762,
+            1.205748,
+            1.123351
+          ],
+          "minimum": [
+            1.553556,
+            -0.094967,
+            -0.002085
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.031",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_031",
+          "world_031"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            -0.017942,
+            1.677127,
+            0.469411
+          ],
+          "dimensions": [
+            1.600447,
+            0.528965,
+            0.940186
+          ],
+          "maximum": [
+            0.782282,
+            1.94161,
+            0.939503
+          ],
+          "minimum": [
+            -0.818165,
+            1.412644,
+            -0.000682
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.032",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_032",
+          "world_032"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            1.940403,
+            -1.368414,
+            2.649887
+          ],
+          "dimensions": [
+            0.019193,
+            0.353578,
+            0.352007
+          ],
+          "maximum": [
+            1.95,
+            -1.191625,
+            2.825891
+          ],
+          "minimum": [
+            1.930807,
+            -1.545203,
+            2.473884
+          ]
+        },
+        "classification_reason": "not_envelope_geometry",
+        "name": "geometry_0.033",
+        "role": "content",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_033",
+          "world_033"
+        ]
+      }
+    ],
+    "floor": [
+      {
+        "bounds": {
+          "center": [
+            0.0,
+            0.0,
+            -0.05
+          ],
+          "dimensions": [
+            4.0,
+            4.0,
+            0.1
+          ],
+          "maximum": [
+            2.0,
+            2.0,
+            0.0
+          ],
+          "minimum": [
+            -2.0,
+            -2.0,
+            -0.1
+          ]
+        },
+        "classification_reason": "semantic_or_large_low_horizontal_envelope",
+        "name": "Mesh_12",
+        "role": "floor",
+        "semantic_labels": [
+          "clientobjects",
+          "mesh_12"
+        ]
+      }
+    ],
+    "overhead": [],
+    "wall": [
+      {
+        "bounds": {
+          "center": [
+            0.0,
+            1.975,
+            1.6
+          ],
+          "dimensions": [
+            4.0,
+            0.05,
+            3.2
+          ],
+          "maximum": [
+            2.0,
+            2.0,
+            3.2
+          ],
+          "minimum": [
+            -2.0,
+            1.95,
+            -0.0
+          ]
+        },
+        "classification_reason": "semantic_or_tall_thin_boundary_envelope",
+        "name": "geometry_0",
+        "role": "wall",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0",
+          "world"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            0.0,
+            -1.975,
+            1.6
+          ],
+          "dimensions": [
+            4.0,
+            0.05,
+            3.2
+          ],
+          "maximum": [
+            2.0,
+            -1.95,
+            3.2
+          ],
+          "minimum": [
+            -2.0,
+            -2.0,
+            0.0
+          ]
+        },
+        "classification_reason": "semantic_or_tall_thin_boundary_envelope",
+        "name": "geometry_0.001",
+        "role": "wall",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_001",
+          "world_001"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            1.975,
+            0.0,
+            1.6
+          ],
+          "dimensions": [
+            0.050015,
+            4.0,
+            3.2
+          ],
+          "maximum": [
+            2.000008,
+            2.0,
+            3.2
+          ],
+          "minimum": [
+            1.949993,
+            -2.0,
+            -0.0
+          ]
+        },
+        "classification_reason": "semantic_or_tall_thin_boundary_envelope",
+        "name": "geometry_0.002",
+        "role": "wall",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_002",
+          "world_002"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            -1.975,
+            0.0,
+            1.6
+          ],
+          "dimensions": [
+            0.050015,
+            4.0,
+            3.2
+          ],
+          "maximum": [
+            -1.949992,
+            2.0,
+            3.2
+          ],
+          "minimum": [
+            -2.000007,
+            -2.0,
+            -0.0
+          ]
+        },
+        "classification_reason": "semantic_or_tall_thin_boundary_envelope",
+        "name": "geometry_0.003",
+        "role": "wall",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_003",
+          "world_003"
+        ]
+      },
+      {
+        "bounds": {
+          "center": [
+            -2.025,
+            0.0,
+            1.6
+          ],
+          "dimensions": [
+            0.050015,
+            4.0,
+            3.2
+          ],
+          "maximum": [
+            -1.999992,
+            2.0,
+            3.2
+          ],
+          "minimum": [
+            -2.050007,
+            -2.0,
+            -0.0
+          ]
+        },
+        "classification_reason": "semantic_or_tall_thin_boundary_envelope",
+        "name": "geometry_0.004",
+        "role": "wall",
+        "semantic_labels": [
+          "clientobjects",
+          "geometry_0_004",
+          "world_004"
+        ]
+      }
+    ]
+  },
+  "derivation_receipt": {
+    "algorithm": "sha256",
+    "attestation": {
+      "algorithm": "sha256",
+      "sha256": "ca3730dc0e3b61a9069882ed7a766c79ddce48d1e36d0dd252f844f81583419a"
+    },
+    "renders": [
+      {
+        "path": "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/boys_toilet_top.png",
+        "sha256": "1f339e8a6af01a5d1262fc6fed81bcc7f6f231d8845fe9a36deee375a86e7523",
+        "size_bytes": 1705138,
+        "view_name": "top"
+      },
+      {
+        "path": "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/boys_toilet_oblique_a.png",
+        "sha256": "14f4461fbea9d762bbd2d1b3cf7dbe8313eabb1500812329df3b526a60f397ce",
+        "size_bytes": 2023275,
+        "view_name": "oblique_a"
+      },
+      {
+        "path": "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/boys_toilet_oblique_b.png",
+        "sha256": "4515b9555feed82c7622cb103a108c11620e63843b14e0ed1ba29ee97c0786e9",
+        "size_bytes": 1969973,
+        "view_name": "oblique_b"
+      }
+    ],
+    "schema_id": "scenesmith_state_blend_render_derivation_v1",
+    "schema_version": 1,
+    "source_blend": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/scene_states/final_scene/scene.blend",
+      "sha256": "42f169e104980e30d3ae34ec3ad0073fb30562a860d59cd6a00df373d17471f4",
+      "size_bytes": 160390858
+    },
+    "source_state": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/scene_states/final_scene/scene_state.json",
+      "sha256": "5cd8143c05e6baf5a32a3f28531c53456a4dfd312f90fbac9a09ee20f0258685",
+      "size_bytes": 118928
+    }
+  },
+  "expected_views": [
+    "top",
+    "oblique_a",
+    "oblique_b"
+  ],
+  "rendered_view_count": 3,
+  "room_bounds": {
+    "center": [
+      -0.025,
+      0.0,
+      1.55
+    ],
+    "depth": 4.0,
+    "height": 3.3,
+    "maximum": [
+      2.000008,
+      2.0,
+      3.2
+    ],
+    "minimum": [
+      -2.050007,
+      -2.0,
+      -0.1
+    ],
+    "width": 4.050015
+  },
+  "room_id": "boys_toilet",
+  "schema_id": "scenesmith_room_cutaway_review_v1",
+  "schema_version": 1,
+  "source_blend": {
+    "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/scene_states/final_scene/scene.blend",
+    "sha256": "42f169e104980e30d3ae34ec3ad0073fb30562a860d59cd6a00df373d17471f4",
+    "size_bytes": 160390858
+  },
+  "source_state": {
+    "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/scene_states/final_scene/scene_state.json",
+    "sha256": "5cd8143c05e6baf5a32a3f28531c53456a4dfd312f90fbac9a09ee20f0258685",
+    "size_bytes": 118928
+  },
+  "status": "pass",
+  "views": [
+    {
+      "camera": {
+        "location": [
+          -0.025,
+          0.0,
+          43.200001
+        ],
+        "ortho_scale": 4.779017,
+        "projection": "ORTHO",
+        "target": [
+          -0.025,
+          0.0,
+          1.55
+        ]
+      },
+      "cutaway": {
+        "classified_content_count": 41,
+        "established": true,
+        "hidden_camera_side_attachments": [],
+        "hidden_camera_side_walls": [],
+        "hidden_envelope_object_names": [
+          "geometry_0.006",
+          "geometry_0.007",
+          "geometry_0.008",
+          "geometry_0.021",
+          "geometry_0.022",
+          "geometry_0.023",
+          "geometry_0.027"
+        ],
+        "hidden_overhead": [],
+        "hidden_overhead_attachments": [
+          {
+            "bounds": {
+              "center": [
+                0.0,
+                1.08,
+                3.188353
+              ],
+              "dimensions": [
+                0.62,
+                0.492687,
+                0.023294
+              ],
+              "maximum": [
+                0.31,
+                1.326344,
+                3.2
+              ],
+              "minimum": [
+                -0.31,
+                0.833657,
+                3.176706
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.006",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_006",
+              "world_006"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                0.0,
+                -1.0,
+                3.188353
+              ],
+              "dimensions": [
+                0.62,
+                0.492687,
+                0.023294
+              ],
+              "maximum": [
+                0.31,
+                -0.753656,
+                3.2
+              ],
+              "minimum": [
+                -0.31,
+                -1.246343,
+                3.176706
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.007",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_007",
+              "world_007"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                1.1,
+                1.1,
+                3.185012
+              ],
+              "dimensions": [
+                0.35,
+                0.293551,
+                0.029976
+              ],
+              "maximum": [
+                1.275,
+                1.246776,
+                3.2
+              ],
+              "minimum": [
+                0.925,
+                0.953225,
+                3.170024
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.008",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_008",
+              "world_008"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                1.39,
+                0.2,
+                3.16
+              ],
+              "dimensions": [
+                0.16267,
+                0.149767,
+                0.08
+              ],
+              "maximum": [
+                1.471335,
+                0.274884,
+                3.2
+              ],
+              "minimum": [
+                1.308665,
+                0.125116,
+                3.12
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.021",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_021",
+              "world_021"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                -1.39,
+                0.2,
+                3.16
+              ],
+              "dimensions": [
+                0.16267,
+                0.149767,
+                0.08
+              ],
+              "maximum": [
+                -1.308665,
+                0.274884,
+                3.2
+              ],
+              "minimum": [
+                -1.471335,
+                0.125116,
+                3.12
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.022",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_022",
+              "world_022"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                -1.330575,
+                0.906442,
+                3.183835
+              ],
+              "dimensions": [
+                0.142704,
+                0.142744,
+                0.03233
+              ],
+              "maximum": [
+                -1.259223,
+                0.977814,
+                3.2
+              ],
+              "minimum": [
+                -1.401927,
+                0.83507,
+                3.16767
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.023",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_023",
+              "world_023"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                0.059973,
+                0.004233,
+                3.177237
+              ],
+              "dimensions": [
+                0.100637,
+                0.100636,
+                0.045525
+              ],
+              "maximum": [
+                0.110291,
+                0.054551,
+                3.2
+              ],
+              "minimum": [
+                0.009655,
+                -0.046085,
+                3.154475
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.027",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_027",
+              "world_027"
+            ]
+          }
+        ],
+        "overhead_state": "verified_absent",
+        "view_name": "top",
+        "visible_content_object_names": [
+          "geometry_0.005",
+          "geometry_0.009",
+          "geometry_0.010",
+          "geometry_0.011",
+          "geometry_0.012",
+          "geometry_0.013",
+          "geometry_0.014",
+          "geometry_0.015",
+          "geometry_0.016",
+          "geometry_0.017",
+          "geometry_0.018",
+          "geometry_0.019",
+          "geometry_0.020",
+          "geometry_0.024",
+          "geometry_0.025",
+          "geometry_0.026",
+          "geometry_0.028",
+          "geometry_0.029",
+          "geometry_0.030",
+          "geometry_0.031",
+          "geometry_0.032",
+          "geometry_0.033",
+          "mesh0",
+          "mesh1",
+          "mesh10",
+          "mesh11",
+          "mesh2",
+          "mesh3",
+          "mesh4",
+          "mesh5",
+          "mesh6",
+          "mesh7",
+          "mesh8",
+          "mesh9"
+        ],
+        "visible_far_wall_object_names": [
+          "geometry_0",
+          "geometry_0.001",
+          "geometry_0.002",
+          "geometry_0.003",
+          "geometry_0.004"
+        ],
+        "visible_floor_object_names": [
+          "Mesh_12"
+        ],
+        "wall_camera_dot_products": {}
+      },
+      "image": "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/boys_toilet_top.png",
+      "image_sha256": "1f339e8a6af01a5d1262fc6fed81bcc7f6f231d8845fe9a36deee375a86e7523",
+      "image_size_bytes": 1705138,
+      "view_name": "top"
+    },
+    {
+      "camera": {
+        "location": [
+          4.622392,
+          -3.567391,
+          5.528016
+        ],
+        "ortho_scale": 4.252515,
+        "projection": "ORTHO",
+        "target": [
+          -0.025,
+          1.08,
+          1.154
+        ]
+      },
+      "cutaway": {
+        "classified_content_count": 41,
+        "established": true,
+        "hidden_camera_side_attachments": [
+          {
+            "bounds": {
+              "center": [
+                0.683397,
+                -1.936981,
+                1.712709
+              ],
+              "dimensions": [
+                0.653954,
+                0.026038,
+                0.909053
+              ],
+              "maximum": [
+                1.010374,
+                -1.923962,
+                2.167236
+              ],
+              "minimum": [
+                0.35642,
+                -1.95,
+                1.258182
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.005",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_005",
+              "world_005"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                -0.871804,
+                -1.888302,
+                2.462355
+              ],
+              "dimensions": [
+                0.600123,
+                0.123395,
+                0.062263
+              ],
+              "maximum": [
+                -0.571743,
+                -1.826605,
+                2.493487
+              ],
+              "minimum": [
+                -1.171865,
+                -1.95,
+                2.431224
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.009",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_009",
+              "world_009"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                1.909864,
+                -0.623086,
+                1.245
+              ],
+              "dimensions": [
+                0.080272,
+                0.122148,
+                0.246927
+              ],
+              "maximum": [
+                1.95,
+                -0.562012,
+                1.368464
+              ],
+              "minimum": [
+                1.869728,
+                -0.68416,
+                1.121536
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.011",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_011",
+              "world_011"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                1.86,
+                0.476249,
+                2.606728
+              ],
+              "dimensions": [
+                0.18,
+                0.33749,
+                0.155381
+              ],
+              "maximum": [
+                1.95,
+                0.644994,
+                2.684418
+              ],
+              "minimum": [
+                1.77,
+                0.307504,
+                2.529038
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.014",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_014",
+              "world_014"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                1.940403,
+                -1.368414,
+                2.649887
+              ],
+              "dimensions": [
+                0.019193,
+                0.353578,
+                0.352007
+              ],
+              "maximum": [
+                1.95,
+                -1.191625,
+                2.825891
+              ],
+              "minimum": [
+                1.930807,
+                -1.545203,
+                2.473884
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.033",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_033",
+              "world_033"
+            ]
+          }
+        ],
+        "hidden_camera_side_walls": [
+          {
+            "bounds": {
+              "center": [
+                0.0,
+                -1.975,
+                1.6
+              ],
+              "dimensions": [
+                4.0,
+                0.05,
+                3.2
+              ],
+              "maximum": [
+                2.0,
+                -1.95,
+                3.2
+              ],
+              "minimum": [
+                -2.0,
+                -2.0,
+                0.0
+              ]
+            },
+            "classification_reason": "semantic_or_tall_thin_boundary_envelope",
+            "name": "geometry_0.001",
+            "role": "wall",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_001",
+              "world_001"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                1.975,
+                0.0,
+                1.6
+              ],
+              "dimensions": [
+                0.050015,
+                4.0,
+                3.2
+              ],
+              "maximum": [
+                2.000008,
+                2.0,
+                3.2
+              ],
+              "minimum": [
+                1.949993,
+                -2.0,
+                -0.0
+              ]
+            },
+            "classification_reason": "semantic_or_tall_thin_boundary_envelope",
+            "name": "geometry_0.002",
+            "role": "wall",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_002",
+              "world_002"
+            ]
+          }
+        ],
+        "hidden_envelope_object_names": [
+          "geometry_0.001",
+          "geometry_0.002",
+          "geometry_0.005",
+          "geometry_0.006",
+          "geometry_0.007",
+          "geometry_0.008",
+          "geometry_0.009",
+          "geometry_0.011",
+          "geometry_0.014",
+          "geometry_0.021",
+          "geometry_0.022",
+          "geometry_0.023",
+          "geometry_0.027",
+          "geometry_0.033"
+        ],
+        "hidden_overhead": [],
+        "hidden_overhead_attachments": [
+          {
+            "bounds": {
+              "center": [
+                0.0,
+                1.08,
+                3.188353
+              ],
+              "dimensions": [
+                0.62,
+                0.492687,
+                0.023294
+              ],
+              "maximum": [
+                0.31,
+                1.326344,
+                3.2
+              ],
+              "minimum": [
+                -0.31,
+                0.833657,
+                3.176706
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.006",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_006",
+              "world_006"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                0.0,
+                -1.0,
+                3.188353
+              ],
+              "dimensions": [
+                0.62,
+                0.492687,
+                0.023294
+              ],
+              "maximum": [
+                0.31,
+                -0.753656,
+                3.2
+              ],
+              "minimum": [
+                -0.31,
+                -1.246343,
+                3.176706
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.007",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_007",
+              "world_007"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                1.1,
+                1.1,
+                3.185012
+              ],
+              "dimensions": [
+                0.35,
+                0.293551,
+                0.029976
+              ],
+              "maximum": [
+                1.275,
+                1.246776,
+                3.2
+              ],
+              "minimum": [
+                0.925,
+                0.953225,
+                3.170024
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.008",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_008",
+              "world_008"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                1.39,
+                0.2,
+                3.16
+              ],
+              "dimensions": [
+                0.16267,
+                0.149767,
+                0.08
+              ],
+              "maximum": [
+                1.471335,
+                0.274884,
+                3.2
+              ],
+              "minimum": [
+                1.308665,
+                0.125116,
+                3.12
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.021",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_021",
+              "world_021"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                -1.39,
+                0.2,
+                3.16
+              ],
+              "dimensions": [
+                0.16267,
+                0.149767,
+                0.08
+              ],
+              "maximum": [
+                -1.308665,
+                0.274884,
+                3.2
+              ],
+              "minimum": [
+                -1.471335,
+                0.125116,
+                3.12
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.022",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_022",
+              "world_022"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                -1.330575,
+                0.906442,
+                3.183835
+              ],
+              "dimensions": [
+                0.142704,
+                0.142744,
+                0.03233
+              ],
+              "maximum": [
+                -1.259223,
+                0.977814,
+                3.2
+              ],
+              "minimum": [
+                -1.401927,
+                0.83507,
+                3.16767
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.023",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_023",
+              "world_023"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                0.059973,
+                0.004233,
+                3.177237
+              ],
+              "dimensions": [
+                0.100637,
+                0.100636,
+                0.045525
+              ],
+              "maximum": [
+                0.110291,
+                0.054551,
+                3.2
+              ],
+              "minimum": [
+                0.009655,
+                -0.046085,
+                3.154475
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.027",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_027",
+              "world_027"
+            ]
+          }
+        ],
+        "overhead_state": "verified_absent",
+        "view_name": "oblique_a",
+        "visible_content_object_names": [
+          "geometry_0.010",
+          "geometry_0.012",
+          "geometry_0.013",
+          "geometry_0.015",
+          "geometry_0.016",
+          "geometry_0.017",
+          "geometry_0.018",
+          "geometry_0.019",
+          "geometry_0.020",
+          "geometry_0.024",
+          "geometry_0.025",
+          "geometry_0.026",
+          "geometry_0.028",
+          "geometry_0.029",
+          "geometry_0.030",
+          "geometry_0.031",
+          "geometry_0.032",
+          "mesh0",
+          "mesh1",
+          "mesh10",
+          "mesh11",
+          "mesh2",
+          "mesh3",
+          "mesh4",
+          "mesh5",
+          "mesh6",
+          "mesh7",
+          "mesh8",
+          "mesh9"
+        ],
+        "visible_far_wall_object_names": [
+          "geometry_0",
+          "geometry_0.003",
+          "geometry_0.004"
+        ],
+        "visible_floor_object_names": [
+          "Mesh_12"
+        ],
+        "wall_camera_dot_products": {
+          "geometry_0": -0.598815,
+          "geometry_0.001": 0.618895,
+          "geometry_0.002": 0.793244,
+          "geometry_0.003": -0.793244,
+          "geometry_0.004": -0.793244
+        }
+      },
+      "image": "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/boys_toilet_oblique_a.png",
+      "image_sha256": "14f4461fbea9d762bbd2d1b3cf7dbe8313eabb1500812329df3b526a60f397ce",
+      "image_size_bytes": 2023275,
+      "view_name": "oblique_a"
+    },
+    {
+      "camera": {
+        "location": [
+          -5.836771,
+          -4.647391,
+          5.528016
+        ],
+        "ortho_scale": 4.374016,
+        "projection": "ORTHO",
+        "target": [
+          -0.916003,
+          0.0,
+          1.154
+        ]
+      },
+      "cutaway": {
+        "classified_content_count": 41,
+        "established": true,
+        "hidden_camera_side_attachments": [
+          {
+            "bounds": {
+              "center": [
+                0.683397,
+                -1.936981,
+                1.712709
+              ],
+              "dimensions": [
+                0.653954,
+                0.026038,
+                0.909053
+              ],
+              "maximum": [
+                1.010374,
+                -1.923962,
+                2.167236
+              ],
+              "minimum": [
+                0.35642,
+                -1.95,
+                1.258182
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.005",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_005",
+              "world_005"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                -0.871804,
+                -1.888302,
+                2.462355
+              ],
+              "dimensions": [
+                0.600123,
+                0.123395,
+                0.062263
+              ],
+              "maximum": [
+                -0.571743,
+                -1.826605,
+                2.493487
+              ],
+              "minimum": [
+                -1.171865,
+                -1.95,
+                2.431224
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.009",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_009",
+              "world_009"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                -1.86,
+                -1.390017,
+                2.607905
+              ],
+              "dimensions": [
+                0.18,
+                0.337608,
+                0.155638
+              ],
+              "maximum": [
+                -1.77,
+                -1.221213,
+                2.685724
+              ],
+              "minimum": [
+                -1.95,
+                -1.558821,
+                2.530086
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.015",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_015",
+              "world_015"
+            ]
+          }
+        ],
+        "hidden_camera_side_walls": [
+          {
+            "bounds": {
+              "center": [
+                0.0,
+                -1.975,
+                1.6
+              ],
+              "dimensions": [
+                4.0,
+                0.05,
+                3.2
+              ],
+              "maximum": [
+                2.0,
+                -1.95,
+                3.2
+              ],
+              "minimum": [
+                -2.0,
+                -2.0,
+                0.0
+              ]
+            },
+            "classification_reason": "semantic_or_tall_thin_boundary_envelope",
+            "name": "geometry_0.001",
+            "role": "wall",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_001",
+              "world_001"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                -1.975,
+                0.0,
+                1.6
+              ],
+              "dimensions": [
+                0.050015,
+                4.0,
+                3.2
+              ],
+              "maximum": [
+                -1.949992,
+                2.0,
+                3.2
+              ],
+              "minimum": [
+                -2.000007,
+                -2.0,
+                -0.0
+              ]
+            },
+            "classification_reason": "semantic_or_tall_thin_boundary_envelope",
+            "name": "geometry_0.003",
+            "role": "wall",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_003",
+              "world_003"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                -2.025,
+                0.0,
+                1.6
+              ],
+              "dimensions": [
+                0.050015,
+                4.0,
+                3.2
+              ],
+              "maximum": [
+                -1.999992,
+                2.0,
+                3.2
+              ],
+              "minimum": [
+                -2.050007,
+                -2.0,
+                -0.0
+              ]
+            },
+            "classification_reason": "semantic_or_tall_thin_boundary_envelope",
+            "name": "geometry_0.004",
+            "role": "wall",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_004",
+              "world_004"
+            ]
+          }
+        ],
+        "hidden_envelope_object_names": [
+          "geometry_0.001",
+          "geometry_0.003",
+          "geometry_0.004",
+          "geometry_0.005",
+          "geometry_0.006",
+          "geometry_0.007",
+          "geometry_0.008",
+          "geometry_0.009",
+          "geometry_0.015",
+          "geometry_0.022",
+          "geometry_0.023",
+          "geometry_0.027"
+        ],
+        "hidden_overhead": [],
+        "hidden_overhead_attachments": [
+          {
+            "bounds": {
+              "center": [
+                0.0,
+                1.08,
+                3.188353
+              ],
+              "dimensions": [
+                0.62,
+                0.492687,
+                0.023294
+              ],
+              "maximum": [
+                0.31,
+                1.326344,
+                3.2
+              ],
+              "minimum": [
+                -0.31,
+                0.833657,
+                3.176706
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.006",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_006",
+              "world_006"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                0.0,
+                -1.0,
+                3.188353
+              ],
+              "dimensions": [
+                0.62,
+                0.492687,
+                0.023294
+              ],
+              "maximum": [
+                0.31,
+                -0.753656,
+                3.2
+              ],
+              "minimum": [
+                -0.31,
+                -1.246343,
+                3.176706
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.007",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_007",
+              "world_007"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                1.1,
+                1.1,
+                3.185012
+              ],
+              "dimensions": [
+                0.35,
+                0.293551,
+                0.029976
+              ],
+              "maximum": [
+                1.275,
+                1.246776,
+                3.2
+              ],
+              "minimum": [
+                0.925,
+                0.953225,
+                3.170024
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.008",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_008",
+              "world_008"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                -1.39,
+                0.2,
+                3.16
+              ],
+              "dimensions": [
+                0.16267,
+                0.149767,
+                0.08
+              ],
+              "maximum": [
+                -1.308665,
+                0.274884,
+                3.2
+              ],
+              "minimum": [
+                -1.471335,
+                0.125116,
+                3.12
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.022",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_022",
+              "world_022"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                -1.330575,
+                0.906442,
+                3.183835
+              ],
+              "dimensions": [
+                0.142704,
+                0.142744,
+                0.03233
+              ],
+              "maximum": [
+                -1.259223,
+                0.977814,
+                3.2
+              ],
+              "minimum": [
+                -1.401927,
+                0.83507,
+                3.16767
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.023",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_023",
+              "world_023"
+            ]
+          },
+          {
+            "bounds": {
+              "center": [
+                0.059973,
+                0.004233,
+                3.177237
+              ],
+              "dimensions": [
+                0.100637,
+                0.100636,
+                0.045525
+              ],
+              "maximum": [
+                0.110291,
+                0.054551,
+                3.2
+              ],
+              "minimum": [
+                0.009655,
+                -0.046085,
+                3.154475
+              ]
+            },
+            "classification_reason": "not_envelope_geometry",
+            "name": "geometry_0.027",
+            "role": "content",
+            "semantic_labels": [
+              "clientobjects",
+              "geometry_0_027",
+              "world_027"
+            ]
+          }
+        ],
+        "overhead_state": "verified_absent",
+        "view_name": "oblique_b",
+        "visible_content_object_names": [
+          "geometry_0.010",
+          "geometry_0.011",
+          "geometry_0.012",
+          "geometry_0.013",
+          "geometry_0.014",
+          "geometry_0.016",
+          "geometry_0.017",
+          "geometry_0.018",
+          "geometry_0.019",
+          "geometry_0.020",
+          "geometry_0.021",
+          "geometry_0.024",
+          "geometry_0.025",
+          "geometry_0.026",
+          "geometry_0.028",
+          "geometry_0.029",
+          "geometry_0.030",
+          "geometry_0.031",
+          "geometry_0.032",
+          "geometry_0.033",
+          "mesh0",
+          "mesh1",
+          "mesh10",
+          "mesh11",
+          "mesh2",
+          "mesh3",
+          "mesh4",
+          "mesh5",
+          "mesh6",
+          "mesh7",
+          "mesh8",
+          "mesh9"
+        ],
+        "visible_far_wall_object_names": [
+          "geometry_0",
+          "geometry_0.002"
+        ],
+        "visible_floor_object_names": [
+          "Mesh_12"
+        ],
+        "wall_camera_dot_products": {
+          "geometry_0": -0.634364,
+          "geometry_0.001": 0.614594,
+          "geometry_0.002": -0.781001,
+          "geometry_0.003": 0.781002,
+          "geometry_0.004": 0.781002
+        }
+      },
+      "image": "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/boys_toilet_oblique_b.png",
+      "image_sha256": "4515b9555feed82c7622cb103a108c11620e63843b14e0ed1ba29ee97c0786e9",
+      "image_size_bytes": 1969973,
+      "view_name": "oblique_b"
+    }
+  ]
+}
