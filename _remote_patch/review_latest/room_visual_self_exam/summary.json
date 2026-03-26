@@ -1,0 +1,13 @@
+{
+  "contract_profile": "school_reference_20260710",
+  "failed_rooms": [
+    "classroom_03"
+  ],
+  "gate_dir": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/quality_gates/room_visual_self_exam",
+  "minimum_review_images": 3,
+  "passed_rooms": [],
+  "reference_image": "/data/run01/scvj260/codex_factory/room1_execution/inputs/full_quality_school_reference_20260710/reference.png",
+  "room_count": 1,
+  "status": "fail",
+  "threshold": 7.0
+}
