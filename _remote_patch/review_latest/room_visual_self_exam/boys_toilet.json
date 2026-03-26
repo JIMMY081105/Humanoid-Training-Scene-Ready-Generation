@@ -1,0 +1,279 @@
+{
+  "contract_profile": "school_reference_20260710",
+  "critical_issues": [
+    "No visible natural daylight source (no window/skylight apparent); daylight requirement cannot be verified and appears unmet (views 2-3).",
+    "Toilet area reads as partially partitioned rather than fully enclosed stalls (no clear stall doors/front partitions), weakening the required 'toilet fixtures/stalls' fidelity (views 2-3).",
+    "Overall warm, welcoming reference-school finish is weak in this room (flat lighting, minimal school identity cues), reducing reference-style alignment (views 2-3).",
+    "Visual checklist requirement failed (daylight_and_warm_lighting): No window/skylight or clear daylight beam is visible; illumination appears generic/neutral and daylight cannot be confirmed.",
+    "Visual checklist requirement failed (inventory:toilets): Two toilet fixtures are visible, separated by partitions; however they do not clearly read as fully enclosed stalls (no clear doors/front enclosure).",
+    "Visual checklist requirement failed (reference_style): While materials are neutral, the room lacks visible daylight and the overall warm, welcoming reference-school character is not clearly matched."
+  ],
+  "deterministic_gate_status": "pass",
+  "evidence": {
+    "algorithm": "sha256",
+    "cutaway_evidence": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/boys_toilet_cutaway_evidence.json",
+      "sha256": "1149b283dcdcc31e3972e63bfe93f830c2cc7f7068ecca512f3157e75c0e4912"
+    },
+    "deterministic_gate": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/quality_gates/room_self_exam_deterministic/boys_toilet.json",
+      "sha256": "9cbbe115b2cb6cb26740bcf3cd49e41021283029ef48bbb8293c8507d68c8e6b"
+    },
+    "effective_prompt": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/inputs/full_quality_school_reference_20260710/prompt.txt",
+      "sha256": "ac8d297cc9a2d605f41b4bcd7abd52aac29bfd0f195875840342ee1e6a7da86f"
+    },
+    "house_layout": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/house_layout.json",
+      "sha256": "b2dc434653d5dca178c3a90f0bbb21e21640452158b81e0ceba227099c265d48"
+    },
+    "input_manifest": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/inputs/full_quality_school_reference_20260710/input_manifest.json",
+      "sha256": "7a285b19c7e5e1622ed70ad72226815fa24084587875bcb658823b5edcdfc61e"
+    },
+    "prompt_binding": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/quality_gates/room_prompt_binding.json",
+      "sha256": "1d237196da20507455a2b75abc7a9059ab19139fff20ec77c449c4529aed5c2e"
+    },
+    "reference_image": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/inputs/full_quality_school_reference_20260710/reference.png",
+      "sha256": "7ba62c39ac98cd2b21d9a5a97fd6f9b90d7efaf447d5ac9a6148524b5a8dbe48"
+    },
+    "review_images": [
+      {
+        "path": "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/boys_toilet_top.png",
+        "sha256": "535d1276b302ec1e28426ffb5c08975af775e4ea6c7f4f26f0b5b34f154b1f42"
+      },
+      {
+        "path": "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/boys_toilet_oblique_a.png",
+        "sha256": "c30c91a472e1954cc29add0eede1cf15a0c8f5024168d9b5aadc54700bfdd6be"
+      },
+      {
+        "path": "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/boys_toilet_oblique_b.png",
+        "sha256": "8dcd0fde2cc40484e29da9f53f9fe6b87455cc3a6f0d8dc576ee56934bf3755e"
+      }
+    ],
+    "scene_state": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/scene_states/final_scene/scene_state.json",
+      "sha256": "5cd8143c05e6baf5a32a3f28531c53456a4dfd312f90fbac9a09ee20f0258685"
+    },
+    "schema_version": 1,
+    "source_blend": {
+      "path": "/data/run01/scvj260/codex_factory/room1_execution/outputs/2026-07-10/full_quality_school_reference_sam3d_artvip_artiverse_20260710/scene_000/room_boys_toilet/scene_states/final_scene/scene.blend",
+      "sha256": "42f169e104980e30d3ae34ec3ad0073fb30562a860d59cd6a00df373d17471f4"
+    },
+    "vlm_request": {
+      "algorithm": "sha256",
+      "backend": "openai",
+      "generated_view_indices": [
+        1,
+        2,
+        3
+      ],
+      "messages_sha256": "6d5425ce3f79423baf0c3f4654474ae49355a09db77c9cb77f6908071fb3cb9f",
+      "model": "gpt-5.2",
+      "reference_image_sha256": "7ba62c39ac98cd2b21d9a5a97fd6f9b90d7efaf447d5ac9a6148524b5a8dbe48",
+      "request_sha256": "7026a4111aecc2434549b14a1f6173d033354de76a76281589951dcd323f51c3",
+      "requirement_keys": [
+        "clear_circulation",
+        "collision_free_support",
+        "daylight_and_warm_lighting",
+        "inventory:drying",
+        "inventory:mirrors",
+        "inventory:partitions",
+        "inventory:sinks",
+        "inventory:soap",
+        "inventory:toilets",
+        "inventory:trash",
+        "inventory:urinals",
+        "reference_style",
+        "room_specific_arrangement",
+        "warm_materials"
+      ],
+      "review_image_sha256": [
+        "535d1276b302ec1e28426ffb5c08975af775e4ea6c7f4f26f0b5b34f154b1f42",
+        "c30c91a472e1954cc29add0eede1cf15a0c8f5024168d9b5aadc54700bfdd6be",
+        "8dcd0fde2cc40484e29da9f53f9fe6b87455cc3a6f0d8dc576ee56934bf3755e"
+      ],
+      "room_id": "boys_toilet",
+      "schema_id": "scenesmith_canonical_vlm_request_v1",
+      "schema_version": 1,
+      "score_keys": [
+        "object_relevance",
+        "placement_realism",
+        "clearance_and_access",
+        "collision_risk",
+        "prompt_alignment"
+      ],
+      "threshold": 7.0
+    }
+  },
+  "reference_image": "/data/run01/scvj260/codex_factory/room1_execution/inputs/full_quality_school_reference_20260710/reference.png",
+  "repair_instructions": [
+    "Add a credible daylight source (e.g., high window, borrowed light panel, or skylight) and ensure the room reads as naturally lit in renders.",
+    "Replace the partial dividers with two clearly defined toilet stalls (full-height partitions and at least partial front/door elements) while preserving clearance.",
+    "Adjust lighting/materials to better match the warm reference (warmer fixtures/tones; reduce non-restroom decor like clock/bulletin board if not justified).",
+    "Raise these combined scores to the pass threshold: object_relevance, prompt_alignment"
+  ],
+  "review_images": [
+    "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/boys_toilet_top.png",
+    "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/boys_toilet_oblique_a.png",
+    "/data/run01/scvj260/codex_factory/room1_execution/review/room_review_renders/boys_toilet_oblique_b.png"
+  ],
+  "room_id": "boys_toilet",
+  "room_prompt": "[SCENESMITH_SCHOOL_CONTRACT_V1 room_id=boys_toilet profile=school_reference_20260710]\nImmutable effective prompt SHA-256: ac8d297cc9a2d605f41b4bcd7abd52aac29bfd0f195875840342ee1e6a7da86f\n\nUse warm cream/beige/off-white walls, light wood furniture and flooring, soft daylight, warm ceiling light, organized school displays, realistic scale, greenery, and clear humanoid/robot circulation. Nothing may float, visibly interpenetrate, block a door, or eliminate a usable walking/turning path.\n\nROOM-SPECIFIC REQUIRED CONTENTS:\nCreate a clean compact boys school toilet with at least two toilet fixtures/stalls, at least two urinals, at least two sinks and mirrors, stall partitions, soap dispenser, paper-towel dispenser or hand dryer, trash bin, tiled floor/walls, and unblocked access.\n\n--- FLOOR-PLANNER CONTEXT (SECONDARY) ---\nCompact boys school restroom west of the shared public foyer.",
+  "scores": {
+    "clearance_and_access": 8.0,
+    "collision_risk": 9.0,
+    "object_relevance": 6.0,
+    "placement_realism": 8.0,
+    "prompt_alignment": 6.0
+  },
+  "status": "fail",
+  "threshold": 7.0,
+  "visual_assessment": {
+    "critical_issues": [
+      "No visible natural daylight source (no window/skylight apparent); daylight requirement cannot be verified and appears unmet (views 2-3).",
+      "Toilet area reads as partially partitioned rather than fully enclosed stalls (no clear stall doors/front partitions), weakening the required 'toilet fixtures/stalls' fidelity (views 2-3).",
+      "Overall warm, welcoming reference-school finish is weak in this room (flat lighting, minimal school identity cues), reducing reference-style alignment (views 2-3)."
+    ],
+    "observations": [
+      "Compact restroom layout includes double-sink vanity with mirrors, urinals, toilets, partitions, soap/dispenser units, and trash bin (views 2-3).",
+      "Central floor area and entrance opening appear navigable without obvious blockage (views 1-3).",
+      "No windows/skylight are visible; lighting reads as neutral/flat rather than daylight-driven (views 2-3)."
+    ],
+    "repair_instructions": [
+      "Add a credible daylight source (e.g., high window, borrowed light panel, or skylight) and ensure the room reads as naturally lit in renders.",
+      "Replace the partial dividers with two clearly defined toilet stalls (full-height partitions and at least partial front/door elements) while preserving clearance.",
+      "Adjust lighting/materials to better match the warm reference (warmer fixtures/tones; reduce non-restroom decor like clock/bulletin board if not justified)."
+    ],
+    "requirement_evidence": {
+      "clear_circulation": {
+        "label": "Door clearance, aisles, and humanoid/robot circulation are visibly usable.",
+        "observation": "The entrance opening and central open floor area provide a usable path to sinks, urinals, and toilets without visible blockage.",
+        "status": "pass",
+        "view_indices": [
+          1,
+          3
+        ]
+      },
+      "collision_free_support": {
+        "label": "Objects are supported, correctly scaled, and visibly free of collisions/floating.",
+        "observation": "Fixtures (vanity, urinals, toilets, partitions, trash) appear grounded and not visibly interpenetrating each other or floating.",
+        "status": "pass",
+        "view_indices": [
+          2,
+          3
+        ]
+      },
+      "daylight_and_warm_lighting": {
+        "label": "Natural daylight and warm interior lighting are visible.",
+        "observation": "No window/skylight or clear daylight beam is visible; illumination appears generic/neutral and daylight cannot be confirmed.",
+        "status": "fail",
+        "view_indices": [
+          2,
+          3
+        ]
+      },
+      "inventory:drying": {
+        "label": "Required inventory is visibly represented: paper towel/hand dryer.",
+        "observation": "A tall wall-mounted drying/dispenser unit is visible adjacent to the sink area.",
+        "status": "pass",
+        "view_indices": [
+          2
+        ]
+      },
+      "inventory:mirrors": {
+        "label": "Required inventory is visibly represented: mirrors.",
+        "observation": "Two mirrors are mounted above the double-sink vanity.",
+        "status": "pass",
+        "view_indices": [
+          2
+        ]
+      },
+      "inventory:partitions": {
+        "label": "Required inventory is visibly represented: stall partitions.",
+        "observation": "Multiple freestanding partition panels divide the toilet area and provide privacy separation.",
+        "status": "pass",
+        "view_indices": [
+          2,
+          3
+        ]
+      },
+      "inventory:sinks": {
+        "label": "Required inventory is visibly represented: sinks/basins.",
+        "observation": "A double-sink vanity with two basins is visible.",
+        "status": "pass",
+        "view_indices": [
+          2
+        ]
+      },
+      "inventory:soap": {
+        "label": "Required inventory is visibly represented: soap dispenser.",
+        "observation": "A wall-mounted soap dispenser is visible near the sinks.",
+        "status": "pass",
+        "view_indices": [
+          2
+        ]
+      },
+      "inventory:toilets": {
+        "label": "Required inventory is visibly represented: toilet fixtures/stalls.",
+        "observation": "Two toilet fixtures are visible, separated by partitions; however they do not clearly read as fully enclosed stalls (no clear doors/front enclosure).",
+        "status": "fail",
+        "view_indices": [
+          3
+        ]
+      },
+      "inventory:trash": {
+        "label": "Required inventory is visibly represented: trash bin.",
+        "observation": "A trash bin is visible on the floor in the open area.",
+        "status": "pass",
+        "view_indices": [
+          2
+        ]
+      },
+      "inventory:urinals": {
+        "label": "Required inventory is visibly represented: urinals.",
+        "observation": "Two urinals are visible on a shared station with a privacy divider between them.",
+        "status": "pass",
+        "view_indices": [
+          3
+        ]
+      },
+      "reference_style": {
+        "label": "Warm, welcoming reference-school style is visibly matched.",
+        "observation": "While materials are neutral, the room lacks visible daylight and the overall warm, welcoming reference-school character is not clearly matched.",
+        "status": "fail",
+        "view_indices": [
+          2,
+          3
+        ]
+      },
+      "room_specific_arrangement": {
+        "label": "The room-specific arrangement and identity are visibly realized.",
+        "observation": "The space clearly reads as a boys restroom with sinks/mirrors, urinals, toilets, partitions, and hygiene accessories in plausible locations.",
+        "status": "pass",
+        "view_indices": [
+          2,
+          3
+        ]
+      },
+      "warm_materials": {
+        "label": "Cream/beige walls and light wood materials are visibly present.",
+        "observation": "Beige/cream tile surfaces and a light-wood vanity are visible, supporting the warm-material requirement.",
+        "status": "pass",
+        "view_indices": [
+          2,
+          3
+        ]
+      }
+    },
+    "scores": {
+      "clearance_and_access": 8.0,
+      "collision_risk": 9.0,
+      "object_relevance": 6.0,
+      "placement_realism": 8.0,
+      "prompt_alignment": 6.0
+    }
+  }
+}
