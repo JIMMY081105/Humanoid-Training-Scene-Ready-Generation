@@ -1,0 +1,14 @@
+--- a/scenesmith/prompts/data/furniture_agent/designer_agent.yaml
++++ b/scenesmith/prompts/data/furniture_agent/designer_agent.yaml
+@@ -534,6 +534,13 @@
+   - Example: For 4 dining chairs, generate one "dining chair" asset, then 
+     place it 4 times at different positions around the table
++
++  ### Generated Asset Atomicity
++  - For generated/SAM3D furniture, each request must describe one connected
++    physical item. Do not combine fixtures, partitions, doors, toilets, sinks,
++    or other independently placed objects into one generated asset request.
++  - Generate each required atomic asset once, then place or duplicate those
++    assets as needed. This changes neither the required inventory nor detail.
+ 
+   ## Workflow Guidelines:
