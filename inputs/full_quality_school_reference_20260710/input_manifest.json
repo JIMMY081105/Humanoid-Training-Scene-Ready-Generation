@@ -1,0 +1,28 @@
+{
+  "appendix_sha256": "7f7afbe051a26563d47b778f8f4a0286fc298f36c0256fba230b811020ab8e6d",
+  "effective_prompt_chars": 17181,
+  "effective_prompt_sha256": "ac8d297cc9a2d605f41b4bcd7abd52aac29bfd0f195875840342ee1e6a7da86f",
+  "expected_room_ids": [
+    "classroom_01",
+    "classroom_02",
+    "classroom_03",
+    "classroom_04",
+    "classroom_05",
+    "classroom_06",
+    "library",
+    "boys_toilet",
+    "girls_toilet",
+    "storage_room",
+    "main_corridor"
+  ],
+  "hash_normalization": "utf-8 with CRLF normalized to LF for text; raw bytes for reference image",
+  "original_prompt_sha256": "5ddc06e1a9afa60b0417da882c1ec53265eae23f3f9bdd2343360d123923f34c",
+  "pipeline_contract": {
+    "final_assembly_policy": "external_artiverse_gated",
+    "id": "scenesmith_full_quality_v1",
+    "required_articulated_source": "artiverse"
+  },
+  "reference_image_sha256": "7ba62c39ac98cd2b21d9a5a97fd6f9b90d7efaf447d5ac9a6148524b5a8dbe48",
+  "run_name": "full_quality_school_reference_sam3d_artvip_artiverse_20260710",
+  "scene_index": 0
+}
