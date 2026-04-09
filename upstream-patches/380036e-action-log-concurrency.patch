@@ -1,0 +1,467 @@
+diff --git a/scenesmith/agent_utils/action_logger.py b/scenesmith/agent_utils/action_logger.py
+index f0eef72..2f068d0 100644
+--- a/scenesmith/agent_utils/action_logger.py
++++ b/scenesmith/agent_utils/action_logger.py
+@@ -4,16 +4,22 @@ This module provides functionality to log scene-modifying tool calls
+ to enable deterministic replay of scene generation processes.
+ """
+ 
++import errno
+ import inspect
+ import json
+ import logging
++import os
++import tempfile
++import threading
++import time
+ 
++from contextlib import contextmanager
+ from dataclasses import asdict, dataclass, is_dataclass
+ from datetime import datetime
+ from enum import Enum
+ from functools import wraps
+ from pathlib import Path
+-from typing import Any, Callable
++from typing import Any, Callable, Iterator
+ 
+ import numpy as np
+ 
+@@ -21,6 +27,108 @@ from pydrake.math import RigidTransform
+ 
+ console_logger = logging.getLogger(__name__)
+ 
++if os.name == "nt":
++    import msvcrt
++else:
++    import fcntl
++
++
++_ACTION_LOG_THREAD_LOCK = threading.Lock()
++_LOCK_RETRY_SECONDS = 0.01
++
++
++def _acquire_file_lock(lock_file) -> None:
++    """Acquire an exclusive OS lock for the action-log sidecar file."""
++    if os.name == "nt":
++        # msvcrt.locking() requires the locked byte to exist.
++        lock_file.seek(0, os.SEEK_END)
++        if lock_file.tell() == 0:
++            lock_file.write(b"\0")
++            lock_file.flush()
++        lock_file.seek(0)
++        while True:
++            try:
++                msvcrt.locking(lock_file.fileno(), msvcrt.LK_NBLCK, 1)
++                return
++            except OSError as exc:
++                if exc.errno not in (errno.EACCES, errno.EAGAIN, errno.EDEADLK):
++                    raise
++                time.sleep(_LOCK_RETRY_SECONDS)
++    else:
++        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
++
++
++def _release_file_lock(lock_file) -> None:
++    """Release an action-log sidecar file lock acquired above."""
++    if os.name == "nt":
++        lock_file.seek(0)
++        msvcrt.locking(lock_file.fileno(), msvcrt.LK_UNLCK, 1)
++    else:
++        fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
++
++
++@contextmanager
++def _exclusive_action_log_lock(log_path: Path) -> Iterator[None]:
++    """Serialize read-modify-write cycles across threads and processes.
++
++    The sidecar remains in place between writes. Removing a lock file after use
++    would allow a waiter to lock a different inode while another writer still
++    owns the original one.
++    """
++    lock_path = log_path.with_name(f".{log_path.name}.lock")
++    log_path.parent.mkdir(parents=True, exist_ok=True)
++    with _ACTION_LOG_THREAD_LOCK:
++        with open(lock_path, "a+b") as lock_file:
++            _acquire_file_lock(lock_file)
++            try:
++                yield
++            finally:
++                _release_file_lock(lock_file)
++
++
++def _fsync_parent_directory(directory: Path) -> None:
++    """Persist a completed rename on platforms that support directory fsync."""
++    if os.name == "nt":
++        # Windows does not support opening directories with os.open() for fsync.
++        return
++    flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
++    directory_fd = os.open(directory, flags)
++    try:
++        os.fsync(directory_fd)
++    finally:
++        os.close(directory_fd)
++
++
++def _write_action_log_atomically(log_path: Path, log_entries: list[dict]) -> None:
++    """Publish a complete JSON document without exposing a partial write."""
++    temporary_path: Path | None = None
++    try:
++        fd, temporary_name = tempfile.mkstemp(
++            dir=log_path.parent,
++            prefix=f".{log_path.name}.",
++            suffix=".tmp",
++        )
++        temporary_path = Path(temporary_name)
++        with os.fdopen(fd, "w", encoding="utf-8") as temporary_file:
++            json.dump(log_entries, temporary_file, indent=2)
++            temporary_file.flush()
++            os.fsync(temporary_file.fileno())
++        os.replace(temporary_path, log_path)
++        temporary_path = None
++        _fsync_parent_directory(log_path.parent)
++    except OSError as exc:
++        raise IOError(f"Failed to write action log to {log_path}: {exc}") from exc
++    finally:
++        if temporary_path is not None:
++            try:
++                temporary_path.unlink(missing_ok=True)
++            except OSError as cleanup_error:
++                console_logger.warning(
++                    "Failed to remove temporary action log %s: %s",
++                    temporary_path,
++                    cleanup_error,
++                )
++
+ 
+ @dataclass
+ class ActionLogEntry:
+@@ -170,40 +278,38 @@ def _append_action_to_log(
+                 f"Failed to serialize metadata for {tool_name}: {e}"
+             ) from e
+ 
+-    # Load existing log or create empty list.
+-    if log_path.exists():
+-        try:
+-            with open(log_path, encoding="utf-8") as f:
+-                log_entries = json.load(f)
+-        except (json.JSONDecodeError, IOError) as e:
+-            console_logger.warning(
+-                f"Failed to load existing action log at {log_path}: {e}. Starting "
+-                "new log."
+-            )
++    # The entry number depends on the preceding document, so loading, appending,
++    # and publishing must be one cross-process critical section. The thread lock
++    # also covers platforms whose file-lock primitive is process-scoped.
++    log_path = Path(log_path)
++    with _exclusive_action_log_lock(log_path):
++        # Load existing log or create empty list.
++        if log_path.exists():
++            try:
++                with open(log_path, encoding="utf-8") as f:
++                    log_entries = json.load(f)
++            except (json.JSONDecodeError, IOError) as e:
++                console_logger.warning(
++                    f"Failed to load existing action log at {log_path}: {e}. "
++                    "Starting new log."
++                )
++                log_entries = []
++        else:
+             log_entries = []
+-    else:
+-        log_entries = []
+-
+-    # Create new entry.
+-    step_number = len(log_entries) + 1
+-    timestamp = datetime.now().isoformat()
+-    entry = ActionLogEntry(
+-        step_number=step_number,
+-        timestamp=timestamp,
+-        tool_name=tool_name,
+-        arguments=serialized_args,
+-        metadata=serialized_metadata,
+-    )
+-
+-    # Append and save.
+-    log_entries.append(asdict(entry))
+-    try:
+-        # Ensure parent directory exists.
+-        log_path.parent.mkdir(parents=True, exist_ok=True)
+-        with open(log_path, "w", encoding="utf-8") as f:
+-            json.dump(log_entries, f, indent=2)
+-    except IOError as e:
+-        raise IOError(f"Failed to write action log to {log_path}: {e}") from e
++
++        # Create new entry.
++        step_number = len(log_entries) + 1
++        timestamp = datetime.now().isoformat()
++        entry = ActionLogEntry(
++            step_number=step_number,
++            timestamp=timestamp,
++            tool_name=tool_name,
++            arguments=serialized_args,
++            metadata=serialized_metadata,
++        )
++
++        log_entries.append(asdict(entry))
++        _write_action_log_atomically(log_path=log_path, log_entries=log_entries)
+ 
+ 
+ def log_scene_action(func: Callable) -> Callable:
+@@ -321,6 +427,7 @@ def load_action_log(log_path: Path) -> list[ActionLogEntry]:
+         FileNotFoundError: If the log file does not exist.
+         ValueError: If the log file is not valid JSON or has invalid structure.
+     """
++    log_path = Path(log_path)
+     if not log_path.exists():
+         raise FileNotFoundError(
+             f"Action log file not found: {log_path}. This scene was likely "
+@@ -328,11 +435,12 @@ def load_action_log(log_path: Path) -> list[ActionLogEntry]:
+             "to generate a new scene with action logging enabled."
+         )
+ 
+-    try:
+-        with open(log_path, encoding="utf-8") as f:
+-            log_data = json.load(f)
+-    except json.JSONDecodeError as e:
+-        raise ValueError(f"Failed to parse action log JSON at {log_path}: {e}")
++    with _exclusive_action_log_lock(log_path):
++        try:
++            with open(log_path, encoding="utf-8") as f:
++                log_data = json.load(f)
++        except json.JSONDecodeError as e:
++            raise ValueError(f"Failed to parse action log JSON at {log_path}: {e}")
+ 
+     if not isinstance(log_data, list):
+         raise ValueError(
+diff --git a/tests/unit/test_action_logger.py b/tests/unit/test_action_logger.py
+index 6cd304d..f9a0335 100644
+--- a/tests/unit/test_action_logger.py
++++ b/tests/unit/test_action_logger.py
+@@ -1,13 +1,16 @@
+ """Unit tests for action logging functionality."""
+ 
+ import json
++import multiprocessing
+ import tempfile
++import threading
+ import unittest
+ 
++from concurrent.futures import ThreadPoolExecutor
+ from dataclasses import dataclass
+ from enum import Enum
+ from pathlib import Path
+-from unittest.mock import MagicMock
++from unittest.mock import MagicMock, patch
+ 
+ import numpy as np
+ 
+@@ -15,6 +18,7 @@ from pydrake.all import Quaternion, RigidTransform, RotationMatrix
+ 
+ from scenesmith.agent_utils.action_logger import (
+     ActionLogEntry,
++    _append_action_to_log,
+     _serialize_value,
+     load_action_log,
+     log_scene_action,
+@@ -22,6 +26,23 @@ from scenesmith.agent_utils.action_logger import (
+ from scenesmith.agent_utils.room import UniqueID
+ 
+ 
++def _append_actions_in_process(
++    log_path: str,
++    worker_id: int,
++    action_count: int,
++    start_event,
++) -> None:
++    """Subprocess target for exercising the portable sidecar lock."""
++    if not start_event.wait(timeout=10):
++        raise RuntimeError("Timed out waiting to start concurrent action logging")
++    for action_index in range(action_count):
++        _append_action_to_log(
++            log_path=Path(log_path),
++            tool_name="process_action",
++            arguments={"worker_id": worker_id, "action_index": action_index},
++        )
++
++
+ class TestSerializeValue(unittest.TestCase):
+     """Tests for _serialize_value function."""
+ 
+@@ -367,6 +388,177 @@ class TestLogSceneActionDecorator(unittest.TestCase):
+             self.assertEqual(log_entries[2]["arguments"]["value"], 3)
+ 
+ 
++class TestConcurrentActionLogging(unittest.TestCase):
++    """Tests that action-log read-modify-write publication is serialized."""
++
++    def test_concurrent_threads_preserve_entries_and_valid_json(self):
++        """Readers never see partial JSON and concurrent entries are not lost."""
++        with tempfile.TemporaryDirectory() as tmp_dir:
++            log_path = Path(tmp_dir) / "action_log.json"
++            _append_action_to_log(
++                log_path=log_path,
++                tool_name="seed",
++                arguments={"worker_id": -1, "action_index": -1},
++            )
++
++            writer_count = 8
++            actions_per_writer = 10
++            start_barrier = threading.Barrier(writer_count)
++            stop_reader = threading.Event()
++            reader_errors: list[Exception] = []
++
++            def read_repeatedly() -> None:
++                while not stop_reader.is_set():
++                    try:
++                        assert isinstance(load_action_log(log_path), list)
++                    except Exception as exc:  # Captured and asserted in main thread.
++                        reader_errors.append(exc)
++                        stop_reader.set()
++
++            def append_actions(worker_id: int) -> None:
++                start_barrier.wait(timeout=10)
++                for action_index in range(actions_per_writer):
++                    _append_action_to_log(
++                        log_path=log_path,
++                        tool_name="thread_action",
++                        arguments={
++                            "worker_id": worker_id,
++                            "action_index": action_index,
++                        },
++                    )
++
++            reader = threading.Thread(target=read_repeatedly, daemon=True)
++            reader.start()
++            try:
++                with ThreadPoolExecutor(max_workers=writer_count) as executor:
++                    list(executor.map(append_actions, range(writer_count)))
++            finally:
++                stop_reader.set()
++                reader.join(timeout=10)
++
++            self.assertFalse(reader.is_alive())
++            self.assertEqual(reader_errors, [])
++            with open(log_path, encoding="utf-8") as log_file:
++                log_entries = json.load(log_file)
++
++            self.assertEqual(
++                len(log_entries), 1 + writer_count * actions_per_writer
++            )
++            self.assertEqual(
++                [entry["step_number"] for entry in log_entries],
++                list(range(1, len(log_entries) + 1)),
++            )
++            observed = {
++                (entry["arguments"]["worker_id"], entry["arguments"]["action_index"])
++                for entry in log_entries
++                if entry["tool_name"] == "thread_action"
++            }
++            expected = {
++                (worker_id, action_index)
++                for worker_id in range(writer_count)
++                for action_index in range(actions_per_writer)
++            }
++            self.assertEqual(observed, expected)
++
++    def test_concurrent_processes_preserve_every_entry(self):
++        """The sidecar lock serializes separate room-worker processes."""
++        with tempfile.TemporaryDirectory() as tmp_dir:
++            log_path = Path(tmp_dir) / "action_log.json"
++            process_count = 4
++            actions_per_process = 12
++            start_method = (
++                "fork"
++                if "fork" in multiprocessing.get_all_start_methods()
++                else "spawn"
++            )
++            context = multiprocessing.get_context(start_method)
++            start_event = context.Event()
++            processes = [
++                context.Process(
++                    target=_append_actions_in_process,
++                    args=(
++                        str(log_path),
++                        worker_id,
++                        actions_per_process,
++                        start_event,
++                    ),
++                )
++                for worker_id in range(process_count)
++            ]
++
++            try:
++                for process in processes:
++                    process.start()
++                start_event.set()
++                for process in processes:
++                    process.join(timeout=30)
++                self.assertTrue(
++                    all(not process.is_alive() for process in processes),
++                    "Concurrent action-log subprocess did not finish",
++                )
++                self.assertEqual(
++                    [process.exitcode for process in processes],
++                    [0] * process_count,
++                )
++            finally:
++                for process in processes:
++                    if process.is_alive():
++                        process.terminate()
++                        process.join(timeout=5)
++
++            with open(log_path, encoding="utf-8") as log_file:
++                log_entries = json.load(log_file)
++
++            self.assertEqual(
++                len(log_entries), process_count * actions_per_process
++            )
++            self.assertEqual(
++                [entry["step_number"] for entry in log_entries],
++                list(range(1, len(log_entries) + 1)),
++            )
++            observed = {
++                (entry["arguments"]["worker_id"], entry["arguments"]["action_index"])
++                for entry in log_entries
++            }
++            expected = {
++                (worker_id, action_index)
++                for worker_id in range(process_count)
++                for action_index in range(actions_per_process)
++            }
++            self.assertEqual(observed, expected)
++
++    def test_failed_atomic_replace_preserves_previous_document(self):
++        """A publication failure leaves the previous JSON valid and unchanged."""
++        with tempfile.TemporaryDirectory() as tmp_dir:
++            log_path = Path(tmp_dir) / "action_log.json"
++            _append_action_to_log(
++                log_path=log_path,
++                tool_name="seed",
++                arguments={"value": 1},
++            )
++            original_bytes = log_path.read_bytes()
++
++            with patch(
++                "scenesmith.agent_utils.action_logger.os.replace",
++                side_effect=OSError("simulated interrupted publication"),
++            ):
++                with self.assertRaisesRegex(
++                    OSError, "simulated interrupted publication"
++                ):
++                    _append_action_to_log(
++                        log_path=log_path,
++                        tool_name="never_published",
++                        arguments={"value": 2},
++                    )
++
++            self.assertEqual(log_path.read_bytes(), original_bytes)
++            with open(log_path, encoding="utf-8") as log_file:
++                self.assertEqual(json.load(log_file)[0]["tool_name"], "seed")
++            self.assertEqual(
++                list(log_path.parent.glob(f".{log_path.name}.*.tmp")), []
++            )
++
++
+ class TestLoadActionLog(unittest.TestCase):
+     """Tests for load_action_log function."""
+ 
