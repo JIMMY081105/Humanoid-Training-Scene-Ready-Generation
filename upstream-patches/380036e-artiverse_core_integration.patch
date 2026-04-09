@@ -1,0 +1,495 @@
+diff --git a/configurations/furniture_agent/base_furniture_agent.yaml b/configurations/furniture_agent/base_furniture_agent.yaml
+--- a/configurations/furniture_agent/base_furniture_agent.yaml
++++ b/configurations/furniture_agent/base_furniture_agent.yaml
+@@ -96,6 +96,12 @@ asset_manager:
+         enabled: true
+         max_retries: 3
+         use_lenient_validation: true  # Lenient validation for dataset objects
++      # Artiverse-only articulated retrieval. This remains separate from the
++      # generic articulated strategy so full-quality runs can prove provenance.
++      artiverse_articulated:
++        enabled: true
++        max_retries: 3
++        required_source: "artiverse"
+       # Thin covering: flat floor surfaces (rugs, yoga mats, runners).
+       thin_covering:
+         enabled: true
+@@ -161,6 +167,10 @@ asset_manager:
+         enabled: true
+         data_path: "data/artvip_sdf"
+         embeddings_path: "data/artvip_sdf/embeddings"
++      artiverse:
++        enabled: true
++        data_path: "data/artiverse"
++        embeddings_path: "data/artiverse/embeddings"
+ 
+   # Image generation configuration
+   image_generation:
+diff --git a/scenesmith/agent_utils/articulated_retrieval_server/dataclasses.py b/scenesmith/agent_utils/articulated_retrieval_server/dataclasses.py
+--- a/scenesmith/agent_utils/articulated_retrieval_server/dataclasses.py
++++ b/scenesmith/agent_utils/articulated_retrieval_server/dataclasses.py
+@@ -17,7 +17,7 @@ class ArticulatedRetrievalServerRequest:
+     This DTO defines the contract for articulated asset retrieval requests sent
+     to the articulated retrieval server via HTTP. Contains all information needed
+     to perform semantic search over articulated object datasets (PartNet-Mobility,
+-    ArtVIP) using CLIP.
++    ArtVIP, Artiverse) using CLIP.
+     """
+ 
+     object_description: str
+@@ -46,6 +46,13 @@ class ArticulatedRetrievalServerRequest:
+     For non-router single retrieval, use default of 1.
+     """
+ 
++    required_source: str | None = None
++    """Optional exact articulated source name to require.
++
++    This is used by provenance-sensitive routes such as ``artiverse_articulated``
++    so a candidate from another enabled source cannot silently satisfy the request.
++    """
++
+     def to_dict(self) -> dict:
+         """Convert to dictionary for JSON serialization.
+ 
+@@ -84,7 +91,7 @@ class ArticulatedRetrievalResult:
+     """Object identifier within the dataset (e.g., PartNet-Mobility ID)."""
+ 
+     source: str
+-    """Source dataset: 'partnet_mobility' or 'artvip'."""
++    """Source dataset: 'partnet_mobility', 'artvip', or 'artiverse'."""
+ 
+     description: str
+     """Human-readable object description."""
+diff --git a/scenesmith/agent_utils/articulated_retrieval_server/data_loader.py b/scenesmith/agent_utils/articulated_retrieval_server/data_loader.py
+--- a/scenesmith/agent_utils/articulated_retrieval_server/data_loader.py
++++ b/scenesmith/agent_utils/articulated_retrieval_server/data_loader.py
+@@ -24,7 +24,7 @@ class ArticulatedMeshMetadata:
+     """Object ID within the source dataset."""
+ 
+     source: str
+-    """Data source name ('partnet_mobility' or 'artvip')."""
++    """Data source name ('partnet_mobility', 'artvip', or 'artiverse')."""
+ 
+     category: str
+     """Object category (e.g., 'Cabinet', 'StorageFurniture')."""
+@@ -94,7 +94,9 @@ class ArticulatedPreprocessedData:
+         """
+         return self._embedding_idx_lookup.get(object_id)
+ 
+-    def filter_by_object_type(self, object_type: str) -> list[int]:
++    def filter_by_object_type(
++        self, object_type: str, required_source: str | None = None
++    ) -> list[int]:
+         """Filter embedding indices by object type.
+ 
+         Filtering logic:
+@@ -105,11 +107,20 @@ class ArticulatedPreprocessedData:
+         Args:
+             object_type: Object type string (FURNITURE, MANIPULAND, etc.).
++            required_source: Optional exact source name. When provided, objects from
++                every other source are excluded before semantic ranking.
+ 
+         Returns:
+             List of embedding indices matching the filter.
+         """
++        normalized_source = required_source.lower() if required_source else None
+         matching_indices = []
+         for object_id, metadata in self.metadata_by_id.items():
++            if (
++                normalized_source is not None
++                and metadata.source.lower() != normalized_source
++            ):
++                continue
++
+             matches = False
+ 
+             if object_type == "FURNITURE":
+@@ -136,6 +147,7 @@ class ArticulatedPreprocessedData:
+                     matching_indices.append(idx)
+ 
+         console_logger.debug(
+-            f"Filtered {len(matching_indices)} objects for type '{object_type}'"
++            f"Filtered {len(matching_indices)} objects for type '{object_type}', "
++            f"required_source={required_source!r}"
+         )
+         return matching_indices
+diff --git a/scenesmith/agent_utils/articulated_retrieval_server/retrieval.py b/scenesmith/agent_utils/articulated_retrieval_server/retrieval.py
+--- a/scenesmith/agent_utils/articulated_retrieval_server/retrieval.py
++++ b/scenesmith/agent_utils/articulated_retrieval_server/retrieval.py
+@@ -100,6 +100,7 @@ class ArticulatedRetriever:
+         description: str,
+         object_type: str,
+         desired_dimensions: list[float] | None = None,
+         top_k: int = 5,
++        required_source: str | None = None,
+     ) -> list[RetrievalCandidate]:
+         """Retrieve articulated objects matching description.
+@@ -108,6 +109,8 @@ class ArticulatedRetriever:
+             description: Text description of desired object.
+             object_type: Object type (FURNITURE, MANIPULAND, etc.).
+             desired_dimensions: Optional [width, depth, height] in meters.
+             top_k: Number of candidates to return.
++            required_source: Optional exact source name to require, such as
++                ``artiverse``. Other enabled articulated sources are excluded.
+ 
+         Returns:
+@@ -121,14 +124,20 @@ class ArticulatedRetriever:
+ 
+         console_logger.info(
+             f"Retrieving articulated objects: description='{description}', "
+-            f"type={object_type}, dimensions={desired_dimensions}, top_k={top_k}"
++            f"type={object_type}, dimensions={desired_dimensions}, "
++            f"required_source={required_source!r}, top_k={top_k}"
+         )
+ 
+-        # Stage 1: Filter by object type.
+-        filtered_indices = self.preprocessed_data.filter_by_object_type(object_type)
++        # Stage 1: Filter by object type and, for provenance-sensitive routes, source.
++        filtered_indices = self.preprocessed_data.filter_by_object_type(
++            object_type=object_type, required_source=required_source
++        )
+ 
+         if not filtered_indices:
+-            console_logger.warning(f"No articulated objects match type '{object_type}'")
++            console_logger.warning(
++                f"No articulated objects match type '{object_type}' and "
++                f"required_source={required_source!r}"
++            )
+             return []
+ 
+         console_logger.info(
+diff --git a/scenesmith/agent_utils/articulated_retrieval_server/server_app.py b/scenesmith/agent_utils/articulated_retrieval_server/server_app.py
+--- a/scenesmith/agent_utils/articulated_retrieval_server/server_app.py
++++ b/scenesmith/agent_utils/articulated_retrieval_server/server_app.py
+@@ -1,7 +1,7 @@
+ """Flask application for articulated retrieval server with round-robin scheduling.
+ 
+ Mirrors the HSSD retrieval server architecture for CLIP-based semantic search
+-over articulated object datasets (PartNet-Mobility, ArtVIP).
++over articulated object datasets (PartNet-Mobility, ArtVIP, Artiverse).
+ """
+ 
+ import logging
+@@ -266,6 +266,7 @@ class ArticulatedRetrievalApp(flask.Flask):
+             description=request.object_description,
+             object_type=request.object_type,
+             desired_dimensions=desired_dimensions,
++            required_source=request.required_source,
+             top_k=request.num_candidates,
+         )
+ 
+diff --git a/scenesmith/agent_utils/articulated_retrieval_server/client.py b/scenesmith/agent_utils/articulated_retrieval_server/client.py
+--- a/scenesmith/agent_utils/articulated_retrieval_server/client.py
++++ b/scenesmith/agent_utils/articulated_retrieval_server/client.py
+@@ -21,7 +21,7 @@ class ArticulatedRetrievalClient:
+     """Client for making requests to the articulated retrieval server.
+ 
+     Provides a high-level interface for retrieving articulated 3D objects
+-    from PartNet-Mobility and ArtVIP datasets using semantic search with CLIP.
++    from PartNet-Mobility, ArtVIP, and Artiverse using semantic search with CLIP.
+     Handles HTTP communication, retries, error handling, and response parsing.
+ 
+     The client maintains a persistent HTTP session for connection pooling
+diff --git a/scenesmith/agent_utils/asset_router/router.py b/scenesmith/agent_utils/asset_router/router.py
+--- a/scenesmith/agent_utils/asset_router/router.py
++++ b/scenesmith/agent_utils/asset_router/router.py
+@@ -490,6 +490,14 @@ class AssetRouter:
+                     debug_dir=debug_dir,
+                     articulated_client=articulated_client,
+                 )
++            elif strategy == "artiverse_articulated":
++                result = self._try_articulated_strategy(
++                    item=item,
++                    max_retries=max_retries,
++                    debug_dir=debug_dir,
++                    articulated_client=articulated_client,
++                    required_source="artiverse",
++                )
+             elif strategy == "thin_covering":
+                 # Thin covering: textured flat surface for floors (e.g, rugs),
+                 # manipulands (e.g., tablecloths), and walls (e.g., posters).
+@@ -521,12 +529,14 @@ class AssetRouter:
+         max_retries: int,
+         debug_dir: Path,
+         articulated_client: "ArticulatedRetrievalClient | None",
++        required_source: str | None = None,
+     ) -> ArticulatedGeometry | None:
+         """Try the articulated strategy for objects with doors/drawers/etc.
+ 
+         Retrieves pre-processed SDF assets from articulated object libraries
+-        (PartNet-Mobility, ArtVIP) using CLIP semantic matching and bounding
+-        box ranking via the articulated retrieval server.
++        (PartNet-Mobility, ArtVIP, Artiverse) using CLIP semantic matching and
++        bounding box ranking via the articulated retrieval server. A source-specific
++        strategy can require one source so provenance cannot silently fall back.
+ 
+         Args:
+             item: The asset item to retrieve.
+@@ -533,6 +542,8 @@ class AssetRouter:
+             max_retries: Number of candidates to try (from router config).
+             debug_dir: Directory to save debug outputs (validation renders).
+             articulated_client: Client for articulated retrieval server.
++            required_source: Optional exact articulated source to require. Used by
++                ``artiverse_articulated`` with ``artiverse``.
+ 
+         Returns:
+             ArticulatedGeometry if successful, None if no suitable candidate found.
+@@ -568,6 +579,7 @@ class AssetRouter:
+             output_dir=str(articulated_output_dir),
+             desired_dimensions=tuple(item.dimensions) if item.dimensions else None,
+             num_candidates=num_candidates,
++            required_source=required_source,
+         )
+ 
+         # Fetch candidates via server.
+@@ -581,6 +593,19 @@ class AssetRouter:
+ 
+             _, response = responses[0]
+             candidates = response.results
++            if required_source is not None:
++                # Defense in depth: do not accept a mislabeled/misconfigured server
++                # response for a provenance-sensitive route.
++                candidates = [
++                    candidate
++                    for candidate in candidates
++                    if candidate.source.lower() == required_source.lower()
++                ]
++                if not candidates:
++                    console_logger.warning(
++                        f"No {required_source} candidates survived source filtering "
++                        f"for '{item.description}'"
++                    )
+ 
+         except Exception as e:
+             console_logger.error(
+diff --git a/scenesmith/experiments/indoor_scene_generation.py b/scenesmith/experiments/indoor_scene_generation.py
+--- a/scenesmith/experiments/indoor_scene_generation.py
++++ b/scenesmith/experiments/indoor_scene_generation.py
+@@ -1531,7 +1531,9 @@ class IndoorSceneGenerationExperiment(BaseExperiment):
+         # Check if articulated strategy is enabled for any agent.
+-        furniture_articulated_enabled = (
+-            self.cfg.furniture_agent.asset_manager.router.strategies.articulated.enabled
++        furniture_strategies = self.cfg.furniture_agent.asset_manager.router.strategies
++        furniture_articulated_enabled = furniture_strategies.articulated.enabled or (
++            "artiverse_articulated" in furniture_strategies
++            and furniture_strategies.artiverse_articulated.enabled
+         )
+         manipuland_articulated_enabled = (
+             self.cfg.manipuland_agent.asset_manager.router.strategies.articulated.enabled
+         )
+@@ -2027,8 +2029,8 @@ class IndoorSceneGenerationExperiment(BaseExperiment):
+             self._start_geometry_server()
+             self._start_hssd_server()
+             self._start_objaverse_server()
+-            # Thin wall coverings use semantic material retrieval for poster art.
+-            # self._start_articulated_server()
++            self._start_articulated_server()
++            # Thin wall coverings use semantic material retrieval for poster art.
+             self._start_materials_server()
+ 
+             if num_workers == 1:
+diff --git a/scenesmith/prompts/data/asset_router/request_analysis_furniture.yaml b/scenesmith/prompts/data/asset_router/request_analysis_furniture.yaml
+--- a/scenesmith/prompts/data/asset_router/request_analysis_furniture.yaml
++++ b/scenesmith/prompts/data/asset_router/request_analysis_furniture.yaml
+@@ -77,10 +77,15 @@ prompt: |
+     - "tileable": Pattern repeats across surface (rugs, carpets with patterns).
+     - "single_image": One image spans entire surface (not typical for furniture).
+ 
+-  PRIORITY 2 - Articulated furniture (only if NOT branded/themed):
+-  - ["articulated", "generated"]: Furniture with doors, drawers, hinges, or moving parts
+-    BUT ONLY if description is generic (no brand/franchise theming).
+-    Examples: "wardrobe", "cabinet", "dresser", "fridge", "wooden toy box with hinged lid"
++  PRIORITY 2 - Artiverse-first articulated furniture (only if NOT branded/themed):
++  - ["artiverse_articulated", "articulated", "generated"]: Generic furniture with
++    functional doors, drawers, hinged lids, or other moving parts. Artiverse is tried
++    first to preserve rich articulation and physics provenance; generic articulated
++    retrieval (for example ArtVIP) and generated geometry are explicit fallbacks.
++    Use this chain only when the description legitimately asks for an openable or
++    articulated object. Never add moving parts merely to trigger this route.
++    Examples: "openable classroom storage cabinet", "filing cabinet with drawers",
++    "library bookcase cabinet with glass doors", "wooden toy box with hinged lid".
+ 
+     EXCEPTION - Use ["generated"] only if description includes:
+     - Brand/franchise themes: "Frozen-themed", "Disney", "Star Wars", "Marvel", "Pixar"
+@@ -162,7 +167,7 @@ prompt: |
+       "short_name": "wardrobe",
+       "dimensions": [1.2, 0.6, 2.0],
+       "object_type": "FURNITURE",
+-      "strategies": ["articulated", "generated"]
++      "strategies": ["artiverse_articulated", "articulated", "generated"]
+     }],
+     "original_description": "antique wardrobe with clothes",
+     "discarded_manipulands": ["clothes"]
+@@ -176,7 +181,7 @@ prompt: |
+       "short_name": "fridge",
+       "dimensions": [0.7, 0.7, 1.8],
+       "object_type": "FURNITURE",
+-      "strategies": ["articulated", "generated"]
++      "strategies": ["artiverse_articulated", "articulated", "generated"]
+     }],
+     "original_description": null,
+     "discarded_manipulands": null
+@@ -344,7 +349,7 @@ prompt: |
+       "short_name": "toy_box",
+       "dimensions": [1.0, 0.45, 0.55],
+       "object_type": "FURNITURE",
+-      "strategies": ["articulated", "generated"]
++      "strategies": ["artiverse_articulated", "articulated", "generated"]
+     }],
+     "original_description": null,
+     "discarded_manipulands": null
+diff --git a/tests/unit/test_artiverse_retrieval_integration.py b/tests/unit/test_artiverse_retrieval_integration.py
+new file mode 100644
+--- /dev/null
++++ b/tests/unit/test_artiverse_retrieval_integration.py
+@@ -0,0 +1,150 @@
++"""Focused tests for source-constrained Artiverse articulated retrieval."""
++
++from pathlib import Path
++
++import numpy as np
++
++from omegaconf import OmegaConf
++
++from scenesmith.agent_utils.articulated_retrieval_server.config import (
++    ArticulatedConfig,
++)
++from scenesmith.agent_utils.articulated_retrieval_server.data_loader import (
++    ArticulatedMeshMetadata,
++    ArticulatedPreprocessedData,
++)
++from scenesmith.agent_utils.articulated_retrieval_server.dataclasses import (
++    ArticulatedRetrievalServerRequest,
++)
++from scenesmith.agent_utils.articulated_retrieval_server.retrieval import (
++    ArticulatedRetriever,
++)
++from scenesmith.agent_utils.asset_router.dataclasses import AssetItem
++from scenesmith.agent_utils.asset_router.router import AssetRouter
++from scenesmith.agent_utils.room import ObjectType
++
++
++def _metadata(object_id: str, source: str) -> ArticulatedMeshMetadata:
++    return ArticulatedMeshMetadata(
++        object_id=object_id,
++        source=source,
++        category="cabinet",
++        description=f"{source} openable cabinet",
++        is_manipuland=False,
++        placement_type="floor",
++        sdf_path=Path(f"/{source}/{object_id}.sdf"),
++        bounding_box_min=[0.0, 0.0, 0.0],
++        bounding_box_max=[1.0, 0.5, 1.8],
++    )
++
++
++def _mixed_data() -> ArticulatedPreprocessedData:
++    artiverse_id = "artiverse/cabinet/fpModel/100"
++    artvip_id = "artvip/large_furniture/200"
++    return ArticulatedPreprocessedData(
++        metadata_by_id={
++            artiverse_id: _metadata(artiverse_id, "artiverse"),
++            artvip_id: _metadata(artvip_id, "artvip"),
++        },
++        clip_embeddings=np.asarray([[1.0, 0.0], [0.0, 1.0]], dtype=np.float32),
++        embedding_index=[artiverse_id, artvip_id],
++    )
++
++
++def test_request_serializes_required_source() -> None:
++    request = ArticulatedRetrievalServerRequest(
++        object_description="openable classroom cabinet",
++        object_type="FURNITURE",
++        output_dir="/tmp/artiverse",
++        required_source="artiverse",
++    )
++
++    assert request.to_dict()["required_source"] == "artiverse"
++
++
++def test_preprocessed_filter_requires_artiverse_source() -> None:
++    data = _mixed_data()
++
++    indices = data.filter_by_object_type(
++        object_type="FURNITURE", required_source="ARTIVERSE"
++    )
++
++    assert indices == [0]
++    assert data.embedding_index[indices[0]].startswith("artiverse/")
++
++
++def test_retriever_never_returns_other_source(monkeypatch) -> None:
++    from scenesmith.agent_utils.articulated_retrieval_server import retrieval
++
++    data = _mixed_data()
++    retriever = ArticulatedRetriever(
++        config=ArticulatedConfig(sources={}, use_top_k=2), clip_device="cpu"
++    )
++    retriever.preprocessed_data = data
++    retriever._initialized = True
++
++    monkeypatch.setattr(
++        retrieval,
++        "get_text_embedding",
++        lambda description, device=None: np.asarray([1.0, 0.0], dtype=np.float32),
++    )
++    monkeypatch.setattr(
++        retrieval,
++        "compute_clip_similarities",
++        lambda query_embedding, embeddings, indices: {index: 0.9 for index in indices},
++    )
++
++    candidates = retriever.retrieve(
++        description="openable classroom cabinet",
++        object_type="FURNITURE",
++        required_source="artiverse",
++        top_k=2,
++    )
++
++    assert [candidate.source for candidate in candidates] == ["artiverse"]
++
++
++def test_router_dispatches_artiverse_with_required_source() -> None:
++    router = AssetRouter.__new__(AssetRouter)
++    router.cfg = OmegaConf.create(
++        {
++            "asset_manager": {
++                "router": {
++                    "strategies": {
++                        "artiverse_articulated": {
++                            "enabled": True,
++                            "max_retries": 2,
++                        }
++                    }
++                }
++            }
++        }
++    )
++    captured = {}
++    expected = object()
++
++    def _fake_articulated(**kwargs):
++        captured.update(kwargs)
++        return expected
++
++    router._try_articulated_strategy = _fake_articulated
++    item = AssetItem(
++        description="openable classroom storage cabinet with two doors",
++        short_name="classroom_storage_cabinet",
++        dimensions=[1.2, 0.5, 1.8],
++        object_type=ObjectType.FURNITURE,
++        strategies=["artiverse_articulated"],
++    )
++
++    result = router.generate_with_validation(
++        item=item,
++        geometry_client=None,
++        image_generator=None,
++        images_dir=None,
++        geometry_dir=Path("."),
++        debug_dir=Path("."),
++        articulated_client=object(),
++    )
++
++    assert result is expected
++    assert captured["required_source"] == "artiverse"
