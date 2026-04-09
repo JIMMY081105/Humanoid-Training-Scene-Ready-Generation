@@ -1,0 +1,1544 @@
+diff --git a/scenesmith/agent_utils/support_surface_extraction.py b/scenesmith/agent_utils/support_surface_extraction.py
+index b4549ea..7fa45fa 100644
+--- a/scenesmith/agent_utils/support_surface_extraction.py
++++ b/scenesmith/agent_utils/support_surface_extraction.py
+@@ -13,12 +13,22 @@ generated rather than artist designed furniture meshes.
+ 
+ from __future__ import annotations
+ 
++import copy
++import hashlib
++import json
+ import logging
++import math
++import os
++import re
++import stat
+ import time
++import xml.etree.ElementTree as ET
+ 
+ from collections import deque
+ from dataclasses import dataclass
+-from pathlib import Path
++from pathlib import Path, PurePosixPath
++from typing import Any
++from urllib.parse import urlsplit
+ 
+ import numpy as np
+ import trimesh
+@@ -788,7 +798,9 @@ def _create_flattened_surface_mesh(
+     return submesh
+ 
+ 
+-def _load_and_prepare_mesh(mesh_path: Path) -> trimesh.Trimesh:
++def _load_and_prepare_mesh_with_up_axis(
++    mesh_path: Path, *, source_is_y_up: bool
++) -> trimesh.Trimesh:
+     """Load mesh and prepare it for surface extraction.
+ 
+     Handles:
+@@ -812,7 +824,8 @@ def _load_and_prepare_mesh(mesh_path: Path) -> trimesh.Trimesh:
+ 
+     console_logger.info(f"Extracting support surfaces from {mesh_path.name}")
+ 
+-    mesh = trimesh.load(str(mesh_path), force="mesh")
++    load_kwargs = {"skip_materials": True} if mesh_path.suffix.lower() == ".obj" else {}
++    mesh = trimesh.load(str(mesh_path), force="mesh", **load_kwargs)
+ 
+     # Handle Scene objects (multiple geometries).
+     if isinstance(mesh, trimesh.Scene):
+@@ -838,10 +851,11 @@ def _load_and_prepare_mesh(mesh_path: Path) -> trimesh.Trimesh:
+     # All subsequent processing happens in Z-up coordinates.
+     # Transformation: (X, Y, Z) → (X, -Z, Y).
+     # This ensures positive Y (up in GLTF) becomes positive Z (up in Drake).
+-    transform_y_to_z = np.array(
+-        [[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]
+-    )
+-    mesh.apply_transform(transform_y_to_z)
++    if source_is_y_up:
++        transform_y_to_z = np.array(
++            [[1, 0, 0, 0], [0, 0, -1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]
++        )
++        mesh.apply_transform(transform_y_to_z)
+ 
+     # Merge duplicate vertices for proper adjacency detection.
+     # GLTF format often stores duplicate vertices per triangle.
+@@ -857,6 +871,12 @@ def _load_and_prepare_mesh(mesh_path: Path) -> trimesh.Trimesh:
+     return mesh
+ 
+ 
++def _load_and_prepare_mesh(mesh_path: Path) -> trimesh.Trimesh:
++    """Load a Y-up render mesh and convert it to SceneSmith's Z-up frame."""
++
++    return _load_and_prepare_mesh_with_up_axis(mesh_path, source_is_y_up=True)
++
++
+ def _create_support_surface_from_plane(
+     plane: ExtractedPlane,
+     mesh: trimesh.Trimesh,
+@@ -1004,6 +1024,9 @@ def _create_support_surface_from_plane(
+ def extract_support_surfaces_from_mesh(
+     mesh_path: Path,
+     config: SupportSurfaceExtractionConfig | None = None,
++    *,
++    mesh_scale: float = 1.0,
++    mesh_transform: np.ndarray | None = None,
+ ) -> list["SupportSurface"]:
+     """Extract all horizontal support surfaces from furniture mesh.
+ 
+@@ -1036,6 +1059,15 @@ def extract_support_surfaces_from_mesh(
+         config = SupportSurfaceExtractionConfig()
+ 
+     mesh = _load_and_prepare_mesh(mesh_path=mesh_path)
++    if not np.isfinite(mesh_scale) or mesh_scale <= 0:
++        raise ValueError(f"Mesh scale must be finite and positive: {mesh_scale}")
++    if mesh_scale != 1.0:
++        mesh.apply_scale(mesh_scale)
++    if mesh_transform is not None:
++        transform = np.asarray(mesh_transform, dtype=float)
++        if transform.shape != (4, 4) or not np.all(np.isfinite(transform)):
++            raise ValueError("Mesh transform must be a finite 4x4 matrix")
++        mesh.apply_transform(transform)
+ 
+     # Cluster faces by normal similarity.
+     clusters = _cluster_faces_by_normal(mesh=mesh, config=config)
+@@ -1131,6 +1163,536 @@ def extract_support_surfaces_from_mesh(
+     return surfaces
+ 
+ 
++@dataclass(frozen=True)
++class _ArtiverseMeshResource:
++    path: Path
++    transform: np.ndarray
++    uniform_scale: float
++
++
++@dataclass(frozen=True)
++class _ArtiverseLinkMeshRecord:
++    """SDF-authored mesh resources for one normalized Artiverse link."""
++
++    link_name: str
++    visual_mesh: _ArtiverseMeshResource
++    collision_meshes: tuple[_ArtiverseMeshResource, ...]
++
++
++def _sha256_file(path: Path) -> str:
++    digest = hashlib.sha256()
++    with path.open("rb") as handle:
++        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
++            digest.update(chunk)
++    return digest.hexdigest()
++
++
++def _regular_file_within(
++    raw_uri: str,
++    *,
++    sdf_dir: Path,
++    label: str,
++    allowed_suffixes: frozenset[str],
++) -> tuple[Path, PurePosixPath]:
++    """Resolve one plain relative SDF URI without permitting path substitution."""
++
++    if not raw_uri or raw_uri != raw_uri.strip() or "\\" in raw_uri or "%" in raw_uri:
++        raise ValueError(f"{label} has an unsafe or empty URI: {raw_uri!r}")
++    parsed = urlsplit(raw_uri)
++    if parsed.scheme or parsed.netloc or parsed.query or parsed.fragment:
++        raise ValueError(f"{label} URI is not a plain relative path: {raw_uri!r}")
++    if not parsed.path.startswith("./"):
++        raise ValueError(f"{label} URI must use canonical './' form: {raw_uri!r}")
++    relative = PurePosixPath(parsed.path[2:])
++    if (
++        relative.is_absolute()
++        or not relative.parts
++        or any(part in {"", ".", ".."} for part in relative.parts)
++        or relative.suffix.lower() not in allowed_suffixes
++    ):
++        raise ValueError(f"{label} URI is unsafe or unsupported: {raw_uri!r}")
++
++    root = sdf_dir.resolve(strict=True)
++    candidate = sdf_dir.joinpath(*relative.parts)
++    current = candidate
++    while current != sdf_dir:
++        if current.is_symlink():
++            raise ValueError(f"{label} resource is a symlink: {candidate}")
++        current = current.parent
++    try:
++        resolved = candidate.resolve(strict=True)
++    except OSError as exc:
++        raise FileNotFoundError(f"{label} resource is missing: {candidate}") from exc
++    if not resolved.is_relative_to(root):
++        raise ValueError(f"{label} resource escapes the Artiverse asset: {candidate}")
++    mode = os.stat(resolved, follow_symlinks=False).st_mode
++    if not stat.S_ISREG(mode):
++        raise ValueError(f"{label} resource is not a regular file: {candidate}")
++    return resolved, relative
++
++
++def _sdf_pose_matrix(
++    pose: ET.Element | None,
++    *,
++    label: str,
++    allowed_attributes: frozenset[str] = frozenset(),
++) -> np.ndarray:
++    unexpected_attributes = (
++        set(pose.attrib) - allowed_attributes if pose is not None else set()
++    )
++    if unexpected_attributes:
++        raise ValueError(
++            f"{label} uses unsupported pose attributes: "
++            f"{sorted(unexpected_attributes)}"
++        )
++    raw = (pose.text or "").strip() if pose is not None else ""
++    values = [0.0] * 6 if not raw else [float(item) for item in raw.split()]
++    if len(values) != 6 or not np.all(np.isfinite(values)):
++        raise ValueError(f"{label} must contain six finite pose values")
++    x, y, z, roll, pitch, yaw = values
++    cr, sr = math.cos(roll), math.sin(roll)
++    cp, sp = math.cos(pitch), math.sin(pitch)
++    cy, sy = math.cos(yaw), math.sin(yaw)
++    rotation_x = np.array([[1, 0, 0], [0, cr, -sr], [0, sr, cr]])
++    rotation_y = np.array([[cp, 0, sp], [0, 1, 0], [-sp, 0, cp]])
++    rotation_z = np.array([[cy, -sy, 0], [sy, cy, 0], [0, 0, 1]])
++    result = np.eye(4)
++    result[:3, :3] = rotation_z @ rotation_y @ rotation_x
++    result[:3, 3] = [x, y, z]
++    return result
++
++
++def _uniform_mesh_scale(mesh: ET.Element, *, label: str) -> float:
++    raw = (mesh.findtext("scale") or "").strip()
++    if not raw:
++        return 1.0
++    values = [float(item) for item in raw.split()]
++    if (
++        len(values) != 3
++        or not np.all(np.isfinite(values))
++        or any(value <= 0 for value in values)
++        or max(values) - min(values) > 1e-9
++    ):
++        raise ValueError(f"{label} must use one finite positive uniform mesh scale")
++    return values[0]
++
++
++def _resolve_artiverse_link_transforms(
++    root: ET.Element,
++) -> tuple[dict[str, ET.Element], dict[str, np.ndarray]]:
++    models = root.findall("model")
++    if len(models) != 1:
++        raise ValueError("Normalized Artiverse SDF must contain exactly one model")
++    model = models[0]
++    model_transform = _sdf_pose_matrix(
++        model.find("pose"), label="normalized Artiverse model pose"
++    )
++    if not np.allclose(model_transform, np.eye(4), rtol=0.0, atol=1e-12):
++        raise ValueError("Normalized Artiverse model pose must be identity")
++    links: dict[str, ET.Element] = {}
++    for link in model.findall("link"):
++        link_name = (link.get("name") or "").strip()
++        if not link_name or link_name in links:
++            raise ValueError(
++                f"Artiverse SDF has an empty or duplicate link name: {link_name!r}"
++            )
++        links[link_name] = link
++
++    resolved: dict[str, np.ndarray] = {}
++    active: set[str] = set()
++
++    def resolve(link_name: str) -> np.ndarray:
++        if link_name in resolved:
++            return resolved[link_name]
++        if link_name in active:
++            raise ValueError(f"Artiverse SDF link pose cycle includes {link_name!r}")
++        active.add(link_name)
++        pose = links[link_name].find("pose")
++        relative_to = (pose.get("relative_to") or "").strip() if pose is not None else ""
++        parent = np.eye(4)
++        if relative_to and relative_to not in {"__model__", "world"}:
++            if relative_to not in links:
++                raise ValueError(
++                    f"Artiverse link {link_name!r} references unknown frame {relative_to!r}"
++                )
++            parent = resolve(relative_to)
++        result = parent @ _sdf_pose_matrix(
++            pose,
++            label=f"link {link_name!r} pose",
++            allowed_attributes=frozenset({"relative_to"}),
++        )
++        active.remove(link_name)
++        resolved[link_name] = result
++        return result
++
++    for name in links:
++        resolve(name)
++    return links, resolved
++
++
++def _geometry_mesh_resource(
++    element: ET.Element,
++    *,
++    sdf_dir: Path,
++    link_transform: np.ndarray,
++    label: str,
++    allowed_suffixes: frozenset[str],
++) -> tuple[Path, PurePosixPath, np.ndarray, float]:
++    pose = element.find("pose")
++    if pose is not None and (pose.get("relative_to") or "").strip():
++        raise ValueError(f"{label} uses an unsupported explicit pose frame")
++    geometries = element.findall("geometry")
++    mesh = element.find("geometry/mesh")
++    if (
++        mesh is None
++        or len(geometries) != 1
++        or len(list(geometries[0])) != 1
++        or list(geometries[0])[0] is not mesh
++    ):
++        raise ValueError(f"{label} must contain exactly one mesh geometry")
++    uri = mesh.findtext("uri") or ""
++    path, relative = _regular_file_within(
++        uri,
++        sdf_dir=sdf_dir,
++        label=label,
++        allowed_suffixes=allowed_suffixes,
++    )
++    transform = link_transform @ _sdf_pose_matrix(pose, label=f"{label} pose")
++    scale = _uniform_mesh_scale(mesh, label=label)
++    return path, relative, transform, scale
++
++
++def _validated_artiverse_manifest(
++    sdf_dir: Path, visual_relatives: set[PurePosixPath]
++) -> None:
++    """Bind normalized visual glTFs to their immutable derivation manifest."""
++
++    manifest_path = sdf_dir / "scenesmith_artiverse_visuals_v2" / "_derivation_manifest.json"
++    if manifest_path.is_symlink() or not manifest_path.is_file():
++        raise FileNotFoundError(
++            f"Normalized Artiverse visual derivation manifest is missing: {manifest_path}"
++        )
++    try:
++        document = json.loads(manifest_path.read_text(encoding="utf-8"))
++    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
++        raise ValueError(f"Invalid Artiverse visual derivation manifest: {manifest_path}") from exc
++    expected_document_keys = {
++        "schema_version",
++        "status",
++        "policy",
++        "resource_directory",
++        "resources",
++    }
++    if (
++        not isinstance(document, dict)
++        or set(document) != expected_document_keys
++        or document.get("schema_version") != 2
++        or document.get("status") != "pass"
++        or document.get("policy") != "publisher_glb_derived_external_gltf"
++        or document.get("resource_directory") != "scenesmith_artiverse_visuals_v2"
++        or not isinstance(document.get("resources"), list)
++    ):
++        raise ValueError(f"Unexpected Artiverse visual derivation contract: {manifest_path}")
++
++    manifest_visuals: set[PurePosixPath] = set()
++    expected_derived_entries = {"_derivation_manifest.json"}
++    casefolded_resource_names: set[str] = set()
++    expected_resource_keys = {
++        "part",
++        "publisher_glb_sha256",
++        "publisher_glb_size_bytes",
++        "publisher_document_sha256",
++        "preserved_semantics_sha256",
++        "derived_gltf",
++        "derived_gltf_sha256",
++        "derived_gltf_size_bytes",
++        "derived_bin",
++        "derived_bin_sha256",
++        "derived_bin_size_bytes",
++    }
++    for index, item in enumerate(document["resources"]):
++        if not isinstance(item, dict) or set(item) != expected_resource_keys:
++            raise ValueError(f"Artiverse derivation record {index} is not an object")
++        part = item.get("part")
++        gltf_name = item.get("derived_gltf")
++        bin_name = item.get("derived_bin")
++        if (
++            not isinstance(part, str)
++            or not part
++            or PurePosixPath(part).name != part
++            or
++            not isinstance(gltf_name, str)
++            or not isinstance(bin_name, str)
++            or PurePosixPath(gltf_name).name != gltf_name
++            or PurePosixPath(bin_name).name != bin_name
++            or gltf_name != f"{part}.gltf"
++            or bin_name != f"{part}.bin"
++        ):
++            raise ValueError(f"Artiverse derivation record {index} has unsafe resource names")
++        for name in (gltf_name, bin_name):
++            if name.casefold() in casefolded_resource_names:
++                raise ValueError(f"Duplicate Artiverse derivation resource: {name}")
++            casefolded_resource_names.add(name.casefold())
++            expected_derived_entries.add(name)
++        gltf_relative = PurePosixPath("scenesmith_artiverse_visuals_v2") / gltf_name
++        if gltf_relative in manifest_visuals:
++            raise ValueError(f"Duplicate Artiverse derivation resource: {gltf_name}")
++        manifest_visuals.add(gltf_relative)
++        resources: dict[str, Path] = {}
++        for key, name in (("derived_gltf", gltf_name), ("derived_bin", bin_name)):
++            path = manifest_path.parent / name
++            if path.is_symlink() or not path.is_file():
++                raise FileNotFoundError(f"Artiverse derived resource is missing: {path}")
++            expected_size = item.get(f"{key}_size_bytes")
++            expected_sha = item.get(f"{key}_sha256")
++            if (
++                not isinstance(expected_size, int)
++                or expected_size <= 0
++                or path.stat().st_size != expected_size
++                or not isinstance(expected_sha, str)
++                or len(expected_sha) != 64
++                or _sha256_file(path) != expected_sha
++            ):
++                raise ValueError(f"Artiverse derived resource does not match manifest: {path}")
++            resources[key] = path
++        publisher_path, _ = _regular_file_within(
++            f"./glbs/{part}.glb",
++            sdf_dir=sdf_dir,
++            label=f"Artiverse derivation record {index} publisher GLB",
++            allowed_suffixes=frozenset({".glb"}),
++        )
++        if (
++            isinstance(item["publisher_glb_size_bytes"], bool)
++            or not isinstance(item["publisher_glb_size_bytes"], int)
++            or item["publisher_glb_size_bytes"] <= 0
++            or publisher_path.stat().st_size != item["publisher_glb_size_bytes"]
++            or not isinstance(item["publisher_glb_sha256"], str)
++            or not re.fullmatch(r"[0-9a-f]{64}", item["publisher_glb_sha256"])
++            or _sha256_file(publisher_path) != item["publisher_glb_sha256"]
++        ):
++            raise ValueError(
++                f"Artiverse publisher GLB does not match manifest: {publisher_path}"
++            )
++        for key in ("publisher_document_sha256", "preserved_semantics_sha256"):
++            if not isinstance(item[key], str) or not re.fullmatch(
++                r"[0-9a-f]{64}", item[key]
++            ):
++                raise ValueError(f"Artiverse derivation record {index} has invalid {key}")
++        try:
++            gltf_document = json.loads(resources["derived_gltf"].read_text(encoding="utf-8"))
++        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
++            raise ValueError(
++                f"Artiverse derived glTF is not valid UTF-8 JSON: {resources['derived_gltf']}"
++            ) from exc
++        buffers = gltf_document.get("buffers") if isinstance(gltf_document, dict) else None
++        if (
++            not isinstance(buffers, list)
++            or len(buffers) != 1
++            or not isinstance(buffers[0], dict)
++            or buffers[0].get("uri") != bin_name
++            or buffers[0].get("byteLength") != resources["derived_bin"].stat().st_size
++        ):
++            raise ValueError(
++                f"Artiverse derived glTF does not bind its exact manifest bin: "
++                f"{resources['derived_gltf']}"
++            )
++
++        preserved_document = copy.deepcopy(gltf_document)
++        del preserved_document["buffers"][0]["uri"]
++        preserved_payload = (
++            json.dumps(
++                preserved_document,
++                ensure_ascii=False,
++                sort_keys=True,
++                separators=(",", ":"),
++            )
++            + "\n"
++        ).encode("utf-8")
++        if (
++            hashlib.sha256(preserved_payload).hexdigest()
++            != item["preserved_semantics_sha256"]
++        ):
++            raise ValueError(
++                f"Artiverse derived glTF semantics do not match manifest: "
++                f"{resources['derived_gltf']}"
++            )
++
++        transitive_uris: list[str] = []
++
++        def collect_uris(value: Any) -> None:
++            if isinstance(value, dict):
++                for key, child in value.items():
++                    if key == "uri":
++                        if not isinstance(child, str):
++                            raise ValueError("Artiverse glTF URI is not a string")
++                        transitive_uris.append(child)
++                    else:
++                        collect_uris(child)
++            elif isinstance(value, list):
++                for child in value:
++                    collect_uris(child)
++
++        collect_uris(gltf_document)
++        if transitive_uris != [bin_name]:
++            raise ValueError(
++                f"Artiverse derived glTF has unexpected transitive URIs: "
++                f"{resources['derived_gltf']} -> {transitive_uris}"
++            )
++    actual_derived_entries = {path.name for path in manifest_path.parent.iterdir()}
++    if actual_derived_entries != expected_derived_entries or any(
++        path.is_symlink() or not path.is_file() for path in manifest_path.parent.iterdir()
++    ):
++        raise ValueError(
++            "Artiverse derived resource directory inventory mismatch: "
++            f"missing={sorted(expected_derived_entries - actual_derived_entries)}, "
++            f"extra={sorted(actual_derived_entries - expected_derived_entries)}"
++        )
++    if manifest_visuals != visual_relatives:
++        missing = sorted(str(path) for path in visual_relatives - manifest_visuals)
++        extra = sorted(str(path) for path in manifest_visuals - visual_relatives)
++        raise ValueError(
++            "Artiverse SDF/derivation visual inventory mismatch: "
++            f"missing={missing}, extra={extra}"
++        )
++
++
++def _parse_artiverse_link_meshes(
++    sdf_path: Path, sdf_dir: Path
++) -> list[_ArtiverseLinkMeshRecord]:
++    """Read normalized Artiverse link meshes from the authoritative copied SDF."""
++
++    if sdf_path.name != "scenesmith_artiverse.sdf":
++        raise ValueError(f"Not a normalized Artiverse SDF: {sdf_path}")
++    if sdf_path.is_symlink() or not sdf_path.is_file():
++        raise ValueError(f"Normalized Artiverse SDF is not a regular file: {sdf_path}")
++    if sdf_path.resolve(strict=True).parent != sdf_dir.resolve(strict=True):
++        raise ValueError("Artiverse SDF must be located directly inside its asset directory")
++    try:
++        root = ET.parse(sdf_path).getroot()
++    except (OSError, ET.ParseError) as exc:
++        raise ValueError(f"Cannot parse normalized Artiverse SDF: {sdf_path}") from exc
++
++    links, link_transforms = _resolve_artiverse_link_transforms(root)
++    records: list[_ArtiverseLinkMeshRecord] = []
++    visual_paths: set[Path] = set()
++    collision_owners: dict[Path, str] = {}
++    visual_relatives: set[PurePosixPath] = set()
++    for link_name, link in links.items():
++        visuals = link.findall("visual")
++        collision_elements = link.findall("collision")
++        if not visuals and not collision_elements:
++            # Multi-DOF conversion can emit a geometry-free proxy link. It has no
++            # surface authority and is intentionally absent from the manifest.
++            continue
++        if len(visuals) != 1 or not collision_elements:
++            raise ValueError(
++                f"Normalized Artiverse geometry link {link_name!r} must have one "
++                "visual and at least one collision mesh"
++            )
++        visual_path, visual_relative, visual_transform, visual_scale = (
++            _geometry_mesh_resource(
++                visuals[0],
++                sdf_dir=sdf_dir,
++                link_transform=link_transforms[link_name],
++                label=f"Artiverse link {link_name!r} visual",
++                allowed_suffixes=frozenset({".gltf"}),
++            )
++        )
++        if visual_relative.parent != PurePosixPath("scenesmith_artiverse_visuals_v2"):
++            raise ValueError(
++                f"Artiverse link {link_name!r} does not use normalized derived visuals"
++            )
++        if visual_path in visual_paths:
++            raise ValueError(f"Artiverse visual is assigned to multiple links: {visual_path}")
++        visual_paths.add(visual_path)
++        visual_relatives.add(visual_relative)
++
++        collisions: list[_ArtiverseMeshResource] = []
++        for collision_index, collision in enumerate(collision_elements):
++            collision_path, _, collision_transform, collision_scale = (
++                _geometry_mesh_resource(
++                    collision,
++                    sdf_dir=sdf_dir,
++                    link_transform=link_transforms[link_name],
++                    label=f"Artiverse link {link_name!r} collision {collision_index}",
++                    allowed_suffixes=frozenset({".obj", ".gltf", ".glb"}),
++                )
++            )
++            previous_owner = collision_owners.setdefault(collision_path, link_name)
++            if previous_owner != link_name:
++                raise ValueError(
++                    f"Artiverse collision is assigned to multiple links: {collision_path}"
++                )
++            collisions.append(
++                _ArtiverseMeshResource(
++                    path=collision_path,
++                    transform=collision_transform,
++                    uniform_scale=collision_scale,
++                )
++            )
++        records.append(
++            _ArtiverseLinkMeshRecord(
++                link_name=link_name,
++                visual_mesh=_ArtiverseMeshResource(
++                    path=visual_path,
++                    transform=visual_transform,
++                    uniform_scale=visual_scale,
++                ),
++                collision_meshes=tuple(collisions),
++            )
++        )
++    if not records:
++        raise ValueError(f"Artiverse SDF contains no links: {sdf_path}")
++    _validated_artiverse_manifest(sdf_dir, visual_relatives)
++    return records
++
++
++def _load_artiverse_collision_union(
++    records: list[_ArtiverseLinkMeshRecord],
++) -> trimesh.Trimesh:
++    """Load every SDF-authored collision mesh in its publisher-authored frame."""
++
++    resources = [resource for record in records for resource in record.collision_meshes]
++    meshes = []
++    for resource in resources:
++        mesh = _load_and_prepare_mesh_with_up_axis(
++            resource.path,
++            source_is_y_up=resource.path.suffix.lower() in {".gltf", ".glb"},
++        )
++        if resource.uniform_scale != 1.0:
++            mesh.apply_scale(resource.uniform_scale)
++        mesh.apply_transform(resource.transform)
++        meshes.append(mesh)
++    if not meshes:
++        raise ValueError("Normalized Artiverse SDF has no collision meshes")
++    combined = trimesh.util.concatenate(meshes)
++    if not isinstance(combined, trimesh.Trimesh) or len(combined.faces) == 0:
++        raise ValueError("Normalized Artiverse collision union has no faces")
++    combined.merge_vertices(digits_vertex=4)
++    return combined
++
++
++def _load_artiverse_collision_unions(
++    records: list[_ArtiverseLinkMeshRecord],
++) -> tuple[trimesh.Trimesh, dict[str, trimesh.Trimesh]]:
++    """Load one exact collision union per SDF link and their global union."""
++
++    link_unions: dict[str, trimesh.Trimesh] = {}
++    for record in records:
++        if record.link_name in link_unions:
++            raise ValueError(
++                f"Duplicate normalized Artiverse collision link: {record.link_name}"
++            )
++        link_unions[record.link_name] = _load_artiverse_collision_union([record])
++    if not link_unions:
++        raise ValueError("Normalized Artiverse SDF has no collision links")
++    combined = trimesh.util.concatenate(list(link_unions.values()))
++    if not isinstance(combined, trimesh.Trimesh) or len(combined.faces) == 0:
++        raise ValueError("Normalized Artiverse collision union has no faces")
++    combined.merge_vertices(digits_vertex=4)
++    return combined, link_unions
++
++
+ def _parse_sdf_mesh_to_link(sdf_path: Path) -> dict[str, str]:
+     """Parse SDF to build mesh filename -> link name mapping.
+ 
+@@ -1170,6 +1732,185 @@ def _parse_sdf_mesh_to_link(sdf_path: Path) -> dict[str, str]:
+     return mesh_to_link
+ 
+ 
++def _surface_interior_sample_points(surface: Any) -> tuple[np.ndarray, np.ndarray]:
++    """Return inset surface-local hull samples and their transformed 3D points."""
++
++    bounds_min = np.asarray(surface.bounding_box_min, dtype=float)
++    bounds_max = np.asarray(surface.bounding_box_max, dtype=float)
++    if (
++        bounds_min.shape != (3,)
++        or bounds_max.shape != (3,)
++        or not np.all(np.isfinite(bounds_min))
++        or not np.all(np.isfinite(bounds_max))
++        or np.any(bounds_max < bounds_min)
++    ):
++        raise ValueError(f"Support surface {surface.surface_id} has invalid bounds")
++
++    mesh = getattr(surface, "mesh", None)
++    if mesh is not None and len(mesh.vertices):
++        mesh_xy = np.asarray(mesh.vertices[:, :2], dtype=float)
++        if mesh_xy.ndim != 2 or mesh_xy.shape[1] != 2 or not np.all(
++            np.isfinite(mesh_xy)
++        ):
++            raise ValueError(
++                f"Support surface {surface.surface_id} has invalid mesh samples"
++            )
++        sample_min = np.min(mesh_xy, axis=0)
++        sample_max = np.max(mesh_xy, axis=0)
++    else:
++        sample_min = bounds_min[:2]
++        sample_max = bounds_max[:2]
++    if np.any(sample_max <= sample_min):
++        raise ValueError(
++            f"Support surface {surface.surface_id} has degenerate sample bounds"
++        )
++    fractions = np.linspace(0.1, 0.9, 5)
++    local_points = [
++        np.array(
++            [
++                sample_min[0] + fraction_x * (sample_max[0] - sample_min[0]),
++                sample_min[1] + fraction_y * (sample_max[1] - sample_min[1]),
++            ]
++        )
++        for fraction_x in fractions
++        for fraction_y in fractions
++    ]
++    if hasattr(surface, "contains_point_2d"):
++        local_points = [
++            point for point in local_points if surface.contains_point_2d(point)
++        ]
++    if not local_points:
++        raise ValueError(
++            f"Support surface {surface.surface_id} has no valid clearance samples"
++        )
++    local_array = np.asarray(local_points, dtype=float)
++    local_hom = np.column_stack(
++        [local_array, np.zeros(len(local_array)), np.ones(len(local_array))]
++    )
++    world_points = (surface.transform.GetAsMatrix4() @ local_hom.T).T[:, :3]
++    return local_array, world_points
++
++
++@dataclass(frozen=True)
++class _ArtiverseCollisionSupportMeasurement:
++    sample_count: int
++    hit_count: int
++    max_gap_m: float | None
++    max_allowed_gap_m: float
++
++    @property
++    def supported(self) -> bool:
++        return (
++            self.sample_count > 0
++            and self.hit_count == self.sample_count
++            and self.max_gap_m is not None
++            and self.max_gap_m <= self.max_allowed_gap_m
++        )
++
++
++def _measure_artiverse_same_link_collision_support(
++    surface: Any,
++    link_collision_meshes: dict[str, trimesh.Trimesh],
++    config: SupportSurfaceExtractionConfig,
++) -> _ArtiverseCollisionSupportMeasurement:
++    """Require every visual-hull sample to have nearby same-link collision below."""
++
++    _, world_points = _surface_interior_sample_points(surface)
++    link_name = getattr(surface, "link_name", None)
++    collision_mesh = link_collision_meshes.get(link_name)
++    max_allowed_gap = config.surface_offset_m + 0.02
++    if collision_mesh is None:
++        return _ArtiverseCollisionSupportMeasurement(
++            sample_count=len(world_points),
++            hit_count=0,
++            max_gap_m=None,
++            max_allowed_gap_m=max_allowed_gap,
++        )
++    ray_origins = world_points.copy()
++    ray_origins[:, 2] = (
++        float(surface.transform.translation()[2])
++        + config.self_intersection_threshold_m
++    )
++    ray_directions = np.tile([0, 0, -1], (len(ray_origins), 1))
++    locations, index_ray, _ = collision_mesh.ray.intersects_location(
++        ray_origins=ray_origins,
++        ray_directions=ray_directions,
++        multiple_hits=True,
++    )
++    nearest: dict[int, float] = {}
++    if len(locations):
++        raw_distances = np.linalg.norm(
++            locations - ray_origins[index_ray], axis=1
++        )
++        for ray_index, raw_distance in zip(index_ray, raw_distances):
++            raw_distance = float(raw_distance)
++            if raw_distance <= 1e-9:
++                continue
++            # Origins are raised by the self-intersection tolerance; report the
++            # physical gap below the actual support-surface origin.
++            gap = max(0.0, raw_distance - config.self_intersection_threshold_m)
++            previous = nearest.get(int(ray_index))
++            if previous is None or gap < previous:
++                nearest[int(ray_index)] = gap
++    return _ArtiverseCollisionSupportMeasurement(
++        sample_count=len(ray_origins),
++        hit_count=len(nearest),
++        max_gap_m=max(nearest.values()) if nearest else None,
++        max_allowed_gap_m=max_allowed_gap,
++    )
++
++
++def _tighten_surface_clearance_against_combined_mesh(
++    surface: Any,
++    combined_mesh: trimesh.Trimesh,
++    config: SupportSurfaceExtractionConfig,
++) -> float:
++    """Persist conservative all-ray clearance into the placement bounding box."""
++
++    bounds_min = np.asarray(surface.bounding_box_min, dtype=float)
++    bounds_max = np.asarray(surface.bounding_box_max, dtype=float)
++    _, ray_origins = _surface_interior_sample_points(surface)
++    surface_z = float(surface.transform.translation()[2])
++    ray_origins[:, 2] = surface_z + config.self_intersection_threshold_m
++    ray_directions = np.tile([0, 0, 1], (len(ray_origins), 1))
++    locations, index_ray, _ = combined_mesh.ray.intersects_location(
++        ray_origins=ray_origins,
++        ray_directions=ray_directions,
++        multiple_hits=True,
++    )
++
++    per_ray_distances: dict[int, float] = {}
++    if len(locations):
++        raw_distances = np.linalg.norm(
++            locations - ray_origins[index_ray], axis=1
++        )
++        for ray_index, raw_distance in zip(index_ray, raw_distances):
++            raw_distance = float(raw_distance)
++            if raw_distance <= config.self_intersection_threshold_m:
++                continue
++            distance = raw_distance + config.self_intersection_threshold_m
++            previous = per_ray_distances.get(int(ray_index))
++            if previous is None or distance < previous:
++                per_ray_distances[int(ray_index)] = distance
++    all_distances = np.array(
++        [
++            per_ray_distances.get(index, config.top_surface_clearance_m)
++            for index in range(len(ray_origins))
++        ],
++        dtype=float,
++    )
++    recomputed_clearance = min(
++        float(np.percentile(all_distances, config.clearance_percentile)),
++        config.max_measured_clearance_m,
++    )
++    authored_clearance = float(bounds_max[2] - bounds_min[2])
++    conservative_clearance = min(authored_clearance, recomputed_clearance)
++    tightened_max = bounds_max.copy()
++    tightened_max[2] = bounds_min[2] + conservative_clearance
++    surface.bounding_box_max = tightened_max
++    return conservative_clearance
++
++
+ def extract_support_surfaces_articulated(
+     sdf_dir: Path,
+     config: SupportSurfaceExtractionConfig | None = None,
+@@ -1227,6 +1968,26 @@ def extract_support_surfaces_articulated(
+         )
+ 
+     link_gltfs = sorted(set(link_gltfs))  # Dedupe and sort.
++    artiverse_mode = False
++    artiverse_link_names: dict[Path, str] = {}
++    artiverse_visual_resources: dict[Path, _ArtiverseMeshResource] = {}
++    artiverse_records: list[_ArtiverseLinkMeshRecord] = []
++    artiverse_link_collision_meshes: dict[str, trimesh.Trimesh] = {}
++
++    # Normalized Artiverse copies deliberately preserve publisher filenames and
++    # SDF link structure instead of synthesizing SceneSmith's historical
++    # *_combined.gltf layout. Resolve their exact visual/collision inventory from
++    # the copied SDF and verify the external-glTF derivation manifest before use.
++    if sdf_path is not None and sdf_path.name == "scenesmith_artiverse.sdf":
++        artiverse_records = _parse_artiverse_link_meshes(sdf_path, sdf_dir)
++        link_gltfs = [record.visual_mesh.path for record in artiverse_records]
++        artiverse_link_names = {
++            record.visual_mesh.path: record.link_name for record in artiverse_records
++        }
++        artiverse_visual_resources = {
++            record.visual_mesh.path: record.visual_mesh for record in artiverse_records
++        }
++        artiverse_mode = True
+ 
+     if not link_gltfs:
+         # Fallback to combined mesh extraction.
+@@ -1243,19 +2004,27 @@ def extract_support_surfaces_articulated(
+             return extract_support_surfaces_from_mesh(combined_path, config)
+         raise FileNotFoundError(f"No link meshes found in {sdf_dir}")
+ 
+-    # Load combined mesh for clearance re-computation.
+-    combined_path = sdf_dir / "combined_scene.gltf"
+-    # Also check *_meshes subdirectory (ArtVIP).
+-    if not combined_path.exists():
+-        for meshes_subdir in sdf_dir.glob("*_meshes"):
+-            alt_combined = meshes_subdir / "combined_scene.gltf"
+-            if alt_combined.exists():
+-                combined_path = alt_combined
+-                break
+-    combined_mesh = None
+-    if combined_path.exists():
+-        combined_mesh = _load_and_prepare_mesh(combined_path)
+-        console_logger.debug("Loaded combined mesh for clearance computation")
++    # Load combined mesh for clearance re-computation. Artiverse's exact
++    # collision union is the physical authority and includes generated drawer
++    # interiors that are intentionally absent from the render mesh.
++    if artiverse_mode:
++        combined_mesh, artiverse_link_collision_meshes = (
++            _load_artiverse_collision_unions(artiverse_records)
++        )
++        console_logger.debug("Loaded Artiverse collision union for clearance computation")
++    else:
++        combined_path = sdf_dir / "combined_scene.gltf"
++        # Also check *_meshes subdirectory (ArtVIP).
++        if not combined_path.exists():
++            for meshes_subdir in sdf_dir.glob("*_meshes"):
++                alt_combined = meshes_subdir / "combined_scene.gltf"
++                if alt_combined.exists():
++                    combined_path = alt_combined
++                    break
++        combined_mesh = None
++        if combined_path.exists():
++            combined_mesh = _load_and_prepare_mesh(combined_path)
++            console_logger.debug("Loaded combined mesh for clearance computation")
+ 
+     console_logger.info(f"Extracting surfaces from {len(link_gltfs)} link meshes")
+ 
+@@ -1264,7 +2033,9 @@ def extract_support_surfaces_articulated(
+     for link_gltf in link_gltfs:
+         # Derive link_name from SDF mapping, fallback to filename.
+         mesh_filename = link_gltf.name
+-        if mesh_filename in mesh_to_link:
++        if link_gltf in artiverse_link_names:
++            link_name = artiverse_link_names[link_gltf]
++        elif mesh_filename in mesh_to_link:
+             link_name = mesh_to_link[mesh_filename]
+         else:
+             # Fallback: strip _combined/_visual suffix.
+@@ -1275,10 +2046,19 @@ def extract_support_surfaces_articulated(
+ 
+         # Extract surfaces from this link mesh using the standard algorithm.
+         try:
++            resource = artiverse_visual_resources.get(link_gltf)
+             link_surfaces = extract_support_surfaces_from_mesh(
+-                mesh_path=link_gltf, config=config
++                mesh_path=link_gltf,
++                config=config,
++                mesh_scale=resource.uniform_scale if resource is not None else 1.0,
++                mesh_transform=resource.transform if resource is not None else None,
+             )
+         except (FileNotFoundError, ValueError) as e:
++            if artiverse_mode:
++                raise ValueError(
++                    f"Failed required Artiverse link extraction for "
++                    f"{link_name!r} ({link_gltf}): {e}"
++                ) from e
+             console_logger.warning(f"Failed to extract from {link_gltf.name}: {e}")
+             continue
+ 
+@@ -1304,57 +2084,33 @@ def extract_support_surfaces_articulated(
+     if combined_mesh is not None:
+         filtered_surfaces = []
+         for surface in all_surfaces:
+-            # Create flattened mesh at surface height for ray-casting.
+-            surface_z = surface.transform.translation()[2]
+-            # Create a simple grid of points covering the surface bbox.
+-            bounds_min = surface.bounding_box_min
+-            bounds_max = surface.bounding_box_max
+-            # Transform bbox corners to world frame.
+-            transform_matrix = surface.transform.GetAsMatrix4()
+-            local_corners = np.array(
+-                [
+-                    [bounds_min[0], bounds_min[1], 0],
+-                    [bounds_max[0], bounds_min[1], 0],
+-                    [bounds_max[0], bounds_max[1], 0],
+-                    [bounds_min[0], bounds_max[1], 0],
+-                ]
+-            )
+-            corners_hom = np.column_stack([local_corners, np.ones(4)])
+-            world_corners = (transform_matrix @ corners_hom.T).T[:, :3]
+-
+-            # Sample points on surface for ray-casting.
+-            n_samples = 25  # 5x5 grid.
+-            u = np.linspace(0, 1, 5)
+-            v = np.linspace(0, 1, 5)
+-            ray_origins = []
+-            for ui in u:
+-                for vi in v:
+-                    pt = (
+-                        (1 - ui) * (1 - vi) * world_corners[0]
+-                        + ui * (1 - vi) * world_corners[1]
+-                        + ui * vi * world_corners[2]
+-                        + (1 - ui) * vi * world_corners[3]
++            if artiverse_mode:
++                support = _measure_artiverse_same_link_collision_support(
++                    surface, artiverse_link_collision_meshes, config
++                )
++                if not support.supported:
++                    console_logger.debug(
++                        "Surface %s (link=%s) lacks exact same-link collision "
++                        "support: samples=%d, hits=%d, max_gap=%s, allowed=%.3fm",
++                        surface.surface_id,
++                        surface.link_name,
++                        support.sample_count,
++                        support.hit_count,
++                        support.max_gap_m,
++                        support.max_allowed_gap_m,
+                     )
+-                    ray_origins.append(pt)
+-            ray_origins = np.array(ray_origins)
+-            ray_origins[:, 2] = surface_z + config.self_intersection_threshold_m
+-
+-            # Cast rays upward.
+-            ray_directions = np.tile([0, 0, 1], (n_samples, 1))
+-            locations, index_ray, _ = combined_mesh.ray.intersects_location(
+-                ray_origins=ray_origins,
+-                ray_directions=ray_directions,
+-                multiple_hits=False,
+-            )
+-
+-            if len(locations) > 0:
+-                distances = (
+-                    np.linalg.norm(locations - ray_origins[index_ray], axis=1)
+-                    + config.self_intersection_threshold_m
++                    continue
++                console_logger.debug(
++                    "Surface %s (link=%s) collision support: samples=%d, "
++                    "coverage=100%%, max_gap=%.3fm",
++                    surface.surface_id,
++                    surface.link_name,
++                    support.sample_count,
++                    support.max_gap_m,
+                 )
+-                clearance = float(np.percentile(distances, config.clearance_percentile))
+-            else:
+-                clearance = config.top_surface_clearance_m
++            clearance = _tighten_surface_clearance_against_combined_mesh(
++                surface, combined_mesh, config
++            )
+ 
+             # Apply clearance filter.
+             if clearance >= config.min_clearance_m:
+@@ -1377,6 +2133,11 @@ def extract_support_surfaces_articulated(
+     # Sort by bounding box area (largest first).
+     all_surfaces.sort(key=lambda s: s.area, reverse=True)
+ 
++    if artiverse_mode and not all_surfaces:
++        raise ValueError(
++            f"Normalized Artiverse asset has no usable support surfaces: {sdf_path}"
++        )
++
+     console_logger.info(
+         f"Extracted {len(all_surfaces)} surfaces from articulated object in "
+         f"{time.time() - start_time:.2f}s"
+diff --git a/tests/unit/test_artiverse_support_surface_extraction.py b/tests/unit/test_artiverse_support_surface_extraction.py
+new file mode 100644
+index 0000000..1c1a4c0
+--- /dev/null
++++ b/tests/unit/test_artiverse_support_surface_extraction.py
+@@ -0,0 +1,516 @@
++"""Regression coverage for SDF-authored Artiverse support meshes."""
++
++from __future__ import annotations
++
++import hashlib
++import json
++import os
++
++from pathlib import Path
++from types import SimpleNamespace
++
++import pytest
++import numpy as np
++
++from scenesmith.agent_utils import support_surface_extraction as extraction
++
++
++def _sha256(data: bytes) -> str:
++    return hashlib.sha256(data).hexdigest()
++
++
++def _write_artiverse_fixture(
++    root: Path,
++    *,
++    visual_uri: str = "./scenesmith_artiverse_visuals_v2/base.gltf",
++    include_collision: bool = True,
++    link_pose: str = "",
++    visual_pose: str = "",
++    mesh_scale: str = "",
++) -> Path:
++    visual_dir = root / "scenesmith_artiverse_visuals_v2"
++    collision_dir = root / "objs"
++    publisher_dir = root / "glbs"
++    visual_dir.mkdir(parents=True)
++    collision_dir.mkdir()
++    publisher_dir.mkdir()
++    binary = b"derived-bin"
++    gltf_document = {
++        "asset": {"version": "2.0"},
++        "buffers": [{"uri": "base.bin", "byteLength": len(binary)}],
++    }
++    gltf = json.dumps(gltf_document, separators=(",", ":")).encode()
++    preserved_document = json.loads(json.dumps(gltf_document))
++    del preserved_document["buffers"][0]["uri"]
++    preserved = (
++        json.dumps(
++            preserved_document,
++            ensure_ascii=False,
++            sort_keys=True,
++            separators=(",", ":"),
++        )
++        + "\n"
++    ).encode()
++    publisher = b"publisher-glb"
++    collision = b"v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n"
++    (visual_dir / "base.gltf").write_bytes(gltf)
++    (visual_dir / "base.bin").write_bytes(binary)
++    (publisher_dir / "base.glb").write_bytes(publisher)
++    (collision_dir / "base.obj").write_bytes(collision)
++    manifest = {
++        "schema_version": 2,
++        "status": "pass",
++        "policy": "publisher_glb_derived_external_gltf",
++        "resource_directory": "scenesmith_artiverse_visuals_v2",
++        "resources": [
++            {
++                "part": "base",
++                "publisher_glb_sha256": _sha256(publisher),
++                "publisher_glb_size_bytes": len(publisher),
++                "publisher_document_sha256": _sha256(b"publisher-document"),
++                "preserved_semantics_sha256": _sha256(preserved),
++                "derived_gltf": "base.gltf",
++                "derived_gltf_size_bytes": len(gltf),
++                "derived_gltf_sha256": _sha256(gltf),
++                "derived_bin": "base.bin",
++                "derived_bin_size_bytes": len(binary),
++                "derived_bin_sha256": _sha256(binary),
++            }
++        ],
++    }
++    (visual_dir / "_derivation_manifest.json").write_text(
++        json.dumps(manifest), encoding="utf-8"
++    )
++    collision_scale_xml = f"<scale>{mesh_scale}</scale>" if mesh_scale else ""
++    collision_xml = (
++        "<collision><geometry><mesh><uri>./objs/base.obj</uri>"
++        f"{collision_scale_xml}</mesh></geometry></collision>"
++        if include_collision
++        else ""
++    )
++    visual_scale_xml = f"<scale>{mesh_scale}</scale>" if mesh_scale else ""
++    link_pose_xml = f"<pose>{link_pose}</pose>" if link_pose else ""
++    visual_pose_xml = f"<pose>{visual_pose}</pose>" if visual_pose else ""
++    sdf = root / "scenesmith_artiverse.sdf"
++    sdf.write_text(
++        "<sdf version='1.7'><model name='asset'><link name='publisher_base'>"
++        f"{link_pose_xml}<visual>{visual_pose_xml}<geometry><mesh>"
++        f"<uri>{visual_uri}</uri>{visual_scale_xml}</mesh></geometry></visual>"
++        f"{collision_xml}</link></model></sdf>",
++        encoding="utf-8",
++    )
++    return sdf
++
++
++def test_artiverse_uses_sdf_visual_and_collision_inventory(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    sdf = _write_artiverse_fixture(tmp_path)
++    observed: dict[str, object] = {}
++
++    def fake_collision_unions(records):
++        observed["records"] = records
++        return None, {}
++
++    def fake_extract(mesh_path: Path, config, **kwargs):
++        observed["visual"] = mesh_path
++        observed["visual_kwargs"] = kwargs
++        return [SimpleNamespace(area=0.5, link_name=None)]
++
++    monkeypatch.setattr(
++        extraction, "_load_artiverse_collision_unions", fake_collision_unions
++    )
++    monkeypatch.setattr(extraction, "extract_support_surfaces_from_mesh", fake_extract)
++
++    surfaces = extraction.extract_support_surfaces_articulated(
++        tmp_path, sdf_path=sdf
++    )
++
++    assert len(surfaces) == 1
++    assert surfaces[0].link_name == "publisher_base"
++    assert observed["visual"] == (
++        tmp_path / "scenesmith_artiverse_visuals_v2" / "base.gltf"
++    ).resolve()
++    records = observed["records"]
++    assert len(records) == 1
++    assert records[0].link_name == "publisher_base"
++    assert records[0].collision_meshes[0].path == (
++        tmp_path / "objs" / "base.obj"
++    ).resolve()
++
++
++def test_artiverse_missing_collision_fails_closed(tmp_path: Path) -> None:
++    sdf = _write_artiverse_fixture(tmp_path, include_collision=False)
++    with pytest.raises(ValueError, match="at least one collision"):
++        extraction.extract_support_surfaces_articulated(tmp_path, sdf_path=sdf)
++
++
++def test_artiverse_visual_uri_cannot_escape_asset(tmp_path: Path) -> None:
++    sdf = _write_artiverse_fixture(tmp_path, visual_uri="./../outside.gltf")
++    with pytest.raises(ValueError, match="unsafe or unsupported"):
++        extraction.extract_support_surfaces_articulated(tmp_path, sdf_path=sdf)
++
++
++def test_artiverse_derivation_hash_is_reverified(tmp_path: Path) -> None:
++    sdf = _write_artiverse_fixture(tmp_path)
++    (tmp_path / "scenesmith_artiverse_visuals_v2" / "base.gltf").write_bytes(
++        b"substituted"
++    )
++    with pytest.raises(ValueError, match="does not match manifest"):
++        extraction.extract_support_surfaces_articulated(tmp_path, sdf_path=sdf)
++
++
++def test_artiverse_missing_manifest_is_rejected(tmp_path: Path) -> None:
++    sdf = _write_artiverse_fixture(tmp_path)
++    (
++        tmp_path
++        / "scenesmith_artiverse_visuals_v2"
++        / "_derivation_manifest.json"
++    ).unlink()
++    with pytest.raises(FileNotFoundError, match="derivation manifest is missing"):
++        extraction._parse_artiverse_link_meshes(sdf, tmp_path)
++
++
++def test_artiverse_required_link_extraction_failure_is_fatal(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    sdf = _write_artiverse_fixture(tmp_path)
++    monkeypatch.setattr(
++        extraction, "_load_artiverse_collision_unions", lambda records: (None, {})
++    )
++
++    def fail_extract(mesh_path: Path, config, **kwargs):
++        raise ValueError("unreadable visual")
++
++    monkeypatch.setattr(extraction, "extract_support_surfaces_from_mesh", fail_extract)
++    with pytest.raises(ValueError, match="Failed required Artiverse link extraction"):
++        extraction.extract_support_surfaces_articulated(tmp_path, sdf_path=sdf)
++
++
++def test_artiverse_pose_and_uniform_scale_are_applied(tmp_path: Path) -> None:
++    sdf = _write_artiverse_fixture(
++        tmp_path,
++        link_pose="1 0 0 0 0 0",
++        visual_pose="0.5 0 0 0 0 0",
++        mesh_scale="0.55 0.55 0.55",
++    )
++    records = extraction._parse_artiverse_link_meshes(sdf, tmp_path)
++    assert records[0].visual_mesh.uniform_scale == pytest.approx(0.55)
++    np.testing.assert_allclose(records[0].visual_mesh.transform[:3, 3], [1.5, 0, 0])
++    np.testing.assert_allclose(
++        records[0].collision_meshes[0].transform[:3, 3], [1.0, 0, 0]
++    )
++
++
++def test_artiverse_nonuniform_scale_fails_closed(tmp_path: Path) -> None:
++    sdf = _write_artiverse_fixture(tmp_path, mesh_scale="1 2 1")
++    with pytest.raises(ValueError, match="uniform mesh scale"):
++        extraction._parse_artiverse_link_meshes(sdf, tmp_path)
++
++
++def test_artiverse_resource_symlink_is_rejected(tmp_path: Path) -> None:
++    sdf = _write_artiverse_fixture(tmp_path)
++    collision = tmp_path / "objs" / "base.obj"
++    outside = tmp_path.parent / f"{tmp_path.name}-outside.obj"
++    outside.write_text("v 0 0 0\n", encoding="utf-8")
++    collision.unlink()
++    try:
++        os.symlink(outside, collision)
++    except OSError as exc:
++        pytest.skip(f"symlink creation unavailable: {exc}")
++    with pytest.raises(ValueError, match="symlink"):
++        extraction._parse_artiverse_link_meshes(sdf, tmp_path)
++
++
++def test_artiverse_manifest_extra_resource_is_rejected(tmp_path: Path) -> None:
++    sdf = _write_artiverse_fixture(tmp_path)
++    visual_dir = tmp_path / "scenesmith_artiverse_visuals_v2"
++    document = json.loads((visual_dir / "_derivation_manifest.json").read_text())
++    extra_bin = b"extra"
++    extra_document = {
++        "asset": {"version": "2.0"},
++        "buffers": [{"uri": "extra.bin", "byteLength": len(extra_bin)}],
++    }
++    extra_gltf = json.dumps(extra_document, separators=(",", ":")).encode()
++    preserved_document = json.loads(json.dumps(extra_document))
++    del preserved_document["buffers"][0]["uri"]
++    extra_preserved = (
++        json.dumps(
++            preserved_document,
++            ensure_ascii=False,
++            sort_keys=True,
++            separators=(",", ":"),
++        )
++        + "\n"
++    ).encode()
++    extra_publisher = b"extra-publisher"
++    (visual_dir / "extra.bin").write_bytes(extra_bin)
++    (visual_dir / "extra.gltf").write_bytes(extra_gltf)
++    (tmp_path / "glbs" / "extra.glb").write_bytes(extra_publisher)
++    document["resources"].append(
++        {
++            "part": "extra",
++            "publisher_glb_sha256": _sha256(extra_publisher),
++            "publisher_glb_size_bytes": len(extra_publisher),
++            "publisher_document_sha256": _sha256(b"extra-document"),
++            "preserved_semantics_sha256": _sha256(extra_preserved),
++            "derived_gltf": "extra.gltf",
++            "derived_gltf_size_bytes": len(extra_gltf),
++            "derived_gltf_sha256": _sha256(extra_gltf),
++            "derived_bin": "extra.bin",
++            "derived_bin_size_bytes": len(extra_bin),
++            "derived_bin_sha256": _sha256(extra_bin),
++        }
++    )
++    (visual_dir / "_derivation_manifest.json").write_text(json.dumps(document))
++    with pytest.raises(ValueError, match="inventory mismatch"):
++        extraction._parse_artiverse_link_meshes(sdf, tmp_path)
++
++
++def test_artiverse_gltf_transitive_uri_is_rejected(tmp_path: Path) -> None:
++    sdf = _write_artiverse_fixture(tmp_path)
++    visual_dir = tmp_path / "scenesmith_artiverse_visuals_v2"
++    path = visual_dir / "base.gltf"
++    document = json.loads(path.read_text())
++    document["images"] = [{"uri": "../substituted.png"}]
++    payload = json.dumps(document, separators=(",", ":")).encode()
++    path.write_bytes(payload)
++    manifest_path = visual_dir / "_derivation_manifest.json"
++    manifest = json.loads(manifest_path.read_text())
++    manifest["resources"][0]["derived_gltf_size_bytes"] = len(payload)
++    manifest["resources"][0]["derived_gltf_sha256"] = _sha256(payload)
++    preserved = json.loads(json.dumps(document))
++    del preserved["buffers"][0]["uri"]
++    manifest["resources"][0]["preserved_semantics_sha256"] = _sha256(
++        (
++            json.dumps(
++                preserved,
++                ensure_ascii=False,
++                sort_keys=True,
++                separators=(",", ":"),
++            )
++            + "\n"
++        ).encode()
++    )
++    manifest_path.write_text(json.dumps(manifest))
++    with pytest.raises(ValueError, match="unexpected transitive URIs"):
++        extraction._parse_artiverse_link_meshes(sdf, tmp_path)
++
++
++def test_artiverse_unlisted_derived_resource_is_rejected(tmp_path: Path) -> None:
++    sdf = _write_artiverse_fixture(tmp_path)
++    (tmp_path / "scenesmith_artiverse_visuals_v2" / "substituted.bin").write_bytes(
++        b"substituted"
++    )
++    with pytest.raises(ValueError, match="directory inventory mismatch"):
++        extraction._parse_artiverse_link_meshes(sdf, tmp_path)
++
++
++def test_normalized_artiverse_sdf_cannot_be_bypassed_by_legacy_mesh(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    sdf = _write_artiverse_fixture(tmp_path, include_collision=False)
++    (tmp_path / "substituted_combined.gltf").write_text("{}", encoding="utf-8")
++    monkeypatch.setattr(
++        extraction,
++        "extract_support_surfaces_from_mesh",
++        lambda *args, **kwargs: [SimpleNamespace(area=1.0, link_name=None)],
++    )
++    with pytest.raises(ValueError, match="at least one collision"):
++        extraction.extract_support_surfaces_articulated(tmp_path, sdf_path=sdf)
++
++
++def test_artiverse_nonidentity_model_pose_fails_closed(tmp_path: Path) -> None:
++    sdf = _write_artiverse_fixture(tmp_path)
++    payload = sdf.read_text(encoding="utf-8").replace(
++        "<model name='asset'>", "<model name='asset'><pose>1 0 0 0 0 0</pose>"
++    )
++    sdf.write_text(payload, encoding="utf-8")
++    with pytest.raises(ValueError, match="model pose must be identity"):
++        extraction._parse_artiverse_link_meshes(sdf, tmp_path)
++
++
++@pytest.mark.parametrize(
++    "attribute",
++    ["degrees='true'", "rotation_format='quat_xyzw'", "unexpected='value'"],
++)
++def test_artiverse_unsupported_pose_attributes_fail_closed(
++    tmp_path: Path, attribute: str
++) -> None:
++    sdf = _write_artiverse_fixture(tmp_path, link_pose="0 0 0 0 0 0")
++    sdf.write_text(
++        sdf.read_text(encoding="utf-8").replace("<pose>", f"<pose {attribute}>"),
++        encoding="utf-8",
++    )
++    with pytest.raises(ValueError, match="unsupported pose attributes"):
++        extraction._parse_artiverse_link_meshes(sdf, tmp_path)
++
++
++class _SyntheticRayIntersector:
++    def __init__(self, *, hit_count: int, clearance: float):
++        self.hit_count = hit_count
++        self.clearance = clearance
++
++    def intersects_location(self, *, ray_origins, ray_directions, multiple_hits):
++        assert multiple_hits
++        indices = np.arange(self.hit_count, dtype=int)
++        locations = ray_origins[indices].copy()
++        locations[:, 2] += self.clearance - 0.001
++        return locations, indices, np.zeros(self.hit_count, dtype=int)
++
++
++def _synthetic_surface(*, authored_clearance: float):
++    mesh = SimpleNamespace(
++        vertices=np.array(
++            [
++                [-0.5, -0.5, 0.0],
++                [0.5, -0.5, 0.0],
++                [0.5, 0.5, 0.0],
++                [-0.5, 0.5, 0.0],
++            ]
++        )
++    )
++    return SimpleNamespace(
++        surface_id="surface",
++        link_name="link",
++        transform=extraction.RigidTransform(p=[0, 0, 0.01]),
++        bounding_box_min=np.array([-0.5, -0.5, 0.01]),
++        bounding_box_max=np.array([0.5, 0.5, 0.01 + authored_clearance]),
++        mesh=mesh,
++        contains_point_2d=lambda point: bool(
++            -0.5 <= point[0] <= 0.5 and -0.5 <= point[1] <= 0.5
++        ),
++    )
++
++
++class _DownwardRayIntersector:
++    def __init__(self, *, hit_indices: list[int], gap_m: float):
++        self.hit_indices = np.asarray(hit_indices, dtype=int)
++        self.gap_m = gap_m
++
++    def intersects_location(self, *, ray_origins, ray_directions, multiple_hits):
++        assert multiple_hits
++        np.testing.assert_allclose(
++            ray_directions, np.tile([0, 0, -1], (len(ray_origins), 1))
++        )
++        locations = ray_origins[self.hit_indices].copy()
++        locations[:, 2] -= self.gap_m + 0.001
++        return locations, self.hit_indices, np.zeros(len(self.hit_indices), dtype=int)
++
++
++def _collision_mesh(*, hit_indices: list[int], gap_m: float):
++    return SimpleNamespace(
++        ray=_DownwardRayIntersector(
++            hit_indices=hit_indices,
++            gap_m=gap_m,
++        )
++    )
++
++
++def test_artiverse_same_link_collision_support_requires_full_nearby_coverage() -> None:
++    config = extraction.SupportSurfaceExtractionConfig()
++    surface = _synthetic_surface(authored_clearance=0.5)
++    all_samples = list(range(25))
++
++    supported = extraction._measure_artiverse_same_link_collision_support(
++        surface,
++        {"link": _collision_mesh(hit_indices=all_samples, gap_m=0.01)},
++        config,
++    )
++    assert supported.supported
++    assert supported.sample_count == supported.hit_count == 25
++    assert supported.max_gap_m == pytest.approx(0.01)
++    assert supported.max_allowed_gap_m == pytest.approx(0.03)
++
++    for collision in (
++        _collision_mesh(hit_indices=[], gap_m=0.01),
++        _collision_mesh(hit_indices=all_samples, gap_m=0.10),
++        _collision_mesh(hit_indices=list(range(15)), gap_m=0.01),
++    ):
++        measurement = extraction._measure_artiverse_same_link_collision_support(
++            surface, {"link": collision}, config
++        )
++        assert not measurement.supported
++
++
++def test_artiverse_collision_support_is_same_link_not_parent_link() -> None:
++    config = extraction.SupportSurfaceExtractionConfig()
++    surface = _synthetic_surface(authored_clearance=0.5)
++    surface.link_name = "child"
++    measurement = extraction._measure_artiverse_same_link_collision_support(
++        surface,
++        {
++            "parent": _collision_mesh(hit_indices=list(range(25)), gap_m=0.01),
++            "child": _collision_mesh(hit_indices=[], gap_m=0.01),
++        },
++        config,
++    )
++    assert not measurement.supported
++    assert measurement.hit_count == 0
++
++
++def test_clearance_samples_use_inset_actual_mesh_hull_not_centered_bbox() -> None:
++    surface = _synthetic_surface(authored_clearance=0.5)
++    surface.mesh.vertices[:, 0] += 2.0
++    surface.contains_point_2d = lambda point: bool(
++        1.5 <= point[0] <= 2.5 and -0.5 <= point[1] <= 0.5
++    )
++    local_points, _ = extraction._surface_interior_sample_points(surface)
++    assert len(local_points) == 25
++    assert np.min(local_points[:, 0]) == pytest.approx(1.6)
++    assert np.max(local_points[:, 0]) == pytest.approx(2.4)
++
++
++def test_combined_collision_clearance_tightens_persisted_bbox() -> None:
++    config = extraction.SupportSurfaceExtractionConfig()
++    surface = _synthetic_surface(authored_clearance=0.5)
++    combined = SimpleNamespace(
++        ray=_SyntheticRayIntersector(hit_count=5, clearance=0.1)
++    )
++
++    clearance = extraction._tighten_surface_clearance_against_combined_mesh(
++        surface, combined, config
++    )
++
++    assert clearance == pytest.approx(0.1)
++    assert (
++        surface.bounding_box_max[2] - surface.bounding_box_min[2]
++    ) == pytest.approx(0.1)
++
++
++def test_combined_collision_clearance_never_enlarges_authored_bbox() -> None:
++    config = extraction.SupportSurfaceExtractionConfig()
++    surface = _synthetic_surface(authored_clearance=0.2)
++    combined = SimpleNamespace(
++        ray=_SyntheticRayIntersector(hit_count=0, clearance=0.5)
++    )
++
++    clearance = extraction._tighten_surface_clearance_against_combined_mesh(
++        surface, combined, config
++    )
++
++    assert clearance == pytest.approx(0.2)
++    assert (
++        surface.bounding_box_max[2] - surface.bounding_box_min[2]
++    ) == pytest.approx(0.2)
++
++
++def test_combined_clearance_ignores_near_self_hit_but_keeps_later_overhead() -> None:
++    class NearAndOverhead:
++        def intersects_location(self, *, ray_origins, ray_directions, multiple_hits):
++            assert multiple_hits
++            indices = np.repeat(np.arange(5, dtype=int), 2)
++            locations = ray_origins[indices].copy()
++            locations[0::2, 2] += 0.0005
++            locations[1::2, 2] += 0.099
++            return locations, indices, np.zeros(len(indices), dtype=int)
++
++    config = extraction.SupportSurfaceExtractionConfig()
++    surface = _synthetic_surface(authored_clearance=0.5)
++    clearance = extraction._tighten_surface_clearance_against_combined_mesh(
++        surface, SimpleNamespace(ray=NearAndOverhead()), config
++    )
++    assert clearance == pytest.approx(0.1)
++    assert (
++        surface.bounding_box_max[2] - surface.bounding_box_min[2]
++    ) == pytest.approx(0.1)
