@@ -1,0 +1,1576 @@
+diff --git a/scenesmith/agent_utils/asset_manager.py b/scenesmith/agent_utils/asset_manager.py
+index da46f54..5ab228b 100644
+--- a/scenesmith/agent_utils/asset_manager.py
++++ b/scenesmith/agent_utils/asset_manager.py
+@@ -1,10 +1,12 @@
+ import hashlib
+ import copy
++import json
+ import logging
+ import re
+ import shutil
+ import time
+ import uuid
++import xml.etree.ElementTree as ET
+ 
+ from concurrent.futures import ThreadPoolExecutor, as_completed
+ from dataclasses import dataclass
+@@ -55,9 +57,18 @@ from scenesmith.agent_utils.mesh_physics_analyzer import (
+     analyze_mesh_orientation_and_material,
+ )
+ from scenesmith.agent_utils.mesh_utils import (
++    DIMENSION_CONTRACT_ATOL_METERS,
++    DIMENSION_CONTRACT_MAJOR_AXIS_MIN_OCCUPANCY,
++    DIMENSION_CONTRACT_RTOL,
++    DIMENSION_CONTRACT_SCHEMA_VERSION,
++    gltf_to_scene_dimensions,
+     load_mesh_as_trimesh,
++    measure_mesh_dimensions,
+     remove_mesh_floaters,
+-    scale_mesh_uniformly_to_dimensions,
++    scale_mesh_uniformly_to_dimensions,  # noqa: F401 - retained test seam
++    scale_mesh_uniformly_to_scene_dimension_contract,
++    scene_to_gltf_dimensions,
++    validate_dimension_vector,
+ )
+ from scenesmith.agent_utils.objaverse_retrieval_server import ObjaverseRetrievalClient
+ from scenesmith.agent_utils.objaverse_retrieval_server.dataclasses import (
+@@ -79,6 +90,7 @@ from scenesmith.utils.logging import BaseLogger
+ if TYPE_CHECKING:
+     from scenesmith.agent_utils.asset_router import AssetRouter
+     from scenesmith.agent_utils.blender import BlenderServer
++    from scenesmith.agent_utils.room import RoomScene
+ 
+ console_logger = logging.getLogger(__name__)
+ 
+@@ -95,6 +107,128 @@ def _sha256_directory_tree(root: Path) -> str:
+     return sha256_safe_directory_tree(root)
+ 
+ 
++def _canonical_json_sha256(payload: dict[str, object]) -> str:
++    encoded = json.dumps(
++        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True
++    ).encode("utf-8")
++    return hashlib.sha256(encoded).hexdigest()
++
++
++def _unscaled_scene_dimension_receipt(
++    measured_scene_dimensions: list[float] | tuple[float, float, float] | np.ndarray,
++    requested_scene_dimensions: list[float],
++    *,
++    policy: str,
++) -> dict[str, object]:
++    """Validate a source whose geometry cannot be deformed or silently rescaled."""
++    measured = validate_dimension_vector(
++        measured_scene_dimensions, label="measured SceneSmith dimensions"
++    )
++    requested = validate_dimension_vector(
++        requested_scene_dimensions, label="requested SceneSmith dimensions"
++    )
++    occupancy = measured / requested
++    major_axes = np.argsort(requested)[-2:]
++    if np.any(measured > requested + DIMENSION_CONTRACT_ATOL_METERS) or np.any(
++        occupancy[major_axes] < DIMENSION_CONTRACT_MAJOR_AXIS_MIN_OCCUPANCY
++    ):
++        raise ValueError(
++            f"{policy} dimensions violate the requested fit: "
++            f"measured={measured.tolist()}, requested={requested.tolist()}, "
++            f"major_axis_occupancies={occupancy[major_axes].tolist()}"
++        )
++    receipt: dict[str, object] = {
++        "schema_version": DIMENSION_CONTRACT_SCHEMA_VERSION,
++        "policy": policy,
++        "requested_scene_dimensions_m": requested.tolist(),
++        "requested_gltf_dimensions_m": scene_to_gltf_dimensions(requested).tolist(),
++        "measured_final_scene_dimensions_m": measured.tolist(),
++        "measured_final_gltf_dimensions_m": scene_to_gltf_dimensions(measured).tolist(),
++        "uniform_scale": 1.0,
++        "major_axis_occupancies": occupancy[major_axes].tolist(),
++        "major_axis_min_occupancy": DIMENSION_CONTRACT_MAJOR_AXIS_MIN_OCCUPANCY,
++        "rtol": DIMENSION_CONTRACT_RTOL,
++        "atol_m": DIMENSION_CONTRACT_ATOL_METERS,
++        "status": "pass",
++    }
++    return receipt
++
++
++def _verify_rigid_sdf_dimension_receipt(
++    sdf_path: Path,
++    expected_visual_path: Path,
++    receipt: dict[str, object],
++) -> dict[str, object]:
++    """Bind an SDF's exact visual reference to the reloaded dimension receipt."""
++    tree = ET.parse(sdf_path)
++    uris = tree.findall(".//visual/geometry/mesh/uri")
++    if len(uris) != 1 or not uris[0].text:
++        raise ValueError(
++            f"Dimension contract requires one non-empty SDF visual URI, got {len(uris)}"
++        )
++    uri = uris[0].text.strip()
++    uri_path = Path(uri)
++    if uri_path.is_absolute() or ".." in uri_path.parts or "://" in uri:
++        raise ValueError(f"Unsafe SDF visual URI in dimension contract: {uri}")
++    resolved_visual = (sdf_path.parent / uri_path).resolve(strict=True)
++    if resolved_visual != expected_visual_path.resolve(strict=True):
++        raise ValueError(
++            "SDF visual URI does not bind the contracted GLTF: "
++            f"{resolved_visual} != {expected_visual_path.resolve(strict=True)}"
++        )
++
++    measured_gltf = measure_mesh_dimensions(resolved_visual)
++    recorded_gltf = validate_dimension_vector(
++        receipt["measured_final_gltf_dimensions_m"],
++        label="recorded final GLTF dimensions",
++    )
++    if not np.allclose(
++        measured_gltf,
++        recorded_gltf,
++        rtol=DIMENSION_CONTRACT_RTOL,
++        atol=DIMENSION_CONTRACT_ATOL_METERS,
++    ):
++        raise ValueError(
++            "SDF-referenced visual violates the dimension receipt: "
++            f"recorded={recorded_gltf.tolist()}, measured={measured_gltf.tolist()}"
++        )
++
++    finalized = copy.deepcopy(receipt)
++    finalized["sdf_visual_uri"] = uri
++    finalized["visual_mesh_sha256"] = _sha256_file(resolved_visual)
++    finalized["sdf_sha256"] = _sha256_file(sdf_path)
++    finalized["asset_directory_sha256"] = _sha256_directory_tree(sdf_path.parent)
++    finalized["receipt_sha256"] = _canonical_json_sha256(finalized)
++    return finalized
++
++
++def _cleanup_failed_asset_namespace(config: "AssetPathConfig") -> None:
++    """Remove only the transaction-exclusive SDF namespace for a failed candidate."""
++    if config.sdf_dir.exists():
++        shutil.rmtree(config.sdf_dir)
++
++
++def _unpack_mesh_conversion_result(result: tuple) -> tuple:
++    """Accept the legacy five-field test seam and the production receipt field."""
++    if len(result) == 5:
++        return (*result, None)
++    if len(result) != 6:
++        raise ValueError(
++            f"Mesh conversion returned {len(result)} fields; expected 5 or 6"
++        )
++    return result
++
++
++def _unpack_thin_conversion_result(result: tuple) -> tuple:
++    if len(result) == 4:
++        return (*result, None)
++    if len(result) != 5:
++        raise ValueError(
++            f"Thin-covering conversion returned {len(result)} fields; expected 4 or 5"
++        )
++    return result
++
++
+ def _articulated_provenance(
+     articulated: ArticulatedGeometry, copied_sdf_path: Path
+ ) -> dict[str, str]:
+@@ -1621,29 +1755,51 @@ class AssetManager:
+                 collision_dims = (item.dimensions[0], thickness, item.dimensions[2])
+                 collision_shape = infer_thin_covering_shape(item.description)
+ 
+-            sdf_path, final_gltf_path, bbox_min, bbox_max = (
+-                self._convert_thin_covering_to_simulation_asset(
+-                    geometry_path=generated.geometry_path,
+-                    config=config,
+-                    collision_dims=collision_dims,
+-                    collision_shape=collision_shape,
++            try:
++                sdf_path, final_gltf_path, bbox_min, bbox_max, dimension_receipt = (
++                    _unpack_thin_conversion_result(
++                        self._convert_thin_covering_to_simulation_asset(
++                            geometry_path=generated.geometry_path,
++                            config=config,
++                            requested_dimensions=item.dimensions,
++                            collision_dims=collision_dims,
++                            collision_shape=collision_shape,
++                            include_dimension_receipt=True,
++                        )
++                    )
+                 )
+-            )
++            except Exception:
++                _cleanup_failed_asset_namespace(config)
++                raise
+             initial_scale = 1.0  # Thin coverings don't scale the mesh.
+         else:
+             # Convert validated geometry to simulation asset (physics analysis, SDF).
+-            sdf_path, final_gltf_path, bbox_min, bbox_max, initial_scale = (
+-                self._convert_mesh_to_simulation_asset(
+-                    geometry_path=generated.geometry_path,
+-                    config=config,
+-                    object_type=request.object_type,
+-                    desired_dimensions=item.dimensions,
+-                    asset_source=generated.asset_source,
++            try:
++                (
++                    sdf_path,
++                    final_gltf_path,
++                    bbox_min,
++                    bbox_max,
++                    initial_scale,
++                    dimension_receipt,
++                ) = _unpack_mesh_conversion_result(
++                    self._convert_mesh_to_simulation_asset(
++                        geometry_path=generated.geometry_path,
++                        config=config,
++                        object_type=request.object_type,
++                        desired_dimensions=item.dimensions,
++                        asset_source=generated.asset_source,
++                        include_dimension_receipt=True,
++                    )
+                 )
+-            )
++            except Exception:
++                _cleanup_failed_asset_namespace(config)
++                raise
+ 
+         # Build additional metadata using explicit asset_source from GeneratedGeometry.
+         additional_metadata = {"asset_source": generated.asset_source}
++        if dimension_receipt is not None:
++            additional_metadata["dimension_contract"] = dimension_receipt
+         if generated.hssd_id is not None:
+             additional_metadata["hssd_mesh_id"] = generated.hssd_id
+ 
+@@ -1703,6 +1859,25 @@ class AssetManager:
+                 "Articulated asset manager/request manipuland scope mismatch"
+             )
+         item = articulated.item
++        dimension_receipt: dict[str, object] | None = None
++        articulated_dimensions = validate_dimension_vector(
++            np.asarray(articulated.bounding_box_max, dtype=float)
++            - np.asarray(articulated.bounding_box_min, dtype=float),
++            label="articulated default-pose dimensions",
++        )
++        if item.dimensions is not None:
++            # Articulated link/joint geometry may not be deformed.  A retrieved
++            # candidate must already fit the request, and the router will advance to
++            # another candidate if this defense-in-depth check fails.
++            dimension_receipt = _unscaled_scene_dimension_receipt(
++                articulated_dimensions,
++                item.dimensions,
++                policy="articulated_unscaled_default_pose_fit",
++            )
++            dimension_receipt["asset_source"] = articulated.source
++            dimension_receipt["measurement_source"] = (
++                "retrieval_default_pose_bounding_box"
++            )
+         safe_name = self._sanitize_filename(item.short_name)
+         base_name = f"{safe_name}_{time.time_ns()}_{uuid.uuid4().hex}"
+ 
+@@ -1772,6 +1947,23 @@ class AssetManager:
+         combined_gltf_path = output_dir / f"{safe_name}_combined.gltf"
+         combined_mesh.export(combined_gltf_path)
+ 
++        combined_dimensions = measure_mesh_dimensions(combined_gltf_path)
++        if not np.allclose(
++            np.sort(combined_dimensions),
++            np.sort(articulated_dimensions),
++            rtol=DIMENSION_CONTRACT_RTOL,
++            atol=DIMENSION_CONTRACT_ATOL_METERS,
++        ):
++            if output_dir != dest_sdf_dir and output_dir.exists():
++                shutil.rmtree(output_dir)
++            if dest_sdf_dir.exists():
++                shutil.rmtree(dest_sdf_dir)
++            raise ValueError(
++                "Articulated combined GLTF violates default-pose dimension "
++                f"postcondition: retrieval={articulated_dimensions.tolist()}, "
++                f"combined={combined_dimensions.tolist()}"
++            )
++
+         console_logger.info(
+             f"Articulated asset combined mesh saved to {combined_gltf_path}"
+         )
+@@ -1783,6 +1975,30 @@ class AssetManager:
+             "is_articulated": True,
+             "generation_timestamp": time.time(),
+         }
++        if dimension_receipt is not None:
++            dimension_receipt["combined_mesh_dimensions_m"] = (
++                combined_dimensions.tolist()
++            )
++            dimension_receipt["source_sdf_sha256"] = _sha256_file(
++                articulated.sdf_path
++            )
++            dimension_receipt["copied_sdf_sha256"] = _sha256_file(copied_sdf_path)
++            dimension_receipt["combined_visual_sha256"] = _sha256_file(
++                combined_gltf_path
++            )
++            # Trimesh GLTF commonly stores vertex/index data in an external .bin.
++            # Bind the entire combined-output tree, including for non-manipuland
++            # assets whose geometry namespace is separate from the copied SDF tree.
++            dimension_receipt["combined_geometry_directory_sha256"] = (
++                _sha256_directory_tree(output_dir)
++            )
++            dimension_receipt["asset_directory_sha256"] = _sha256_directory_tree(
++                dest_sdf_dir
++            )
++            dimension_receipt["receipt_sha256"] = _canonical_json_sha256(
++                dimension_receipt
++            )
++            metadata["dimension_contract"] = dimension_receipt
+         if artiverse_visual_normalization is not None:
+             metadata["artiverse_visual_normalization"] = (
+                 artiverse_visual_normalization
+@@ -1987,12 +2203,20 @@ class AssetManager:
+                 )
+ 
+                 # Process mesh: VLM → canonicalize → scale → collision → SDF.
+-                sdf_path, final_gltf_path, bbox_min, bbox_max, initial_scale = (
++                (
++                    sdf_path,
++                    final_gltf_path,
++                    bbox_min,
++                    bbox_max,
++                    initial_scale,
++                    dimension_receipt,
++                ) = _unpack_mesh_conversion_result(
+                     self._convert_mesh_to_simulation_asset(
+                         geometry_path=server_geometry_path,
+                         config=config,
+                         object_type=request.object_type,
+                         desired_dimensions=request.desired_dimensions[index],
++                        include_dimension_receipt=True,
+                     )
+                 )
+ 
+@@ -2004,7 +2228,14 @@ class AssetManager:
+                     final_gltf_path=final_gltf_path,
+                     bbox_min=bbox_min,
+                     bbox_max=bbox_max,
+-                    additional_metadata={"asset_source": "generated"},
++                    additional_metadata={
++                        "asset_source": "generated",
++                        **(
++                            {"dimension_contract": dimension_receipt}
++                            if dimension_receipt is not None
++                            else {}
++                        ),
++                    },
+                     scale_factor=initial_scale,
+                 )
+ 
+@@ -2015,6 +2246,8 @@ class AssetManager:
+                 )
+ 
+             except Exception as e:
++                if "config" in locals():
++                    _cleanup_failed_asset_namespace(config)
+                 # Log failure but continue processing remaining assets.
+                 console_logger.error(
+                     f"Failed to process asset {index + 1}/{len(asset_path_configs)} "
+@@ -2049,7 +2282,8 @@ class AssetManager:
+         object_type: ObjectType,
+         desired_dimensions: list[float] | None = None,
+         asset_source: str = "generated",
+-    ) -> tuple[Path, Path, np.ndarray, np.ndarray, float]:
++        include_dimension_receipt: bool = False,
++    ) -> tuple:
+         """Convert mesh to a simulatable Drake SDF.
+ 
+         Pipeline:
+@@ -2071,12 +2305,13 @@ class AssetManager:
+             config: Asset path configuration.
+             object_type: Type of object (determines placement strategy).
+             desired_dimensions: Optional dimensions (width, depth, height) from agent.
+-            asset_source: Source of the asset ("generated" or "hssd"). HSSD assets
+-                use specialized VLM prompts and skip vertical views since they're
+-                already upright.
++            asset_source: Source of the asset ("generated", "hssd", or
++                "objaverse"). HSSD assets use specialized VLM prompts and skip
++                vertical views since they're already upright.
+ 
+         Returns:
+-            Tuple of (sdf_path, final_gltf_path, bbox_min, bbox_max, scale_factor).
++            Tuple of (sdf_path, final_gltf_path, bbox_min, bbox_max, scale_factor,
++            dimension_receipt).
+             The scale_factor is the uniform scaling applied during mesh scaling
+             (1.0 if no scaling was applied). This is needed to correctly scale
+             HSSD pre-computed support surfaces.
+@@ -2160,18 +2395,23 @@ class AssetManager:
+         # are at original HSSD dimensions and need scaling.
+         final_gltf_path = canonical_path
+         initial_scale = 1.0
++        dimension_receipt: dict[str, object] | None = None
+         if desired_dimensions is not None:
+             console_logger.info(
+                 f"Scaling mesh to desired dimensions: {desired_dimensions}"
+             )
+             final_gltf_path = config.sdf_dir / f"{config.short_name}.gltf"
+-            final_gltf_path, applied_scale = scale_mesh_uniformly_to_dimensions(
++            (
++                final_gltf_path,
++                applied_scale,
++                dimension_receipt,
++            ) = scale_mesh_uniformly_to_scene_dimension_contract(
+                 mesh_path=canonical_path,
+-                desired_dimensions=desired_dimensions,
++                requested_scene_dimensions=desired_dimensions,
+                 output_path=final_gltf_path,
+-                min_dimension_meters=self.min_mesh_dimension_meters,
+-                relative_threshold=self.mesh_relative_dimension_threshold,
+             )
++            dimension_receipt["asset_source"] = asset_source
++            dimension_receipt["source_geometry_sha256"] = _sha256_file(geometry_path)
+             # HSSD pre-computed surfaces are at original mesh dimensions.
+             # They need scale_factor to match the physical scaling applied above.
+             if is_hssd:
+@@ -2196,6 +2436,10 @@ class AssetManager:
+             output_path=sdf_path,
+             asset_name=config.short_name,
+         )
++        if dimension_receipt is not None:
++            dimension_receipt = _verify_rigid_sdf_dimension_receipt(
++                sdf_path, final_gltf_path, dimension_receipt
++            )
+ 
+         # Extract bounding box from scaled mesh.
+         bounds = mesh.bounds  # In Y-up coordinates (GLTF native format).
+@@ -2220,15 +2464,26 @@ class AssetManager:
+             f"Drake SDF complete: SDF at {sdf_path}, bounds: {bbox_min} to {bbox_max}"
+         )
+ 
+-        return sdf_path, final_gltf_path, bbox_min, bbox_max, initial_scale
++        result = (
++            sdf_path,
++            final_gltf_path,
++            bbox_min,
++            bbox_max,
++            initial_scale,
++        )
++        if include_dimension_receipt:
++            return (*result, dimension_receipt)
++        return result
+ 
+     def _convert_thin_covering_to_simulation_asset(
+         self,
+         geometry_path: Path,
+         config: AssetPathConfig,
++        requested_dimensions: list[float] | None = None,
+         collision_dims: tuple[float, float, float] | None = None,
+         collision_shape: str = "rectangular",
+-    ) -> tuple[Path, Path, np.ndarray, np.ndarray]:
++        include_dimension_receipt: bool = False,
++    ) -> tuple:
+         """Convert thin covering mesh to Drake SDF (simplified pipeline).
+ 
+         Thin coverings are static decorative objects that don't require:
+@@ -2247,12 +2502,14 @@ class AssetManager:
+         Args:
+             geometry_path: Path to thin covering GLB file.
+             config: Asset path configuration.
++            requested_dimensions: Requested SceneSmith [width, depth, height].
+             collision_dims: Optional (width, depth, height) for collision geometry.
+                 Used for wall thin coverings.
+             collision_shape: Shape of collision ("rectangular" or "circular").
+ 
+         Returns:
+-            Tuple of (sdf_path, final_gltf_path, bbox_min, bbox_max).
++            Tuple of (sdf_path, final_gltf_path, bbox_min, bbox_max,
++            dimension_receipt).
+         """
+         console_logger.info(f"Processing thin covering ({geometry_path}) to static SDF")
+ 
+@@ -2265,6 +2522,20 @@ class AssetManager:
+             export_yup=True,
+         )
+ 
++        # Procedural thin coverings are already generated at their requested major
++        # dimensions.  Validate the converted Y-up file before SDF/collision writes.
++        dimension_receipt: dict[str, object] | None = None
++        if requested_dimensions is not None:
++            measured_gltf = measure_mesh_dimensions(gltf_path)
++            measured_scene = gltf_to_scene_dimensions(measured_gltf)
++            dimension_receipt = _unscaled_scene_dimension_receipt(
++                measured_scene,
++                requested_dimensions,
++                policy="procedural_thin_covering_unscaled_fit",
++            )
++            dimension_receipt["asset_source"] = "thin_covering"
++            dimension_receipt["source_geometry_sha256"] = _sha256_file(geometry_path)
++
+         # Generate static SDF (with optional collision geometry for wall coverings).
+         sdf_path = config.sdf_dir / f"{config.short_name}.sdf"
+         generate_thin_covering_sdf(
+@@ -2274,6 +2545,10 @@ class AssetManager:
+             collision_dims=collision_dims,
+             collision_shape=collision_shape,
+         )
++        if dimension_receipt is not None:
++            dimension_receipt = _verify_rigid_sdf_dimension_receipt(
++                sdf_path, gltf_path, dimension_receipt
++            )
+ 
+         # Load mesh for bounding box calculation.
+         mesh = load_mesh_as_trimesh(gltf_path, force_merge=True)
+@@ -2297,7 +2572,10 @@ class AssetManager:
+             f"Thin covering SDF complete: {sdf_path}, bounds: {bbox_min} to {bbox_max}"
+         )
+ 
+-        return sdf_path, gltf_path, bbox_min, bbox_max
++        result = (sdf_path, gltf_path, bbox_min, bbox_max)
++        if include_dimension_receipt:
++            return (*result, dimension_receipt)
++        return result
+ 
+     def _find_sdf_file(self, sdf_dir: Path) -> Path:
+         """Find the generated SDF file in the asset directory.
+diff --git a/scenesmith/agent_utils/asset_router/router.py b/scenesmith/agent_utils/asset_router/router.py
+index 5d8fd61..df02e05 100644
+--- a/scenesmith/agent_utils/asset_router/router.py
++++ b/scenesmith/agent_utils/asset_router/router.py
+@@ -11,6 +11,7 @@ from pathlib import Path
+ from typing import TYPE_CHECKING
+ 
+ import trimesh
++import numpy as np
+ 
+ from omegaconf import DictConfig
+ 
+@@ -42,6 +43,13 @@ from scenesmith.agent_utils.material_generator import (
+ from scenesmith.agent_utils.materials_retrieval_server import (
+     MaterialsRetrievalServerRequest,
+ )
++from scenesmith.agent_utils.mesh_utils import (
++    DIMENSION_CONTRACT_ATOL_METERS,
++    DIMENSION_CONTRACT_MAJOR_AXIS_MIN_OCCUPANCY,
++    mesh_dimension_candidate_compatibility,
++    uniform_dimension_fit_plan,
++    validate_dimension_vector,
++)
+ from scenesmith.agent_utils.objaverse_retrieval_server.dataclasses import (
+     ObjaverseRetrievalServerRequest,
+ )
+@@ -84,6 +92,95 @@ def _require_new_asset_output(path: Path) -> None:
+         raise FileExistsError(f"Refusing to overwrite existing asset output: {path}")
+ 
+ 
++def _mesh_candidate_satisfies_dimension_contract(
++    mesh_path: Path, item: AssetItem
++) -> bool:
++    """Reject aspect-incompatible meshes inside the router retry loop."""
++    if item.dimensions is None:
++        return True
++    try:
++        compatible, plan = mesh_dimension_candidate_compatibility(
++            mesh_path, item.dimensions
++        )
++    except (FileNotFoundError, ValueError) as exc:
++        console_logger.warning(
++            f"Dimension prefilter rejected '{item.description}' at {mesh_path}: {exc}"
++        )
++        return False
++    if not compatible:
++        console_logger.warning(
++            f"Dimension prefilter rejected '{item.description}' at {mesh_path}: "
++            "two-major-axis occupancies="
++            f"{np.asarray(plan['major_axis_occupancies']).tolist()}, required>="
++            f"{plan['major_axis_min_occupancy']}"
++        )
++    return compatible
++
++
++def _dimension_filter_primitive_result(
++    result: GeneratedGeometry | None, item: AssetItem
++) -> GeneratedGeometry | None:
++    """Apply the same contract to a deterministic primitive fallback."""
++    if result is None:
++        return None
++    if _mesh_candidate_satisfies_dimension_contract(result.geometry_path, item):
++        return result
++    # Primitive outputs are transaction-exclusive GLBs with no external payload.
++    result.geometry_path.unlink(missing_ok=True)
++    return None
++
++
++def _cleanup_rejected_generated_candidate(result: GeneratedGeometry) -> None:
++    """Clean only transaction-exclusive text-to-3D outputs, never library sources."""
++    if result.asset_source != "generated":
++        return
++    result.geometry_path.unlink(missing_ok=True)
++    if result.image_path is not None:
++        result.image_path.unlink(missing_ok=True)
++
++
++def _articulated_candidate_satisfies_dimension_contract(
++    candidate: ArticulatedRetrievalResult, item: AssetItem
++) -> bool:
++    """Validate unscaled articulated bounds before copy, VLM, or registration."""
++    if item.dimensions is None:
++        return True
++    try:
++        requested = validate_dimension_vector(
++            item.dimensions, label="requested articulated dimensions"
++        )
++        bbox_min = np.asarray(candidate.bounding_box_min, dtype=float)
++        bbox_max = np.asarray(candidate.bounding_box_max, dtype=float)
++        measured = validate_dimension_vector(
++            bbox_max - bbox_min, label="articulated candidate dimensions"
++        )
++        # Compute the shared major-axis policy, but do not apply its hypothetical
++        # scale: articulated joint geometry may not be deformed or silently rescaled.
++        plan = uniform_dimension_fit_plan(measured, requested)
++        occupancy = measured / requested
++        major_axes = np.argsort(requested)[-2:]
++        compatible = bool(
++            np.all(measured <= requested + DIMENSION_CONTRACT_ATOL_METERS)
++            and np.all(
++                occupancy[major_axes]
++                >= DIMENSION_CONTRACT_MAJOR_AXIS_MIN_OCCUPANCY
++            )
++        )
++    except (TypeError, ValueError) as exc:
++        console_logger.warning(
++            f"Articulated dimension prefilter rejected '{item.description}': {exc}"
++        )
++        return False
++    if not compatible:
++        console_logger.warning(
++            f"Articulated dimension prefilter rejected '{item.description}' "
++            f"candidate {candidate.object_id}: measured={measured.tolist()}, "
++            f"requested={requested.tolist()}, occupancy={occupancy.tolist()}, "
++            f"uniform_fit_compatible={plan['compatible']}"
++        )
++    return compatible
++
++
+ class AssetRouter:
+     """Routes asset generation requests through LLM analysis and validation.
+ 
+@@ -600,7 +697,9 @@ class AssetRouter:
+                 return None
+ 
+             _, response = responses[0]
+-            candidates = response.results
++            # Bound a misbehaving server to the configured attempt budget.  The
++            # dimension check remains mandatory even when max_retries=0 disables VLM.
++            candidates = response.results[:num_candidates]
+             if required_source is not None:
+                 # Defense in depth: do not accept a mislabeled/misconfigured server
+                 # response for a provenance-sensitive route.
+@@ -633,12 +732,23 @@ class AssetRouter:
+ 
+         # If max_retries=0, return first candidate without validation.
+         if max_retries == 0:
+-            candidate = candidates[0]
+-            console_logger.info(
+-                f"Returning first articulated candidate without validation: "
+-                f"{candidate.object_id}"
++            for candidate in candidates:
++                if not _articulated_candidate_satisfies_dimension_contract(
++                    candidate, item
++                ):
++                    continue
++                console_logger.info(
++                    f"Returning first dimension-compatible articulated candidate "
++                    f"without VLM validation: {candidate.object_id}"
++                )
++                return self._result_to_articulated_geometry(
++                    result=candidate, item=item
++                )
++            console_logger.warning(
++                f"No articulated candidate satisfied the dimension contract for "
++                f"'{item.description}'"
+             )
+-            return self._result_to_articulated_geometry(result=candidate, item=item)
++            return None
+ 
+         # Validation loop: try each candidate until one passes.
+         for i, candidate in enumerate(candidates):
+@@ -648,6 +758,11 @@ class AssetRouter:
+                 f"bbox={candidate.bbox_score:.3f})"
+             )
+ 
++            if not _articulated_candidate_satisfies_dimension_contract(
++                candidate, item
++            ):
++                continue
++
+             # Validate with VLM.
+             validation = self._validate_articulated_result(
+                 result=candidate, description=item.description, debug_dir=debug_dir
+@@ -1229,6 +1344,12 @@ class AssetRouter:
+ 
+             console_logger.info(f"Generated thin covering mesh: {glb_path}")
+ 
++            if not _mesh_candidate_satisfies_dimension_contract(glb_path, item):
++                # The output name is transaction-exclusive, so cleanup cannot touch
++                # another candidate.  Never return a procedurally malformed asset.
++                glb_path.unlink(missing_ok=True)
++                return None
++
+             return GeneratedGeometry(
+                 geometry_path=glb_path, item=item, asset_source="thin_covering"
+             )
+@@ -1426,9 +1547,15 @@ class AssetRouter:
+             console_logger.info(
+                 f"Using direct primitive manipuland fallback for '{item.description}'"
+             )
+-            return self._create_primitive_manipuland_fallback_geometry(
++            primitive = self._create_primitive_manipuland_fallback_geometry(
+                 item=item, geometry_dir=geometry_dir
+             )
++            if primitive is not None:
++                return primitive
++            console_logger.warning(
++                f"Primitive manipuland fallback violated the dimension contract for "
++                f"'{item.description}'; continuing with HSSD candidates"
++            )
+ 
+         # For library retrieval, pre-fetch candidates (single server call).
+         hssd_candidates: list | None = None
+@@ -1471,7 +1598,7 @@ class AssetRouter:
+             console_logger.info(
+                 f"Acquiring '{item.description}' with generated (no validation)"
+             )
+-            return self._acquire_generated_candidate(
++            result = self._acquire_generated_candidate(
+                 item=item,
+                 asset_source=asset_source,
+                 attempt=0,
+@@ -1485,6 +1612,13 @@ class AssetRouter:
+                 hssd_candidates=hssd_candidates,
+                 objaverse_candidates=objaverse_candidates,
+             )
++            if result is None or not _mesh_candidate_satisfies_dimension_contract(
++                result.geometry_path, item
++            ):
++                if result is not None:
++                    _cleanup_rejected_generated_candidate(result)
++                return None
++            return result
+ 
+         # Validation + retry loop.
+         for attempt in range(max_retries):
+@@ -1513,6 +1647,14 @@ class AssetRouter:
+                 )
+                 continue
+ 
++            if not _mesh_candidate_satisfies_dimension_contract(
++                result.geometry_path, item
++            ):
++                # Crucially remain inside this loop: the next HSSD/Objaverse result
++                # or newly generated candidate can still satisfy the contract.
++                _cleanup_rejected_generated_candidate(result)
++                continue
++
+             # Validate with VLM.
+             # Use lenient validation for retrieved library assets (HSSD, Objaverse) based
+             # on config. Generated assets always use strict validation.
+@@ -1600,8 +1742,10 @@ class AssetRouter:
+         """
+         text = f"{item.short_name} {item.description}".lower()
+         if "projector" in text:
+-            return self._create_primitive_projector_geometry(item, geometry_dir)
+-        return self._create_primitive_ceiling_panel_geometry(item, geometry_dir)
++            result = self._create_primitive_projector_geometry(item, geometry_dir)
++        else:
++            result = self._create_primitive_ceiling_panel_geometry(item, geometry_dir)
++        return _dimension_filter_primitive_result(result, item)
+ 
+     def _create_primitive_ceiling_panel_geometry(
+         self, item: AssetItem, geometry_dir: Path
+@@ -1640,11 +1784,12 @@ class AssetRouter:
+             f"Using primitive ceiling panel fallback for '{item.description}' "
+             f"at {geometry_path} ({width:.2f}m x {depth:.2f}m x {height:.2f}m)"
+         )
+-        return GeneratedGeometry(
++        result = GeneratedGeometry(
+             geometry_path=geometry_path,
+             item=item,
+             asset_source="generated",
+         )
++        return _dimension_filter_primitive_result(result, item)
+ 
+     def _create_primitive_projector_geometry(
+         self, item: AssetItem, geometry_dir: Path
+@@ -1823,11 +1968,12 @@ class AssetRouter:
+             f"Using primitive manipuland fallback for '{item.description}' "
+             f"at {geometry_path} ({width:.2f}m x {depth:.2f}m x {height:.2f}m)"
+         )
+-        return GeneratedGeometry(
++        result = GeneratedGeometry(
+             geometry_path=geometry_path,
+             item=item,
+             asset_source="generated",
+         )
++        return _dimension_filter_primitive_result(result, item)
+ 
+     def _primitive_keyboard_scene(
+         self, width: float, depth: float, height: float
+diff --git a/scenesmith/agent_utils/mesh_utils.py b/scenesmith/agent_utils/mesh_utils.py
+index 65130cf..bd36d2a 100644
+--- a/scenesmith/agent_utils/mesh_utils.py
++++ b/scenesmith/agent_utils/mesh_utils.py
+@@ -10,6 +10,14 @@ from mathutils import Vector
+ console_logger = logging.getLogger(__name__)
+ 
+ 
++DIMENSION_CONTRACT_SCHEMA_VERSION = 1
++DIMENSION_CONTRACT_RTOL = 1.0e-5
++DIMENSION_CONTRACT_ATOL_METERS = 1.0e-6
++DIMENSION_CONTRACT_MIN_EXTENT_METERS = 1.0e-9
++DIMENSION_CONTRACT_MAX_UNIFORM_SCALE = 1.0e6
++DIMENSION_CONTRACT_MAJOR_AXIS_MIN_OCCUPANCY = 0.5
++
++
+ def load_mesh_as_trimesh(mesh_path: Path, force_merge: bool = True) -> trimesh.Trimesh:
+     """Load a mesh file and ensure it's a single Trimesh object.
+ 
+@@ -66,6 +74,203 @@ def load_mesh_as_trimesh(mesh_path: Path, force_merge: bool = True) -> trimesh.T
+     return mesh
+ 
+ 
++def validate_dimension_vector(
++    dimensions: list[float] | tuple[float, float, float] | np.ndarray,
++    *,
++    label: str,
++) -> np.ndarray:
++    """Return a finite, strictly-positive three-axis dimension vector."""
++    try:
++        values = np.asarray(dimensions, dtype=float)
++    except (TypeError, ValueError) as exc:
++        raise ValueError(f"{label} must contain exactly three finite numbers") from exc
++    if values.shape != (3,):
++        raise ValueError(f"{label} must contain exactly three values, got {dimensions}")
++    if not np.all(np.isfinite(values)) or np.any(values <= 0.0):
++        raise ValueError(f"{label} must contain finite positive values, got {dimensions}")
++    return values
++
++
++def scene_to_gltf_dimensions(
++    scene_dimensions: list[float] | tuple[float, float, float] | np.ndarray,
++) -> np.ndarray:
++    """Map SceneSmith Z-up ``[width, depth, height]`` to GLTF Y-up axes."""
++    width, depth, height = validate_dimension_vector(
++        scene_dimensions, label="requested SceneSmith dimensions"
++    )
++    return np.array([width, height, depth], dtype=float)
++
++
++def gltf_to_scene_dimensions(
++    gltf_dimensions: list[float] | tuple[float, float, float] | np.ndarray,
++) -> np.ndarray:
++    """Map GLTF Y-up ``[x, y, z]`` extents to SceneSmith Z-up dimensions."""
++    x_extent, y_extent, z_extent = validate_dimension_vector(
++        gltf_dimensions, label="measured GLTF dimensions"
++    )
++    return np.array([x_extent, z_extent, y_extent], dtype=float)
++
++
++def measure_mesh_dimensions(mesh_path: Path) -> np.ndarray:
++    """Load a mesh and return validated native-axis AABB extents.
++
++    Source meshes have arbitrary absolute scale, and legitimate paper-like assets can
++    be far thinner than one millimeter.  The dimension contract therefore rejects only
++    non-finite or numerically zero extents here; semantic aspect compatibility is
++    checked separately.
++    """
++    mesh = load_mesh_as_trimesh(mesh_path, force_merge=True)
++    extents = np.asarray(mesh.bounds[1] - mesh.bounds[0], dtype=float)
++    if extents.shape != (3,) or not np.all(np.isfinite(extents)):
++        raise ValueError(f"Mesh has invalid bounds at {mesh_path}: {extents}")
++    if np.any(extents <= DIMENSION_CONTRACT_MIN_EXTENT_METERS):
++        raise ValueError(
++            "Mesh has numerically degenerate dimensions at "
++            f"{mesh_path}: {extents}; every axis must exceed "
++            f"{DIMENSION_CONTRACT_MIN_EXTENT_METERS}m"
++        )
++    return extents
++
++
++def uniform_dimension_fit_plan(
++    current_dimensions: list[float] | tuple[float, float, float] | np.ndarray,
++    target_dimensions: list[float] | tuple[float, float, float] | np.ndarray,
++    *,
++    orientation_invariant: bool = False,
++    major_axis_min_occupancy: float = DIMENSION_CONTRACT_MAJOR_AXIS_MIN_OCCUPANCY,
++) -> dict[str, object]:
++    """Plan a proportion-preserving fit and reject aspect-incompatible candidates.
++
++    A single scale is the largest value that fits all requested bounds.  The two
++    largest requested axes must each remain substantially occupied.  Thickness may
++    underfill, which permits real sheets of paper, but a box/trophy cannot be shrunk
++    into a tiny speck merely to satisfy a paper-thickness bound.
++    """
++    current = validate_dimension_vector(current_dimensions, label="current dimensions")
++    target = validate_dimension_vector(target_dimensions, label="target dimensions")
++    if orientation_invariant:
++        current = np.sort(current)
++        target = np.sort(target)
++    if (
++        not np.isfinite(major_axis_min_occupancy)
++        or major_axis_min_occupancy <= 0.0
++        or major_axis_min_occupancy > 1.0
++    ):
++        raise ValueError("major_axis_min_occupancy must be in (0, 1]")
++
++    ratios = target / current
++    uniform_scale = float(np.min(ratios))
++    if (
++        not np.isfinite(uniform_scale)
++        or uniform_scale <= 0.0
++        or uniform_scale > DIMENSION_CONTRACT_MAX_UNIFORM_SCALE
++    ):
++        raise ValueError(f"Unsafe uniform dimension scale: {uniform_scale}")
++    fitted = current * uniform_scale
++    occupancy = fitted / target
++    major_axes = np.argsort(target)[-2:]
++    major_occupancies = occupancy[major_axes]
++    compatible = bool(
++        np.all(fitted <= target + DIMENSION_CONTRACT_ATOL_METERS)
++        and np.all(major_occupancies >= major_axis_min_occupancy)
++    )
++    return {
++        "current_dimensions": current,
++        "target_dimensions": target,
++        "uniform_scale": uniform_scale,
++        "expected_dimensions": fitted,
++        "occupancy": occupancy,
++        "major_axes": major_axes,
++        "major_axis_occupancies": major_occupancies,
++        "major_axis_min_occupancy": float(major_axis_min_occupancy),
++        "compatible": compatible,
++    }
++
++
++def mesh_dimension_candidate_compatibility(
++    mesh_path: Path,
++    requested_scene_dimensions: list[float],
++) -> tuple[bool, dict[str, object]]:
++    """Prefilter an arbitrarily oriented candidate before semantic validation."""
++    current = measure_mesh_dimensions(mesh_path)
++    target = scene_to_gltf_dimensions(requested_scene_dimensions)
++    plan = uniform_dimension_fit_plan(
++        current, target, orientation_invariant=True
++    )
++    return bool(plan["compatible"]), plan
++
++
++def scale_mesh_uniformly_to_scene_dimension_contract(
++    mesh_path: Path,
++    requested_scene_dimensions: list[float],
++    output_path: Path | None = None,
++) -> tuple[Path, float, dict[str, object]]:
++    """Uniformly fit a canonical Y-up mesh to an explicit SceneSmith request.
++
++    The exported file is reloaded and must exactly match the planned uniform result,
++    remain inside every requested bound, and satisfy the major-axis occupancy policy.
++    No median/average scale is permitted.
++    """
++    current = measure_mesh_dimensions(mesh_path)
++    target = scene_to_gltf_dimensions(requested_scene_dimensions)
++    plan = uniform_dimension_fit_plan(current, target)
++    if not plan["compatible"]:
++        raise ValueError(
++            "Mesh aspect ratio is incompatible with requested dimensions: "
++            f"current_gltf={current.tolist()}, target_gltf={target.tolist()}, "
++            "major_axis_occupancies="
++            f"{np.asarray(plan['major_axis_occupancies']).tolist()}, required>="
++            f"{plan['major_axis_min_occupancy']}"
++        )
++
++    mesh = load_mesh_as_trimesh(mesh_path, force_merge=True)
++    uniform_scale = float(plan["uniform_scale"])
++    mesh.apply_scale(uniform_scale)
++    final_output_path = output_path if output_path is not None else mesh_path
++    final_output_path.parent.mkdir(parents=True, exist_ok=True)
++    mesh.export(final_output_path)
++
++    reloaded = measure_mesh_dimensions(final_output_path)
++    expected = np.asarray(plan["expected_dimensions"], dtype=float)
++    if not np.allclose(
++        reloaded,
++        expected,
++        rtol=DIMENSION_CONTRACT_RTOL,
++        atol=DIMENSION_CONTRACT_ATOL_METERS,
++    ):
++        raise ValueError(
++            "Reloaded mesh violates exact dimension postcondition: "
++            f"expected_gltf={expected.tolist()}, measured_gltf={reloaded.tolist()}"
++        )
++    if np.any(reloaded > target + DIMENSION_CONTRACT_ATOL_METERS):
++        raise ValueError(
++            "Reloaded mesh exceeds requested bounds: "
++            f"target_gltf={target.tolist()}, measured_gltf={reloaded.tolist()}"
++        )
++
++    receipt = {
++        "schema_version": DIMENSION_CONTRACT_SCHEMA_VERSION,
++        "policy": "proportion_preserving_uniform_fit",
++        "requested_scene_dimensions_m": validate_dimension_vector(
++            requested_scene_dimensions, label="requested SceneSmith dimensions"
++        ).tolist(),
++        "requested_gltf_dimensions_m": target.tolist(),
++        "source_gltf_dimensions_m": current.tolist(),
++        "planned_final_gltf_dimensions_m": expected.tolist(),
++        "measured_final_gltf_dimensions_m": reloaded.tolist(),
++        "measured_final_scene_dimensions_m": gltf_to_scene_dimensions(reloaded).tolist(),
++        "uniform_scale": uniform_scale,
++        "major_axis_occupancies": np.asarray(
++            plan["major_axis_occupancies"], dtype=float
++        ).tolist(),
++        "major_axis_min_occupancy": float(plan["major_axis_min_occupancy"]),
++        "rtol": DIMENSION_CONTRACT_RTOL,
++        "atol_m": DIMENSION_CONTRACT_ATOL_METERS,
++        "status": "pass",
++    }
++    return final_output_path, uniform_scale, receipt
++
++
+ def convert_glb_to_gltf(
+     input_path: Path, output_path: Path, export_yup: bool = False
+ ) -> Path:
+diff --git a/tests/unit/test_artiverse_retrieval_integration.py b/tests/unit/test_artiverse_retrieval_integration.py
+index 2a3d0e5..47324f8 100644
+--- a/tests/unit/test_artiverse_retrieval_integration.py
++++ b/tests/unit/test_artiverse_retrieval_integration.py
+@@ -242,7 +242,9 @@ def test_asset_manager_records_visual_normalization_in_artiverse_metadata(
+ 
+     class CombinedMesh:
+         def export(self, path):
+-            Path(path).write_bytes(b"combined")
++            asset_manager_module.trimesh.creation.box(
++                extents=[1.0, 0.5, 1.5]
++            ).export(path)
+ 
+     monkeypatch.setattr(
+         asset_manager_module, "normalize_copied_artiverse_visuals", normalize
+diff --git a/tests/unit/test_asset_manager.py b/tests/unit/test_asset_manager.py
+index 601dbfc..96f6609 100644
+--- a/tests/unit/test_asset_manager.py
++++ b/tests/unit/test_asset_manager.py
+@@ -768,7 +768,7 @@ class TestAssetManager(unittest.TestCase):
+         original_convert = self.asset_manager._convert_mesh_to_simulation_asset
+ 
+         def mock_convert_with_failure(
+-            geometry_path, config, object_type, desired_dimensions
++            geometry_path, config, object_type, desired_dimensions, **kwargs
+         ):
+             if "nightstand" in str(geometry_path):
+                 raise RuntimeError(
+@@ -776,7 +776,11 @@ class TestAssetManager(unittest.TestCase):
+                 )
+             # For successful assets, use the original mock behavior from setUp.
+             return original_convert(
+-                geometry_path, config, object_type, desired_dimensions
++                geometry_path,
++                config,
++                object_type,
++                desired_dimensions,
++                **kwargs,
+             )
+ 
+         with patch.object(
+@@ -859,7 +863,7 @@ class TestAssetManager(unittest.TestCase):
+         original_convert = self.asset_manager._convert_mesh_to_simulation_asset
+ 
+         def mock_convert_with_failures(
+-            geometry_path, config, object_type, desired_dimensions
++            geometry_path, config, object_type, desired_dimensions, **kwargs
+         ):
+             path_str = str(geometry_path)
+             if "wardrobe" in path_str:
+@@ -870,7 +874,11 @@ class TestAssetManager(unittest.TestCase):
+                 raise RuntimeError("CoACD decomposition timeout")
+             # Table succeeds.
+             return original_convert(
+-                geometry_path, config, object_type, desired_dimensions
++                geometry_path,
++                config,
++                object_type,
++                desired_dimensions,
++                **kwargs,
+             )
+ 
+         with patch.object(
+@@ -981,14 +989,19 @@ class TestAssetManagerDimensionControl(unittest.TestCase):
+         self.assertIn("Mismatch between desired_dimensions", str(context.exception))
+ 
+     @patch("scenesmith.agent_utils.asset_manager.generate_drake_sdf")
++    @patch("scenesmith.agent_utils.asset_manager._verify_rigid_sdf_dimension_receipt")
+     @patch("scenesmith.agent_utils.asset_manager.canonicalize_mesh")
+     @patch("scenesmith.agent_utils.asset_manager.analyze_mesh_orientation_and_material")
+-    @patch("scenesmith.agent_utils.asset_manager.scale_mesh_uniformly_to_dimensions")
++    @patch(
++        "scenesmith.agent_utils.asset_manager."
++        "scale_mesh_uniformly_to_scene_dimension_contract"
++    )
+     def test_mesh_scaling_when_dimensions_provided(
+         self,
+         mock_scale_mesh,
+         mock_analyze,
+         mock_canon,
++        mock_verify_receipt,
+         mock_sdf,
+     ):
+         """Test that mesh scaling is called when dimensions are provided."""
+@@ -1049,12 +1062,20 @@ class TestAssetManagerDimensionControl(unittest.TestCase):
+ 
+         # Mock scale_mesh_uniformly_to_dimensions to create scaled file.
+         def mock_scale_side_effect(
+-            mesh_path, desired_dimensions, output_path, **kwargs
++            mesh_path, requested_scene_dimensions, output_path, **kwargs
+         ):
+             test_mesh.export(output_path)
+-            return (output_path, 1.5)
++            return (
++                output_path,
++                1.5,
++                {
++                    "measured_final_gltf_dimensions_m": [1.0, 1.0, 1.0],
++                    "status": "pass",
++                },
++            )
+ 
+         mock_scale_mesh.side_effect = mock_scale_side_effect
++        mock_verify_receipt.side_effect = lambda _sdf, _gltf, receipt: receipt
+ 
+         # Mock blender_server.convert_glb_to_gltf to create GLTF file.
+         def mock_convert_side_effect(input_path, output_path, export_yup=False):
+@@ -1090,10 +1111,12 @@ class TestAssetManagerDimensionControl(unittest.TestCase):
+             # Generate assets.
+             asset_manager.generate_assets(request)
+ 
+-        # Verify scale_mesh_uniformly_to_dimensions was called.
++        # Verify the fail-closed dimension-contract scaler was called.
+         mock_scale_mesh.assert_called_once()
+         call_args = mock_scale_mesh.call_args
+-        self.assertEqual(call_args[1]["desired_dimensions"], [1.8, 0.9, 0.75])
++        self.assertEqual(
++            call_args[1]["requested_scene_dimensions"], [1.8, 0.9, 0.75]
++        )
+ 
+ 
+ if __name__ == "__main__":
+diff --git a/tests/unit/test_objathor_manipuland_routing.py b/tests/unit/test_objathor_manipuland_routing.py
+index 316057e..77a6b11 100644
+--- a/tests/unit/test_objathor_manipuland_routing.py
++++ b/tests/unit/test_objathor_manipuland_routing.py
+@@ -4,6 +4,7 @@ from pathlib import Path
+ from unittest.mock import MagicMock, call, patch
+ 
+ import pytest
++import trimesh
+ 
+ from omegaconf import OmegaConf
+ 
+@@ -226,7 +227,9 @@ def test_objathor_school_supply_uses_retrieval_not_primitive(tmp_path: Path) ->
+         {"asset_manager": {"general_asset_source": "objaverse"}}
+     )
+     retrieved = MagicMock(name="retrieved")
+-    acquired = MagicMock(name="acquired")
++    candidate_path = tmp_path / "candidate.glb"
++    trimesh.creation.box(extents=[0.14, 0.012, 0.012]).export(candidate_path)
++    acquired = MagicMock(name="acquired", geometry_path=candidate_path)
+     router._fetch_objaverse_candidates = MagicMock(return_value=[retrieved])
+     router._acquire_generated_candidate = MagicMock(return_value=acquired)
+     router._create_primitive_manipuland_fallback_geometry = MagicMock()
+@@ -249,7 +252,9 @@ def test_objathor_validation_exhaustion_does_not_use_hssd_primitive(
+         }
+     )
+     retrieved = MagicMock(name="retrieved")
+-    acquired = MagicMock(name="acquired", geometry_path=tmp_path / "candidate.glb")
++    candidate_path = tmp_path / "candidate.glb"
++    trimesh.creation.box(extents=[0.14, 0.012, 0.012]).export(candidate_path)
++    acquired = MagicMock(name="acquired", geometry_path=candidate_path)
+     router._fetch_objaverse_candidates = MagicMock(return_value=[retrieved])
+     router._acquire_generated_candidate = MagicMock(return_value=acquired)
+     router.validate_asset = MagicMock(
+diff --git a/tests/unit/test_dimension_contract.py b/tests/unit/test_dimension_contract.py
+new file mode 100644
+index 0000000..5bb63bb
+--- /dev/null
++++ b/tests/unit/test_dimension_contract.py
+@@ -0,0 +1,383 @@
++import json
++from pathlib import Path
++from types import SimpleNamespace
++
++import numpy as np
++import pytest
++import trimesh
++
++from scenesmith.agent_utils.asset_manager import (
++    _verify_rigid_sdf_dimension_receipt,
++)
++from scenesmith.agent_utils.asset_router.dataclasses import (
++    AssetItem,
++    GeneratedGeometry,
++    ValidationResult,
++)
++from scenesmith.agent_utils.asset_router.router import AssetRouter
++from scenesmith.agent_utils.mesh_utils import (
++    DIMENSION_CONTRACT_ATOL_METERS,
++    gltf_to_scene_dimensions,
++    mesh_dimension_candidate_compatibility,
++    scale_mesh_uniformly_to_scene_dimension_contract,
++    scene_to_gltf_dimensions,
++    uniform_dimension_fit_plan,
++    validate_dimension_vector,
++)
++from scenesmith.agent_utils.room import AgentType, ObjectType
++
++
++LIVE_SHEET_NATIVE = [0.10389152, 0.00073083, 0.05557691]
++LIVE_FOLDER_NATIVE = [0.24320523, 0.06487418, 0.16829520]
++LIVE_PACKET_NATIVE = [0.16053873, 0.22639443, 0.10109075]
++
++
++def _box(path: Path, extents: list[float]) -> Path:
++    trimesh.creation.box(extents=extents).export(path)
++    return path
++
++
++def _item(dimensions: list[float] | None = None) -> AssetItem:
++    return AssetItem(
++        description="thin graded quiz sheet",
++        short_name="quiz_sheet",
++        dimensions=dimensions or [0.24, 0.21, 0.005],
++        object_type=ObjectType.FURNITURE,
++        strategies=["generated"],
++    )
++
++
++def test_scene_gltf_axis_order_is_explicit_and_round_trips() -> None:
++    requested = [0.24, 0.21, 0.005]
++    np.testing.assert_allclose(scene_to_gltf_dimensions(requested), [0.24, 0.005, 0.21])
++    np.testing.assert_allclose(
++        gltf_to_scene_dimensions(scene_to_gltf_dimensions(requested)), requested
++    )
++
++
++@pytest.mark.parametrize(
++    "invalid",
++    ([1.0, 2.0], [1.0, 0.0, 2.0], [1.0, np.nan, 2.0], [1.0, np.inf, 2.0]),
++)
++def test_dimension_vectors_reject_wrong_shape_zero_and_nonfinite(invalid) -> None:
++    with pytest.raises(ValueError):
++        validate_dimension_vector(invalid, label="test dimensions")
++
++
++def test_orientation_invariant_prefilter_accepts_submillimeter_real_sheet(
++    tmp_path: Path,
++) -> None:
++    mesh = _box(tmp_path / "real_sheet.glb", LIVE_SHEET_NATIVE)
++    compatible, plan = mesh_dimension_candidate_compatibility(
++        mesh, [0.24, 0.21, 0.005]
++    )
++    assert compatible
++    assert min(plan["major_axis_occupancies"]) >= 0.5
++
++
++@pytest.mark.parametrize("extents", (LIVE_FOLDER_NATIVE, LIVE_PACKET_NATIVE))
++def test_live_wrong_aspect_candidates_are_rejected_before_vlm(
++    tmp_path: Path, extents: list[float]
++) -> None:
++    mesh = _box(tmp_path / f"bad_{len(list(tmp_path.iterdir()))}.glb", extents)
++    compatible, plan = mesh_dimension_candidate_compatibility(
++        mesh, [0.24, 0.17, 0.004] if extents == LIVE_FOLDER_NATIVE else [0.21, 0.15, 0.018]
++    )
++    assert not compatible
++    assert max(plan["major_axis_occupancies"]) < 0.5
++
++
++def test_uniform_scaler_preserves_proportions_and_reloads_exactly(
++    tmp_path: Path,
++) -> None:
++    source = _box(tmp_path / "isotropic.glb", [2.0, 1.0, 3.0])
++    output = tmp_path / "scaled.glb"
++    path, scale, receipt = scale_mesh_uniformly_to_scene_dimension_contract(
++        source,
++        requested_scene_dimensions=[4.0, 6.0, 2.0],
++        output_path=output,
++    )
++    assert path == output
++    assert scale == pytest.approx(2.0)
++    measured = trimesh.load(output, force="mesh").extents
++    np.testing.assert_allclose(measured, [4.0, 2.0, 6.0], rtol=1e-5, atol=1e-6)
++    np.testing.assert_allclose(
++        np.asarray(receipt["measured_final_scene_dimensions_m"]), [4.0, 6.0, 2.0]
++    )
++    assert receipt["status"] == "pass"
++
++
++def test_postcanonical_impossible_aspect_fails_without_output(tmp_path: Path) -> None:
++    source = _box(tmp_path / "folder.glb", LIVE_FOLDER_NATIVE)
++    output = tmp_path / "must_not_publish.glb"
++    with pytest.raises(ValueError, match="aspect ratio is incompatible"):
++        scale_mesh_uniformly_to_scene_dimension_contract(
++            source,
++            requested_scene_dimensions=[0.24, 0.17, 0.004],
++            output_path=output,
++        )
++    assert not output.exists()
++
++
++def test_sdf_receipt_binds_visual_dimensions_and_hashes(tmp_path: Path) -> None:
++    source = _box(tmp_path / "source.glb", [1.0, 1.0, 1.0])
++    visual, _, receipt = scale_mesh_uniformly_to_scene_dimension_contract(
++        source,
++        requested_scene_dimensions=[0.5, 0.5, 0.5],
++        output_path=tmp_path / "asset.gltf",
++    )
++    sdf = tmp_path / "asset.sdf"
++    sdf.write_text(
++        "<?xml version='1.0'?><sdf version='1.7'><model name='a'><link name='l'>"
++        "<visual name='v'><geometry><mesh><uri>asset.gltf</uri></mesh></geometry>"
++        "</visual></link></model></sdf>",
++        encoding="utf-8",
++    )
++    finalized = _verify_rigid_sdf_dimension_receipt(sdf, visual, receipt)
++    assert finalized["receipt_sha256"]
++    assert finalized["visual_mesh_sha256"]
++    assert finalized["sdf_sha256"]
++    assert finalized["asset_directory_sha256"]
++
++    payload = json.loads(json.dumps(finalized))
++    payload["measured_final_gltf_dimensions_m"][0] += 0.1
++    with pytest.raises(ValueError, match="violates the dimension receipt"):
++        _verify_rigid_sdf_dimension_receipt(sdf, visual, payload)
++
++
++@pytest.mark.parametrize("asset_source", ("generated", "hssd", "objaverse"))
++def test_router_retries_incompatible_candidate_before_vlm(
++    tmp_path: Path, asset_source: str
++) -> None:
++    bad = _box(tmp_path / f"{asset_source}_bad.glb", LIVE_FOLDER_NATIVE)
++    good = _box(tmp_path / f"{asset_source}_good.glb", LIVE_SHEET_NATIVE)
++    item = _item()
++    router = object.__new__(AssetRouter)
++    router.cfg = SimpleNamespace(
++        asset_manager=SimpleNamespace(
++            general_asset_source=asset_source,
++            hssd=SimpleNamespace(use_lenient_validation=True),
++            objaverse=SimpleNamespace(use_lenient_validation=True),
++        )
++    )
++    router._should_use_primitive_manipuland_fallback = lambda _item: False
++    router._should_use_primitive_ceiling_fallback = lambda _item: False
++    if asset_source == "hssd":
++        router._fetch_hssd_candidates = lambda **_kwargs: [object(), object()]
++    if asset_source == "objaverse":
++        router._fetch_objaverse_candidates = lambda **_kwargs: [object(), object()]
++
++    attempts: list[int] = []
++
++    def acquire(**kwargs):
++        attempts.append(kwargs["attempt"])
++        path = bad if kwargs["attempt"] == 0 else good
++        return GeneratedGeometry(path, item, asset_source)
++
++    router._acquire_generated_candidate = acquire
++    validated: list[Path] = []
++
++    def validate_asset(**kwargs):
++        validated.append(kwargs["mesh_path"])
++        return ValidationResult(True, "compatible")
++
++    router.validate_asset = validate_asset
++    result = router._try_generated_strategy(
++        item=item,
++        max_retries=2,
++        geometry_client=None,
++        hssd_client=None,
++        objaverse_client=None,
++        image_generator=None,
++        images_dir=tmp_path,
++        geometry_dir=tmp_path,
++        debug_dir=tmp_path,
++    )
++    assert result is not None and result.geometry_path == good
++    assert attempts == [0, 1]
++    assert validated == [good]
++
++
++def test_router_max_retries_zero_still_fails_closed(tmp_path: Path) -> None:
++    bad = _box(tmp_path / "bad.glb", LIVE_PACKET_NATIVE)
++    item = _item([0.21, 0.15, 0.018])
++    router = object.__new__(AssetRouter)
++    router.cfg = SimpleNamespace(
++        asset_manager=SimpleNamespace(general_asset_source="generated")
++    )
++    router._acquire_generated_candidate = lambda **_kwargs: GeneratedGeometry(
++        bad, item, "generated"
++    )
++    router.validate_asset = lambda **_kwargs: pytest.fail("VLM must not run")
++    result = router._try_generated_strategy(
++        item=item,
++        max_retries=0,
++        geometry_client=None,
++        hssd_client=None,
++        objaverse_client=None,
++        image_generator=None,
++        images_dir=tmp_path,
++        geometry_dir=tmp_path,
++        debug_dir=tmp_path,
++    )
++    assert result is None
++
++
++def test_articulated_router_skips_incompatible_candidate_before_vlm(
++    tmp_path: Path,
++) -> None:
++    item = _item([1.0, 0.5, 1.5])
++    bad = SimpleNamespace(
++        object_id="bad",
++        source="artiverse",
++        bounding_box_min=[0.0, 0.0, 0.0],
++        bounding_box_max=[0.05, 0.05, 0.05],
++        clip_score=1.0,
++        bbox_score=0.0,
++        sdf_path=str(tmp_path / "bad.sdf"),
++    )
++    good = SimpleNamespace(
++        object_id="good",
++        source="artiverse",
++        bounding_box_min=[0.0, 0.0, 0.0],
++        bounding_box_max=[0.8, 0.4, 1.2],
++        clip_score=0.9,
++        bbox_score=0.1,
++        sdf_path=str(tmp_path / "good.sdf"),
++    )
++    client = SimpleNamespace(
++        retrieve_objects=lambda _requests: [(0, SimpleNamespace(results=[bad, good]))]
++    )
++    router = object.__new__(AssetRouter)
++    router.agent_type = AgentType.FURNITURE
++    validated: list[str] = []
++
++    def validate_articulated(**kwargs):
++        validated.append(kwargs["result"].object_id)
++        return ValidationResult(True, "compatible")
++
++    router._validate_articulated_result = validate_articulated
++    result = router._try_articulated_strategy(
++        item=item,
++        max_retries=2,
++        debug_dir=tmp_path,
++        articulated_client=client,
++    )
++    assert result is not None
++    assert result.object_id == "good"
++    assert validated == ["good"]
++
++
++def test_articulated_max_retries_zero_is_bounded_and_fails_closed(
++    tmp_path: Path,
++) -> None:
++    item = _item([1.0, 0.5, 1.5])
++    bad = SimpleNamespace(
++        object_id="bad",
++        source="artiverse",
++        bounding_box_min=[0.0, 0.0, 0.0],
++        bounding_box_max=[0.05, 0.05, 0.05],
++        clip_score=1.0,
++        bbox_score=0.0,
++        sdf_path=str(tmp_path / "bad.sdf"),
++    )
++    would_pass_but_is_over_budget = SimpleNamespace(
++        object_id="over_budget",
++        source="artiverse",
++        bounding_box_min=[0.0, 0.0, 0.0],
++        bounding_box_max=[0.8, 0.4, 1.2],
++        clip_score=0.9,
++        bbox_score=0.1,
++        sdf_path=str(tmp_path / "good.sdf"),
++    )
++    client = SimpleNamespace(
++        retrieve_objects=lambda _requests: [
++            (
++                0,
++                SimpleNamespace(
++                    results=[bad, would_pass_but_is_over_budget]
++                ),
++            )
++        ]
++    )
++    router = object.__new__(AssetRouter)
++    router.agent_type = AgentType.FURNITURE
++    router._validate_articulated_result = lambda **_kwargs: pytest.fail(
++        "max_retries=0 must not call VLM"
++    )
++    assert (
++        router._try_articulated_strategy(
++            item=item,
++            max_retries=0,
++            debug_dir=tmp_path,
++            articulated_client=client,
++        )
++        is None
++    )
++
++
++def test_thin_covering_strategy_advances_after_dimension_rejection(
++    tmp_path: Path,
++) -> None:
++    item = _item([0.24, 0.21, 0.005])
++    first = SimpleNamespace(material_id="bad", material_path=str(tmp_path / "bad"), similarity_score=1.0)
++    second = SimpleNamespace(material_id="good", material_path=str(tmp_path / "good"), similarity_score=0.9)
++    client = SimpleNamespace(
++        retrieve_materials=lambda _requests: [
++            (0, SimpleNamespace(results=[first, second]))
++        ]
++    )
++    router = object.__new__(AssetRouter)
++    router.agent_type = AgentType.MANIPULAND
++    router.cfg = SimpleNamespace(
++        asset_manager=SimpleNamespace(
++            router=SimpleNamespace(
++                strategies=SimpleNamespace(
++                    thin_covering=SimpleNamespace(
++                        thickness_m=0.005,
++                        texture_scale=1.0,
++                        generator=SimpleNamespace(enabled=False),
++                    )
++                )
++            )
++        )
++    )
++    good_geometry = GeneratedGeometry(
++        _box(tmp_path / "good.glb", LIVE_SHEET_NATIVE), item, "thin_covering"
++    )
++    calls: list[str] = []
++
++    def generate(**kwargs):
++        calls.append(kwargs["material_path"].name)
++        return None if len(calls) == 1 else good_geometry
++
++    router._generate_thin_covering_geometry = generate
++    router._validate_thin_covering = lambda **_kwargs: ValidationResult(True, "ok")
++    result = router._try_thin_covering_strategy(
++        item=item,
++        max_retries=2,
++        materials_client=client,
++        image_generator=None,
++        geometry_dir=tmp_path,
++        debug_dir=tmp_path,
++    )
++    assert result == good_geometry
++    assert calls == ["bad", "good"]
++
++
++def test_uniform_fit_plan_rejects_old_4mm_to_64mm_failure() -> None:
++    target = scene_to_gltf_dimensions([0.24, 0.17, 0.004])
++    plan = uniform_dimension_fit_plan(LIVE_FOLDER_NATIVE, target)
++    assert not plan["compatible"]
++    old_result = np.asarray(LIVE_FOLDER_NATIVE) * 0.987
++    old_scene = gltf_to_scene_dimensions(old_result)
++    assert old_scene[2] > 0.064 - DIMENSION_CONTRACT_ATOL_METERS
++
++
++def test_uniform_fit_plan_rejects_old_18mm_to_150mm_failure() -> None:
++    target = scene_to_gltf_dimensions([0.21, 0.15, 0.018])
++    plan = uniform_dimension_fit_plan(LIVE_PACKET_NATIVE, target)
++    assert not plan["compatible"]
++    old_result = np.asarray(LIVE_PACKET_NATIVE) * 0.663
++    old_scene = gltf_to_scene_dimensions(old_result)
++    assert old_scene[2] > 0.15 - DIMENSION_CONTRACT_ATOL_METERS
