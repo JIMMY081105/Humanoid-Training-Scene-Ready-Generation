@@ -1,0 +1,3539 @@
+diff --git a/scenesmith/manipuland_agents/stateful_manipuland_agent.py b/scenesmith/manipuland_agents/stateful_manipuland_agent.py
+index 659bf28..90c60b5 100644
+--- a/scenesmith/manipuland_agents/stateful_manipuland_agent.py
++++ b/scenesmith/manipuland_agents/stateful_manipuland_agent.py
+@@ -5,15 +5,27 @@ This module implements manipuland placement using persistent agents that work
+ per-furniture, with fresh contexts for each furniture surface to bound token usage.
+ """
+ 
++import copy
++import hashlib
++import json
+ import logging
+ import math
+ import os
+-
+-from pathlib import Path
++import re
++import shlex
++import shutil
++import time
++import uuid
++import xml.etree.ElementTree as ET
++
++from contextlib import contextmanager
++from pathlib import Path, PurePosixPath
+ from typing import Any
++from urllib.parse import urlsplit
+ 
+ from agents import Agent, FunctionTool, Runner, RunResult, custom_span
+-from omegaconf import DictConfig
++from omegaconf import DictConfig, OmegaConf
++import yaml
+ 
+ from scenesmith.agent_utils.base_stateful_agent import (
+     BaseStatefulAgent,
+@@ -49,6 +61,859 @@ from scenesmith.utils.logging import BaseLogger
+ 
+ console_logger = logging.getLogger(__name__)
+ 
++_FURNITURE_CHECKPOINT_SCHEMA = 2
++_FURNITURE_PLAN_SCHEMA = 1
++_LEGACY_RECOVERY_SCHEMA = 3
++_SAFE_CHECKPOINT_ID = re.compile(r"^[A-Za-z0-9_.-]+$")
++_ACCEPTED_IMAGE_NAMES = frozenset(
++    {"0_side.png", "0_top.png", "1_side.png", "2_side.png", "3_side.png"}
++)
++_SCORE_CATEGORIES = (
++    "Realism",
++    "Functionality",
++    "Layout",
++    "Holistic Completeness",
++    "Prompt Following",
++)
++_TRANSFORM_TOLERANCE = 1e-9
++
++
++def _fsync_directory(directory: Path) -> None:
++    if os.name == "nt":
++        return
++    descriptor = os.open(directory, os.O_RDONLY)
++    try:
++        os.fsync(descriptor)
++    finally:
++        os.close(descriptor)
++
++
++def _fsync_file(path: Path) -> None:
++    with path.open("rb") as handle:
++        os.fsync(handle.fileno())
++
++
++@contextmanager
++def _exclusive_checkpoint_lock(scene_states_dir: Path):
++    scene_states_dir.mkdir(parents=True, exist_ok=True)
++    lock_path = scene_states_dir / ".manipuland_checkpoint.lock"
++    if lock_path.is_symlink():
++        raise RuntimeError(f"Manipuland checkpoint lock is a symlink: {lock_path}")
++    with lock_path.open("a+b") as lock_file:
++        if os.name == "nt":
++            import msvcrt
++
++            lock_file.seek(0, os.SEEK_END)
++            if lock_file.tell() == 0:
++                lock_file.write(b"\0")
++                lock_file.flush()
++                os.fsync(lock_file.fileno())
++            lock_file.seek(0)
++            while True:
++                try:
++                    msvcrt.locking(lock_file.fileno(), msvcrt.LK_NBLCK, 1)
++                    break
++                except OSError:
++                    time.sleep(0.01)
++        else:
++            import fcntl
++
++            fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
++        try:
++            yield
++        finally:
++            if os.name == "nt":
++                lock_file.seek(0)
++                msvcrt.locking(lock_file.fileno(), msvcrt.LK_UNLCK, 1)
++            else:
++                fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
++
++
++def _write_json_fsynced(path: Path, document: dict[str, Any]) -> None:
++    with path.open("x", encoding="utf-8", newline="\n") as handle:
++        json.dump(document, handle, indent=2, sort_keys=True)
++        handle.write("\n")
++        handle.flush()
++        os.fsync(handle.fileno())
++
++
++def _atomic_json_fsynced(path: Path, document: dict[str, Any]) -> None:
++    temporary = path.with_name(f".{path.name}.tmp.{os.getpid()}.{uuid.uuid4().hex}")
++    try:
++        _write_json_fsynced(temporary, document)
++        os.replace(temporary, path)
++        _fsync_directory(path.parent)
++    except Exception:
++        if temporary.exists():
++            temporary.unlink()
++        raise
++
++
++def _canonical_json_bytes(value: Any) -> bytes:
++    return json.dumps(
++        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
++    ).encode("utf-8")
++
++
++def _sha256_bytes(value: bytes) -> str:
++    return hashlib.sha256(value).hexdigest()
++
++
++def _sha256_file(path: Path) -> str:
++    digest = hashlib.sha256()
++    with path.open("rb") as handle:
++        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
++            digest.update(chunk)
++    return digest.hexdigest()
++
++
++def _file_record(path: Path) -> dict[str, Any]:
++    if (
++        path.is_symlink()
++        or not path.is_file()
++        or path.stat().st_size <= 0
++        or path.stat().st_nlink != 1
++    ):
++        raise RuntimeError(f"Checkpoint evidence is missing or not regular: {path}")
++    return {
++        "name": path.name,
++        "size_bytes": path.stat().st_size,
++        "sha256": _sha256_file(path),
++    }
++
++
++def _valid_file_record(record: Any, *, include_path: bool = False) -> bool:
++    expected = {"name", "size_bytes", "sha256"}
++    if include_path:
++        expected.add("path")
++    if not isinstance(record, dict) or set(record) != expected:
++        return False
++    if (
++        not isinstance(record["name"], str)
++        or not record["name"]
++        or PurePosixPath(record["name"]).name != record["name"]
++        or isinstance(record["size_bytes"], bool)
++        or not isinstance(record["size_bytes"], int)
++        or record["size_bytes"] <= 0
++        or not isinstance(record["sha256"], str)
++        or re.fullmatch(r"[0-9a-f]{64}", record["sha256"]) is None
++    ):
++        return False
++    if include_path:
++        raw_path = record["path"]
++        relative = PurePosixPath(raw_path) if isinstance(raw_path, str) else None
++        if (
++            relative is None
++            or relative.is_absolute()
++            or not relative.parts
++            or any(part in {"", ".", ".."} for part in relative.parts)
++            or relative.as_posix() != raw_path
++            or relative.name != record["name"]
++        ):
++            return False
++    return True
++
++
++def _canonical_relative_path(raw: Any, *, label: str) -> PurePosixPath:
++    if (
++        not isinstance(raw, str)
++        or not raw
++        or raw != raw.strip()
++        or "\\" in raw
++        or "%" in raw
++    ):
++        raise RuntimeError(f"{label} is not canonical room-relative")
++    relative = PurePosixPath(raw)
++    if (
++        relative.is_absolute()
++        or not relative.parts
++        or any(part in {"", ".", ".."} for part in relative.parts)
++        or relative.as_posix() != raw
++    ):
++        raise RuntimeError(f"{label} is not canonical room-relative")
++    return relative
++
++
++def _validate_legacy_recovery_manifest_document(
++    manifest: Any, *, expected_room_id: str
++) -> dict[str, Any]:
++    expected_keys = {
++        "schema_version",
++        "status",
++        "purpose",
++        "room_id",
++        "furniture_index",
++        "furniture_id",
++        "input_scene_content_hash",
++        "output_scene_content_hash",
++        "input_scene_state_path",
++        "input_scene_state",
++        "render_directory",
++        "scene_state",
++        "drake_directive",
++        "accepted_evidence",
++        "added_manipuland_ids",
++        "added_asset_files",
++        "referenced_asset_object_ids",
++        "referenced_asset_files",
++    }
++    if (
++        not isinstance(manifest, dict)
++        or set(manifest) != expected_keys
++        or manifest["schema_version"] != _LEGACY_RECOVERY_SCHEMA
++        or manifest["status"] != "authorized"
++        or manifest["purpose"] != "one_time_legacy_manipuland_recovery"
++        or manifest["room_id"] != expected_room_id
++        or isinstance(manifest["furniture_index"], bool)
++        or not isinstance(manifest["furniture_index"], int)
++        or manifest["furniture_index"] < 0
++        or not isinstance(manifest["furniture_id"], str)
++        or not _SAFE_CHECKPOINT_ID.fullmatch(manifest["furniture_id"])
++        or not isinstance(manifest["input_scene_content_hash"], str)
++        or re.fullmatch(r"[0-9a-f]{64}", manifest["input_scene_content_hash"])
++        is None
++        or not isinstance(manifest["output_scene_content_hash"], str)
++        or re.fullmatch(r"[0-9a-f]{64}", manifest["output_scene_content_hash"])
++        is None
++        or not _valid_file_record(manifest["input_scene_state"])
++        or not _valid_file_record(manifest["scene_state"])
++        or not _valid_file_record(manifest["drake_directive"])
++        or not isinstance(manifest["accepted_evidence"], dict)
++    ):
++        raise RuntimeError("Legacy recovery manifest has a non-exact schema")
++    input_relative = _canonical_relative_path(
++        manifest["input_scene_state_path"], label="legacy input scene-state path"
++    )
++    _canonical_relative_path(
++        manifest["render_directory"], label="legacy render directory"
++    )
++    if input_relative.name != manifest["input_scene_state"]["name"]:
++        raise RuntimeError("Legacy recovery input scene-state record/path mismatch")
++    added_ids = manifest["added_manipuland_ids"]
++    referenced_ids = manifest["referenced_asset_object_ids"]
++    if (
++        not isinstance(added_ids, list)
++        or not added_ids
++        or added_ids != sorted(set(added_ids))
++        or not all(
++            isinstance(value, str) and _SAFE_CHECKPOINT_ID.fullmatch(value)
++            for value in added_ids
++        )
++        or not isinstance(referenced_ids, list)
++        or referenced_ids != sorted(set(referenced_ids))
++        or set(referenced_ids)
++        != set(added_ids) | {manifest["furniture_id"]}
++    ):
++        raise RuntimeError("Legacy recovery manifest object inventory is malformed")
++    for key in ("added_asset_files", "referenced_asset_files"):
++        records = manifest[key]
++        if (
++            not isinstance(records, list)
++            or not records
++            or not all(_valid_file_record(record, include_path=True) for record in records)
++            or [record["path"] for record in records]
++            != sorted({record["path"] for record in records})
++        ):
++            raise RuntimeError("Legacy recovery manifest asset inventory is malformed")
++    return manifest
++
++
++def _regular_file_without_symlink_components(path: Path, *, label: str) -> Path:
++    lexical = path.expanduser()
++    if not lexical.is_absolute():
++        lexical = Path.cwd() / lexical
++    current = Path(lexical.anchor)
++    for part in lexical.parts[1:]:
++        current = current / part
++        if current.is_symlink():
++            raise RuntimeError(f"{label} contains a symlink component: {current}")
++    try:
++        resolved = lexical.resolve(strict=True)
++    except OSError as exc:
++        raise RuntimeError(f"{label} is missing: {lexical}") from exc
++    if (
++        not resolved.is_file()
++        or resolved.stat().st_size <= 0
++        or resolved.stat().st_nlink != 1
++    ):
++        raise RuntimeError(f"{label} is not a nonempty regular file: {resolved}")
++    return resolved
++
++
++def _regular_directory_without_symlink_components(
++    path: Path,
++    *,
++    label: str,
++    required_root: Path | None = None,
++) -> Path:
++    lexical = path.expanduser()
++    if not lexical.is_absolute():
++        lexical = Path.cwd() / lexical
++    current = Path(lexical.anchor)
++    for part in lexical.parts[1:]:
++        current = current / part
++        if current.is_symlink():
++            raise RuntimeError(f"{label} contains a symlink component: {current}")
++    try:
++        resolved = lexical.resolve(strict=True)
++    except OSError as exc:
++        raise RuntimeError(f"{label} is missing: {lexical}") from exc
++    if not resolved.is_dir():
++        raise RuntimeError(f"{label} is not a regular directory: {resolved}")
++    if required_root is not None and not resolved.is_relative_to(
++        required_root.resolve(strict=True)
++    ):
++        raise RuntimeError(f"{label} escapes its required root: {resolved}")
++    return resolved
++
++
++def _room_asset_file_record(
++    raw_path: Any,
++    *,
++    room_root: Path,
++    label: str,
++    allow_absolute_within_room: bool = True,
++) -> tuple[Path, dict[str, Any]]:
++    if (
++        not isinstance(raw_path, str)
++        or not raw_path
++        or raw_path != raw_path.strip()
++        or "\\" in raw_path
++        or "%" in raw_path
++    ):
++        raise RuntimeError(f"{label} path is not canonical: {raw_path!r}")
++    pure = PurePosixPath(raw_path)
++    if (
++        not pure.parts
++        or any(part in {"", ".", ".."} for part in pure.parts)
++        or pure.as_posix() != raw_path
++    ):
++        raise RuntimeError(f"{label} path is not canonical: {raw_path!r}")
++
++    root = room_root.resolve(strict=True)
++    if pure.is_absolute():
++        if not allow_absolute_within_room:
++            raise RuntimeError(f"{label} path must be room-relative: {raw_path!r}")
++        lexical = Path(raw_path)
++        try:
++            relative_native = lexical.relative_to(root)
++        except ValueError as exc:
++            raise RuntimeError(f"{label} absolute path escapes the room: {raw_path}") from exc
++        relative = PurePosixPath(relative_native.as_posix())
++    else:
++        relative = pure
++
++    current = root
++    for part in relative.parts:
++        current = current / part
++        if current.is_symlink():
++            raise RuntimeError(f"{label} path contains a symlink: {current}")
++    try:
++        resolved = current.resolve(strict=True)
++    except OSError as exc:
++        raise RuntimeError(f"{label} file is missing: {current}") from exc
++    if not resolved.is_relative_to(root):
++        raise RuntimeError(f"{label} file escapes the room: {resolved}")
++    if resolved.stat().st_nlink != 1:
++        raise RuntimeError(f"{label} file is hard-linked: {resolved}")
++    record = _file_record(resolved)
++    record["path"] = relative.as_posix()
++    return resolved, record
++
++
++def _dependency_relative_path(
++    raw_uri: Any,
++    *,
++    owner_relative: PurePosixPath,
++    label: str,
++    allowed_suffixes: frozenset[str],
++) -> PurePosixPath:
++    if (
++        not isinstance(raw_uri, str)
++        or not raw_uri
++        or raw_uri != raw_uri.strip()
++        or "\\" in raw_uri
++        or "%" in raw_uri
++    ):
++        raise RuntimeError(f"{label} URI is not canonical: {raw_uri!r}")
++    parsed = urlsplit(raw_uri)
++    if parsed.scheme or parsed.netloc or parsed.query or parsed.fragment:
++        raise RuntimeError(f"{label} URI is not a local relative file: {raw_uri!r}")
++    path = parsed.path[2:] if parsed.path.startswith("./") else parsed.path
++    relative = PurePosixPath(path)
++    if (
++        relative.is_absolute()
++        or not relative.parts
++        or any(part in {"", ".", ".."} for part in relative.parts)
++        or relative.as_posix() != path
++        or relative.suffix.lower() not in allowed_suffixes
++    ):
++        raise RuntimeError(f"{label} URI is unsafe or unsupported: {raw_uri!r}")
++    return owner_relative.parent / relative
++
++
++def _referenced_room_asset_records(
++    scene_state: dict[str, Any],
++    *,
++    room_root: Path,
++    object_ids: set[str] | None = None,
++) -> list[dict[str, Any]]:
++    """Bind direct, composite-member, SDF, and glTF files for selected objects."""
++
++    objects = scene_state.get("objects")
++    if not isinstance(objects, dict):
++        raise RuntimeError("Scene asset inventory has no exact object mapping")
++    selected_ids = set(objects) if object_ids is None else set(object_ids)
++    if not selected_ids or not selected_ids.issubset(objects):
++        raise RuntimeError("Scene asset inventory object selection is invalid")
++
++    pending: list[tuple[str, str]] = []
++
++    def add_direct_path(raw: Any, *, key: str, label: str) -> None:
++        if not isinstance(raw, str):
++            raise RuntimeError(f"{label} is not a path string")
++        suffix = PurePosixPath(raw).suffix.lower()
++        allowed = (
++            frozenset({".gltf", ".obj", ".stl", ".ply"})
++            if key == "geometry_path"
++            else frozenset({".sdf"})
++        )
++        if suffix not in allowed:
++            raise RuntimeError(
++                f"{label} has an unsupported direct asset suffix: {suffix!r}"
++            )
++        pending.append((raw, label))
++
++    for object_id in sorted(selected_ids):
++        item = objects[object_id]
++        if not isinstance(item, dict):
++            raise RuntimeError(f"Scene object {object_id} is malformed")
++        for key in ("geometry_path", "sdf_path"):
++            if item.get(key) is not None:
++                add_direct_path(item[key], key=key, label=f"{object_id} {key}")
++        metadata = item.get("metadata")
++        members = metadata.get("member_assets") if isinstance(metadata, dict) else None
++        if members is not None:
++            if not isinstance(members, list) or not members:
++                raise RuntimeError(f"Scene object {object_id} member assets are malformed")
++            for index, member in enumerate(members):
++                if not isinstance(member, dict):
++                    raise RuntimeError(
++                        f"Scene object {object_id} member {index} is malformed"
++                    )
++                for key in ("geometry_path", "sdf_path"):
++                    if member.get(key) is None:
++                        raise RuntimeError(
++                            f"Scene object {object_id} member {index} lacks {key}"
++                        )
++                    add_direct_path(
++                        member[key],
++                        key=key,
++                        label=f"{object_id} member {index} {key}",
++                    )
++
++    records: dict[str, dict[str, Any]] = {}
++    resolved_paths: dict[str, Path] = {}
++
++    def add_path(raw: Any, label: str, *, allow_absolute: bool = True) -> None:
++        resolved, record = _room_asset_file_record(
++            raw,
++            room_root=room_root,
++            label=label,
++            allow_absolute_within_room=allow_absolute,
++        )
++        relative = record["path"]
++        previous = records.setdefault(relative, record)
++        if previous != record:
++            raise RuntimeError(f"Scene asset record changed during inventory: {relative}")
++        resolved_paths[relative] = resolved
++
++    for raw, label in pending:
++        add_path(raw, label)
++
++    visited_dependencies: set[str] = set()
++    dependency_graph: dict[str, set[str]] = {}
++
++    def add_dependency_edge(owner: str, dependency: PurePosixPath) -> None:
++        dependency_string = dependency.as_posix()
++        stack = [dependency_string]
++        seen: set[str] = set()
++        while stack:
++            current = stack.pop()
++            if current == owner:
++                raise RuntimeError(
++                    f"Referenced asset dependency cycle: {owner} -> "
++                    f"{dependency_string}"
++                )
++            if current in seen:
++                continue
++            seen.add(current)
++            stack.extend(dependency_graph.get(current, set()))
++        dependency_graph.setdefault(owner, set()).add(dependency_string)
++
++    while True:
++        unvisited = sorted(set(records) - visited_dependencies)
++        if not unvisited:
++            break
++        relative_string = unvisited[0]
++        visited_dependencies.add(relative_string)
++        path = resolved_paths[relative_string]
++        relative = PurePosixPath(relative_string)
++        suffix = path.suffix.lower()
++        dependencies: list[PurePosixPath] = []
++        if suffix == ".sdf":
++            try:
++                root = ET.parse(path).getroot()
++            except (OSError, ET.ParseError) as exc:
++                raise RuntimeError(f"Cannot parse referenced SDF: {path}") from exc
++            consumed_uri_ids: set[int] = set()
++            for geometry in root.iter():
++                if geometry.tag.rsplit("}", 1)[-1] != "geometry":
++                    continue
++                for mesh in geometry:
++                    if mesh.tag.rsplit("}", 1)[-1] != "mesh":
++                        continue
++                    mesh_uris = [
++                        child
++                        for child in mesh
++                        if child.tag.rsplit("}", 1)[-1] == "uri"
++                    ]
++                    if len(mesh_uris) != 1:
++                        raise RuntimeError(
++                            f"Referenced SDF mesh has a non-exact URI: {relative}"
++                        )
++                    consumed_uri_ids.add(id(mesh_uris[0]))
++                    dependencies.append(
++                        _dependency_relative_path(
++                            mesh_uris[0].text or "",
++                            owner_relative=relative,
++                            label=f"referenced SDF {relative}",
++                            allowed_suffixes=frozenset(
++                                {".gltf", ".obj", ".stl", ".ply"}
++                            ),
++                        )
++                    )
++            for include in root.iter():
++                if include.tag.rsplit("}", 1)[-1] != "include":
++                    continue
++                include_uris = [
++                    child
++                    for child in include
++                    if child.tag.rsplit("}", 1)[-1] == "uri"
++                ]
++                if len(include_uris) != 1:
++                    raise RuntimeError(
++                        f"Referenced SDF include has a non-exact URI: {relative}"
++                    )
++                consumed_uri_ids.add(id(include_uris[0]))
++                dependencies.append(
++                    _dependency_relative_path(
++                        include_uris[0].text or "",
++                        owner_relative=relative,
++                        label=f"referenced SDF include {relative}",
++                        allowed_suffixes=frozenset({".sdf"}),
++                    )
++                )
++            all_uri_elements = [
++                element
++                for element in root.iter()
++                if element.tag.rsplit("}", 1)[-1] == "uri"
++            ]
++            if any(id(element) not in consumed_uri_ids for element in all_uri_elements):
++                raise RuntimeError(
++                    f"Referenced SDF has unsupported URI elements: {relative}"
++                )
++        elif suffix == ".glb":
++            raise RuntimeError(
++                f"Referenced GLB is unsupported by the exact dependency audit: {path}"
++            )
++        elif suffix == ".gltf":
++            try:
++                document = json.loads(path.read_text(encoding="utf-8"))
++            except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
++                raise RuntimeError(f"Cannot parse referenced glTF: {path}") from exc
++            uris: list[Any] = []
++
++            def collect_uris(value: Any) -> None:
++                if isinstance(value, dict):
++                    for key, child in value.items():
++                        if key == "uri":
++                            uris.append(child)
++                        else:
++                            collect_uris(child)
++                elif isinstance(value, list):
++                    for child in value:
++                        collect_uris(child)
++
++            collect_uris(document)
++            for raw_uri in uris:
++                if isinstance(raw_uri, str) and raw_uri.startswith("data:"):
++                    continue
++                dependencies.append(
++                    _dependency_relative_path(
++                        raw_uri,
++                        owner_relative=relative,
++                        label=f"referenced glTF {relative}",
++                        allowed_suffixes=frozenset(
++                            {
++                                ".bin",
++                                ".png",
++                                ".jpg",
++                                ".jpeg",
++                                ".webp",
++                                ".ktx2",
++                            }
++                        ),
++                    )
++                )
++        elif suffix == ".obj":
++            try:
++                lines = path.read_text(encoding="utf-8").splitlines()
++            except (OSError, UnicodeDecodeError) as exc:
++                raise RuntimeError(f"Cannot parse referenced OBJ: {path}") from exc
++            for line in lines:
++                stripped = line.strip()
++                if not stripped or stripped.startswith("#"):
++                    continue
++                try:
++                    tokens = shlex.split(stripped, comments=True, posix=True)
++                except ValueError as exc:
++                    raise RuntimeError(f"Cannot parse referenced OBJ: {path}") from exc
++                if tokens and tokens[0].lower() == "mtllib":
++                    if len(tokens) != 2:
++                        raise RuntimeError(
++                            f"Referenced OBJ has ambiguous mtllib: {relative}"
++                        )
++                    dependencies.append(
++                        _dependency_relative_path(
++                            tokens[1],
++                            owner_relative=relative,
++                            label=f"referenced OBJ {relative}",
++                            allowed_suffixes=frozenset({".mtl"}),
++                        )
++                    )
++        elif suffix == ".mtl":
++            try:
++                lines = path.read_text(encoding="utf-8").splitlines()
++            except (OSError, UnicodeDecodeError) as exc:
++                raise RuntimeError(f"Cannot parse referenced MTL: {path}") from exc
++            texture_commands = {
++                "map_ka",
++                "map_kd",
++                "map_ks",
++                "map_ke",
++                "map_ns",
++                "map_d",
++                "bump",
++                "map_bump",
++                "disp",
++                "decal",
++                "norm",
++                "refl",
++            }
++            for line in lines:
++                stripped = line.strip()
++                if not stripped or stripped.startswith("#"):
++                    continue
++                try:
++                    tokens = shlex.split(stripped, comments=True, posix=True)
++                except ValueError as exc:
++                    raise RuntimeError(f"Cannot parse referenced MTL: {path}") from exc
++                if tokens and tokens[0].lower() in texture_commands:
++                    if len(tokens) < 2:
++                        raise RuntimeError(
++                            f"Referenced MTL texture record is empty: {relative}"
++                        )
++                    dependencies.append(
++                        _dependency_relative_path(
++                            tokens[-1],
++                            owner_relative=relative,
++                            label=f"referenced MTL {relative}",
++                            allowed_suffixes=frozenset(
++                                {
++                                    ".png",
++                                    ".jpg",
++                                    ".jpeg",
++                                    ".webp",
++                                    ".tga",
++                                    ".bmp",
++                                    ".exr",
++                                }
++                            ),
++                        )
++                    )
++        elif suffix not in {
++            ".bin",
++            ".png",
++            ".jpg",
++            ".jpeg",
++            ".webp",
++            ".ktx2",
++            ".tga",
++            ".bmp",
++            ".exr",
++            ".stl",
++            ".ply",
++        }:
++            raise RuntimeError(
++                f"Referenced asset has an unsupported dependency audit: {relative}"
++            )
++        for dependency in dependencies:
++            add_dependency_edge(relative_string, dependency)
++            add_path(
++                dependency.as_posix(),
++                f"transitive dependency of {relative}",
++                allow_absolute=False,
++            )
++
++    return [records[path] for path in sorted(records)]
++
++
++def _verify_referenced_asset_records(
++    expected: Any,
++    *,
++    scene_state: dict[str, Any],
++    room_root: Path,
++    object_ids: set[str],
++) -> None:
++    current = _referenced_room_asset_records(
++        scene_state,
++        room_root=room_root,
++        object_ids=object_ids,
++    )
++    if current != expected:
++        raise RuntimeError("Checkpoint referenced asset inventory mismatch")
++
++
++def _selection_payload(selection: FurnitureSelection) -> dict[str, Any]:
++    return {
++        "furniture_id": str(selection.furniture_id),
++        "suggested_items": selection.suggested_items,
++        "prompt_constraints": selection.prompt_constraints,
++        "style_notes": selection.style_notes,
++        "context_furniture_ids": [
++            str(item) for item in selection.context_furniture_ids
++        ],
++    }
++
++
++def _accepted_render_evidence(
++    directory: Path,
++    *,
++    minimum_score: int,
++    allowed_extra: frozenset[str] = frozenset(),
++) -> dict[str, Any]:
++    """Bind the final score and the exact five copied critic views."""
++
++    directory = _regular_directory_without_symlink_components(
++        directory,
++        label="accepted manipuland evidence directory",
++    )
++    if isinstance(minimum_score, bool) or not isinstance(minimum_score, int):
++        raise RuntimeError(f"Manipuland minimum score is not an integer: {minimum_score!r}")
++    if minimum_score < 0 or minimum_score > 10:
++        raise RuntimeError(f"Manipuland minimum score is outside 0..10: {minimum_score}")
++    score = directory / "scores.yaml"
++    images = [directory / name for name in sorted(_ACCEPTED_IMAGE_NAMES)]
++    allowed = {score.name, *_ACCEPTED_IMAGE_NAMES, *allowed_extra}
++    actual = {path.name for path in directory.iterdir()}
++    if actual != allowed:
++        raise RuntimeError(
++            f"Accepted manipuland evidence inventory mismatch: "
++            f"missing={sorted(allowed - actual)}, extra={sorted(actual - allowed)}"
++        )
++    for path in directory.iterdir():
++        if path.is_symlink() or not path.is_file():
++            raise RuntimeError(f"Accepted manipuland evidence entry is not regular: {path}")
++    try:
++        scores = yaml.safe_load(score.read_text(encoding="utf-8"))
++    except (OSError, UnicodeDecodeError, yaml.YAMLError) as exc:
++        raise RuntimeError(f"Cannot parse accepted manipuland scores: {score}") from exc
++    if not isinstance(scores, dict) or set(scores) != {*_SCORE_CATEGORIES, "summary"}:
++        raise RuntimeError(f"Accepted manipuland scores have a non-exact schema: {score}")
++    grades: dict[str, int] = {}
++    for category in _SCORE_CATEGORIES:
++        item = scores[category]
++        if not isinstance(item, dict) or set(item) != {"grade", "comment"}:
++            raise RuntimeError(f"Accepted score category {category!r} is malformed")
++        grade = item["grade"]
++        if (
++            isinstance(grade, bool)
++            or not isinstance(grade, int)
++            or grade < 0
++            or grade > 10
++            or grade < minimum_score
++            or not isinstance(item["comment"], str)
++            or not item["comment"].strip()
++        ):
++            raise RuntimeError(
++                f"Accepted score category {category!r} does not pass {minimum_score}"
++            )
++        grades[category] = grade
++    if not isinstance(scores["summary"], str) or not scores["summary"].strip():
++        raise RuntimeError("Accepted manipuland score summary is empty")
++    return {
++        "scores": _file_record(score),
++        "images": [_file_record(path) for path in images],
++        "minimum_score": minimum_score,
++        "grades": grades,
++    }
++
++
++def _evidence_matches(left: dict[str, Any], right: dict[str, Any]) -> bool:
++    return left == right
++
++
++def _receipt_attestation(document: dict[str, Any]) -> str:
++    payload = {key: value for key, value in document.items() if key != "attestation"}
++    return _sha256_bytes(_canonical_json_bytes(payload))
++
++
++def _transforms_equivalent(before: Any, after: Any) -> bool:
++    if (
++        not isinstance(before, dict)
++        or not isinstance(after, dict)
++        or set(before) != {"translation", "rotation_wxyz"}
++        or set(after) != {"translation", "rotation_wxyz"}
++    ):
++        return False
++    try:
++        before_translation = [float(item) for item in before["translation"]]
++        after_translation = [float(item) for item in after["translation"]]
++        before_quaternion = [float(item) for item in before["rotation_wxyz"]]
++        after_quaternion = [float(item) for item in after["rotation_wxyz"]]
++    except (TypeError, ValueError):
++        return False
++    if (
++        len(before_translation) != 3
++        or len(after_translation) != 3
++        or len(before_quaternion) != 4
++        or len(after_quaternion) != 4
++        or not all(
++            math.isfinite(item)
++            for item in (
++                *before_translation,
++                *after_translation,
++                *before_quaternion,
++                *after_quaternion,
++            )
++        )
++    ):
++        return False
++    translation_error = max(
++        abs(left - right)
++        for left, right in zip(before_translation, after_translation)
++    )
++    same_sign_error = max(
++        abs(left - right) for left, right in zip(before_quaternion, after_quaternion)
++    )
++    opposite_sign_error = max(
++        abs(left + right) for left, right in zip(before_quaternion, after_quaternion)
++    )
++    return translation_error <= _TRANSFORM_TOLERANCE and min(
++        same_sign_error, opposite_sign_error
++    ) <= _TRANSFORM_TOLERANCE
++
+ 
+ class StatefulManipulandAgent(BaseStatefulAgent, BaseManipulandAgent):
+     """Manipuland placement with planner/designer/critic agents per furniture.
+@@ -113,6 +978,9 @@ class StatefulManipulandAgent(BaseStatefulAgent, BaseManipulandAgent):
+ 
+         # Initialize pending images for image injection during critique.
+         self.pending_images: list[dict[str, Any]] = []
++        self._legacy_recovery_consumed = False
++        self._legacy_recovery_satisfied = False
++        self._required_legacy_recovery: tuple[int, str, str] | None = None
+ 
+         # Current furniture selection context (set per-furniture in workflow).
+         self.current_furniture_selection: FurnitureSelection | None = None
+@@ -683,6 +1551,1166 @@ class StatefulManipulandAgent(BaseStatefulAgent, BaseManipulandAgent):
+             / f"manipuland_furniture_{self.current_furniture_id}"
+         )
+ 
++    def _checkpoint_context(
++        self, furniture_selection: FurnitureSelection, furniture_index: int
++    ) -> dict[str, Any]:
++        selection = _selection_payload(furniture_selection)
++        resolved_config = OmegaConf.to_container(self.cfg, resolve=True)
++        return {
++            "furniture_index": furniture_index,
++            "furniture_id": str(furniture_selection.furniture_id),
++            "selection": selection,
++            "selection_sha256": _sha256_bytes(_canonical_json_bytes(selection)),
++            "config_sha256": _sha256_bytes(_canonical_json_bytes(resolved_config)),
++            "checkpoint_runtime_sha256": _sha256_file(Path(__file__).resolve()),
++        }
++
++    def _plan_context(self, input_scene_hash: str) -> dict[str, Any]:
++        resolved_config = OmegaConf.to_container(self.cfg, resolve=True)
++        return {
++            "room_id": str(getattr(self.scene, "room_id", "")),
++            "input_scene_content_hash": input_scene_hash,
++            "config_sha256": _sha256_bytes(_canonical_json_bytes(resolved_config)),
++            "checkpoint_runtime_sha256": _sha256_file(Path(__file__).resolve()),
++        }
++
++    def _load_furniture_plan(
++        self, input_scene_hash: str
++    ) -> list[FurnitureSelection] | None:
++        scene_states = self.logger.output_dir / "scene_states"
++        path = scene_states / "manipuland_furniture_plan.json"
++        with _exclusive_checkpoint_lock(scene_states):
++            if not path.exists():
++                return None
++            if path.is_symlink() or not path.is_file():
++                raise RuntimeError(f"Manipuland furniture plan is not regular: {path}")
++            try:
++                document = json.loads(path.read_text(encoding="utf-8"))
++            except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
++                raise RuntimeError(f"Cannot parse manipuland furniture plan: {path}") from exc
++            expected_keys = {
++                "schema_version",
++                "status",
++                "room_id",
++                "input_scene_content_hash",
++                "config_sha256",
++                "checkpoint_runtime_sha256",
++                "selections",
++                "selections_sha256",
++                "attestation",
++            }
++            if (
++                not isinstance(document, dict)
++                or set(document) != expected_keys
++                or document["schema_version"] != _FURNITURE_PLAN_SCHEMA
++                or document["status"] != "pass"
++                or document["attestation"] != _receipt_attestation(document)
++            ):
++                raise RuntimeError("Manipuland furniture plan contract mismatch")
++            for key, expected in self._plan_context(input_scene_hash).items():
++                if document.get(key) != expected:
++                    raise RuntimeError(f"Manipuland furniture plan {key} mismatch")
++            selections = document.get("selections")
++            if (
++                not isinstance(selections, list)
++                or not selections
++                or document.get("selections_sha256")
++                != _sha256_bytes(_canonical_json_bytes(selections))
++            ):
++                raise RuntimeError("Manipuland furniture plan selection hash mismatch")
++            result: list[FurnitureSelection] = []
++            seen: set[str] = set()
++            expected_selection_keys = {
++                "furniture_id",
++                "suggested_items",
++                "prompt_constraints",
++                "style_notes",
++                "context_furniture_ids",
++            }
++            for item in selections:
++                if not isinstance(item, dict) or set(item) != expected_selection_keys:
++                    raise RuntimeError("Manipuland furniture plan selection is malformed")
++                furniture_id = item["furniture_id"]
++                contexts = item["context_furniture_ids"]
++                if (
++                    not isinstance(furniture_id, str)
++                    or not _SAFE_CHECKPOINT_ID.fullmatch(furniture_id)
++                    or furniture_id in seen
++                    or not all(
++                        isinstance(item[key], str)
++                        for key in ("suggested_items", "prompt_constraints", "style_notes")
++                    )
++                    or not isinstance(contexts, list)
++                    or not all(isinstance(value, str) for value in contexts)
++                ):
++                    raise RuntimeError("Manipuland furniture plan selection is invalid")
++                seen.add(furniture_id)
++                result.append(
++                    FurnitureSelection(
++                        furniture_id=UniqueID(furniture_id),
++                        suggested_items=item["suggested_items"],
++                        prompt_constraints=item["prompt_constraints"],
++                        style_notes=item["style_notes"],
++                        context_furniture_ids=[UniqueID(value) for value in contexts],
++                    )
++                )
++            console_logger.info("Restored exact manipuland furniture plan from %s", path)
++            return result
++
++    def _publish_furniture_plan(
++        self, input_scene_hash: str, selections: list[FurnitureSelection]
++    ) -> None:
++        if not selections:
++            raise RuntimeError("Refusing to publish an empty manipuland furniture plan")
++        payload = [_selection_payload(selection) for selection in selections]
++        document = {
++            "schema_version": _FURNITURE_PLAN_SCHEMA,
++            "status": "pass",
++            **self._plan_context(input_scene_hash),
++            "selections": payload,
++            "selections_sha256": _sha256_bytes(_canonical_json_bytes(payload)),
++        }
++        document["attestation"] = _receipt_attestation(document)
++        scene_states = self.logger.output_dir / "scene_states"
++        path = scene_states / "manipuland_furniture_plan.json"
++        with _exclusive_checkpoint_lock(scene_states):
++            if path.exists():
++                raise RuntimeError(f"Refusing to replace manipuland furniture plan: {path}")
++            _atomic_json_fsynced(path, document)
++        console_logger.info("Published exact manipuland furniture plan: %s", path)
++
++    def _minimum_accepted_score(self) -> int:
++        value = self.cfg.early_finish_min_score
++        if isinstance(value, bool) or not isinstance(value, int):
++            raise RuntimeError(f"Invalid manipuland early_finish_min_score: {value!r}")
++        return value
++
++    def _checkpoint_directory(
++        self, furniture_selection: FurnitureSelection, furniture_index: int
++    ) -> Path:
++        furniture_id = str(furniture_selection.furniture_id)
++        if not _SAFE_CHECKPOINT_ID.fullmatch(furniture_id):
++            raise RuntimeError(f"Unsafe furniture ID for checkpoint: {furniture_id!r}")
++        return (
++            self.logger.output_dir
++            / "scene_states"
++            / f"manipuland_checkpoint_{furniture_index:03d}_{furniture_id}"
++        )
++
++    @staticmethod
++    def _verify_file_record(path: Path, record: Any, *, label: str) -> None:
++        if not isinstance(record, dict) or set(record) != {
++            "name",
++            "size_bytes",
++            "sha256",
++        }:
++            raise RuntimeError(f"Malformed {label} record")
++        current = _file_record(path)
++        if current != record:
++            raise RuntimeError(f"{label} hash/size mismatch: {path}")
++
++    def _verify_legacy_checkpoint_source(
++        self,
++        source: Any,
++        *,
++        accepted_evidence: dict[str, Any],
++        scene_state: dict[str, Any],
++        furniture_selection: FurnitureSelection,
++        furniture_index: int,
++        input_scene_hash: str,
++        input_object_ids: set[str],
++        live_input_scene_state: dict[str, Any] | None = None,
++    ) -> None:
++        if source is None:
++            return
++        expected_keys = {
++            "authorization",
++            "render_directory",
++            "scene_state",
++            "drake_directive",
++            "output_scene_content_hash",
++            "accepted_evidence",
++            "added_manipuland_ids",
++            "added_asset_files",
++            "referenced_asset_object_ids",
++            "referenced_asset_files",
++        }
++        if not isinstance(source, dict) or set(source) != expected_keys:
++            raise RuntimeError("Manipuland checkpoint legacy source schema mismatch")
++        authorization = source["authorization"]
++        authorization_value = (
++            authorization.get("manifest_path") if isinstance(authorization, dict) else None
++        )
++        authorization_lexical = (
++            Path(authorization_value) if isinstance(authorization_value, str) else None
++        )
++        if (
++            not isinstance(authorization, dict)
++            or set(authorization)
++            != {"manifest_path", "manifest_size_bytes", "manifest_sha256"}
++            or not isinstance(authorization["manifest_path"], str)
++            or not authorization["manifest_path"]
++            or "%" in authorization["manifest_path"]
++            or authorization_lexical is None
++            or not authorization_lexical.is_absolute()
++            or str(authorization_lexical) != authorization["manifest_path"]
++            or any(
++                part in {"", ".", ".."}
++                for part in authorization_lexical.parts[1:]
++            )
++            or isinstance(authorization["manifest_size_bytes"], bool)
++            or not isinstance(authorization["manifest_size_bytes"], int)
++            or authorization["manifest_size_bytes"] <= 0
++            or not isinstance(authorization["manifest_sha256"], str)
++            or not re.fullmatch(r"[0-9a-f]{64}", authorization["manifest_sha256"])
++        ):
++            raise RuntimeError("Manipuland checkpoint legacy authorization is malformed")
++        authorization_path = _regular_file_without_symlink_components(
++            Path(authorization["manifest_path"]),
++            label="legacy authorization manifest",
++        )
++        output_root = self.logger.output_dir.resolve(strict=True)
++        if authorization_path.is_relative_to(output_root):
++            raise RuntimeError("Legacy authorization manifest must be outside room output")
++        if (
++            authorization_path.stat().st_size
++            != authorization["manifest_size_bytes"]
++            or _sha256_file(authorization_path) != authorization["manifest_sha256"]
++        ):
++            raise RuntimeError("Legacy authorization manifest changed after promotion")
++        try:
++            manifest = json.loads(authorization_path.read_text(encoding="utf-8"))
++        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
++            raise RuntimeError("Cannot parse checkpoint legacy authorization") from exc
++        manifest = _validate_legacy_recovery_manifest_document(
++            manifest,
++            expected_room_id=str(getattr(self.scene, "room_id", "")),
++        )
++        configured_sha = os.environ.get(
++            "SCENESMITH_LEGACY_MANIPULAND_RECOVERY_SHA256", ""
++        ).strip()
++        if configured_sha and configured_sha != authorization["manifest_sha256"]:
++            raise RuntimeError("Durable legacy checkpoint authorization SHA mismatch")
++        if not isinstance(source["output_scene_content_hash"], str) or not re.fullmatch(
++            r"[0-9a-f]{64}", source["output_scene_content_hash"]
++        ):
++            raise RuntimeError("Manipuland checkpoint legacy output hash is malformed")
++        expected_source_fields = {
++            "render_directory": manifest["render_directory"],
++            "scene_state": manifest["scene_state"],
++            "drake_directive": manifest["drake_directive"],
++            "output_scene_content_hash": manifest["output_scene_content_hash"],
++            "accepted_evidence": manifest["accepted_evidence"],
++            "added_manipuland_ids": manifest["added_manipuland_ids"],
++            "added_asset_files": manifest["added_asset_files"],
++            "referenced_asset_object_ids": manifest[
++                "referenced_asset_object_ids"
++            ],
++            "referenced_asset_files": manifest["referenced_asset_files"],
++        }
++        if any(source.get(key) != value for key, value in expected_source_fields.items()):
++            raise RuntimeError(
++                "Manipuland checkpoint legacy source does not match authorization manifest"
++            )
++        if (
++            manifest["furniture_index"] != furniture_index
++            or manifest["furniture_id"] != str(furniture_selection.furniture_id)
++            or manifest["input_scene_content_hash"] != input_scene_hash
++        ):
++            raise RuntimeError(
++                "Manipuland checkpoint legacy authorization context mismatch"
++            )
++        input_relative = _canonical_relative_path(
++            manifest["input_scene_state_path"],
++            label="checkpoint legacy input scene-state path",
++        )
++        input_state_path = _regular_file_without_symlink_components(
++            output_root.joinpath(*input_relative.parts),
++            label="checkpoint legacy input scene state",
++        )
++        if not input_state_path.is_relative_to(output_root):
++            raise RuntimeError("Checkpoint legacy input scene state escapes room output")
++        self._verify_file_record(
++            input_state_path,
++            manifest["input_scene_state"],
++            label="checkpoint legacy input scene state",
++        )
++        try:
++            input_state = json.loads(input_state_path.read_text(encoding="utf-8"))
++        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
++            raise RuntimeError("Cannot parse checkpoint legacy input scene state") from exc
++        manifest_input_objects = input_state.get("objects")
++        if (
++            not isinstance(manifest_input_objects, dict)
++            or set(manifest_input_objects) != input_object_ids
++        ):
++            raise RuntimeError(
++                "Manipuland checkpoint legacy input object inventory mismatch"
++            )
++        if live_input_scene_state is not None:
++            expected_input = copy.deepcopy(live_input_scene_state)
++            recorded_input = copy.deepcopy(input_state)
++            expected_input.pop("timestamp", None)
++            recorded_input.pop("timestamp", None)
++            if expected_input != recorded_input:
++                raise RuntimeError(
++                    "Manipuland checkpoint legacy input state does not match live scene"
++                )
++        render_directory = source["render_directory"]
++        if not isinstance(render_directory, str) or "\\" in render_directory:
++            raise RuntimeError("Manipuland checkpoint legacy render directory is unsafe")
++        render_relative = PurePosixPath(render_directory)
++        if (
++            render_relative.is_absolute()
++            or not render_relative.parts
++            or any(part in {"", ".", ".."} for part in render_relative.parts)
++        ):
++            raise RuntimeError("Manipuland checkpoint legacy render directory is unsafe")
++
++        for key in ("scene_state", "drake_directive"):
++            record = source[key]
++            if not _valid_file_record(record):
++                raise RuntimeError(f"Manipuland checkpoint legacy {key} is malformed")
++        if source["accepted_evidence"] != accepted_evidence:
++            raise RuntimeError("Manipuland checkpoint legacy evidence mismatch")
++        added_ids = source["added_manipuland_ids"]
++        if (
++            not isinstance(added_ids, list)
++            or not added_ids
++            or len(added_ids) != len(set(added_ids))
++            or not all(
++                isinstance(value, str) and _SAFE_CHECKPOINT_ID.fullmatch(value)
++                for value in added_ids
++            )
++        ):
++            raise RuntimeError("Manipuland checkpoint legacy object inventory is malformed")
++        current_objects = scene_state.get("objects")
++        if (
++            not isinstance(current_objects, dict)
++            or not input_object_ids.issubset(current_objects)
++            or set(current_objects) - input_object_ids != set(added_ids)
++        ):
++            raise RuntimeError(
++                "Manipuland checkpoint legacy postprocessed object delta mismatch"
++            )
++
++        render_dir = _regular_directory_without_symlink_components(
++            output_root.joinpath(*render_relative.parts),
++            label="checkpoint legacy render directory",
++            required_root=output_root,
++        )
++        rendered_evidence = _accepted_render_evidence(
++            render_dir,
++            minimum_score=self._minimum_accepted_score(),
++            allowed_extra=frozenset({"scene_state.json", "scene.dmd.yaml"}),
++        )
++        if rendered_evidence != accepted_evidence:
++            raise RuntimeError("Manipuland checkpoint legacy render evidence changed")
++        self._verify_file_record(
++            render_dir / "scene_state.json",
++            source["scene_state"],
++            label="checkpoint legacy scene state",
++        )
++        self._verify_file_record(
++            render_dir / "scene.dmd.yaml",
++            source["drake_directive"],
++            label="checkpoint legacy Drake directive",
++        )
++        try:
++            candidate_state = json.loads(
++                (render_dir / "scene_state.json").read_text(encoding="utf-8")
++            )
++        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
++            raise RuntimeError("Cannot parse checkpoint legacy render state") from exc
++        candidate_objects = candidate_state.get("objects")
++        if (
++            not isinstance(candidate_objects, dict)
++            or not input_object_ids.issubset(candidate_objects)
++            or set(candidate_objects) - input_object_ids != set(added_ids)
++        ):
++            raise RuntimeError("Manipuland checkpoint legacy render delta mismatch")
++        asset_records = source["added_asset_files"]
++        if not isinstance(asset_records, list) or not asset_records:
++            raise RuntimeError("Manipuland checkpoint legacy asset inventory is empty")
++        _verify_referenced_asset_records(
++            asset_records,
++            scene_state=candidate_state,
++            room_root=Path(self.scene.scene_dir),
++            object_ids=set(added_ids),
++        )
++        referenced_ids = source["referenced_asset_object_ids"]
++        referenced_assets = source["referenced_asset_files"]
++        for state_document in (candidate_state, scene_state):
++            _verify_referenced_asset_records(
++                referenced_assets,
++                scene_state=state_document,
++                room_root=Path(self.scene.scene_dir),
++                object_ids=set(referenced_ids),
++            )
++        _verify_referenced_asset_records(
++            asset_records,
++            scene_state=scene_state,
++            room_root=Path(self.scene.scene_dir),
++            object_ids=set(added_ids),
++        )
++
++    def _restore_completed_furniture_checkpoint(
++        self,
++        *,
++        furniture_selection: FurnitureSelection,
++        furniture_index: int,
++        input_scene_hash: str,
++    ) -> bool:
++        scene_states = self.logger.output_dir / "scene_states"
++        with _exclusive_checkpoint_lock(scene_states):
++            return self._restore_completed_furniture_checkpoint_unlocked(
++                furniture_selection=furniture_selection,
++                furniture_index=furniture_index,
++                input_scene_hash=input_scene_hash,
++            )
++
++    def _restore_completed_furniture_checkpoint_unlocked(
++        self,
++        *,
++        furniture_selection: FurnitureSelection,
++        furniture_index: int,
++        input_scene_hash: str,
++    ) -> bool:
++        directory = self._checkpoint_directory(furniture_selection, furniture_index)
++        if not directory.exists():
++            return False
++        if directory.is_symlink() or not directory.is_dir():
++            raise RuntimeError(f"Invalid manipuland checkpoint directory: {directory}")
++        expected_entries = {
++            "scene_state.json",
++            "scene.dmd.yaml",
++            "completion_receipt.json",
++        }
++        actual_entries = {path.name for path in directory.iterdir()}
++        if actual_entries != expected_entries or any(
++            path.is_symlink() or not path.is_file() for path in directory.iterdir()
++        ):
++            raise RuntimeError(
++                f"Manipuland checkpoint inventory mismatch: {directory}"
++            )
++        receipt_path = directory / "completion_receipt.json"
++        try:
++            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
++        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
++            raise RuntimeError(f"Cannot read manipuland checkpoint: {directory}") from exc
++        expected_receipt_keys = {
++            "schema_version",
++            "status",
++            "furniture_index",
++            "furniture_id",
++            "selection",
++            "selection_sha256",
++            "config_sha256",
++            "checkpoint_runtime_sha256",
++            "input_scene_content_hash",
++            "output_scene_content_hash",
++            "accepted_evidence",
++            "added_manipuland_ids",
++            "referenced_asset_object_ids",
++            "referenced_asset_files",
++            "legacy_source",
++            "artifacts",
++            "attestation",
++        }
++        if not isinstance(receipt, dict) or set(receipt) != expected_receipt_keys:
++            raise RuntimeError(f"Manipuland checkpoint receipt schema mismatch: {directory}")
++        context = self._checkpoint_context(furniture_selection, furniture_index)
++        for key, expected in context.items():
++            if receipt.get(key) != expected:
++                raise RuntimeError(
++                    f"Manipuland checkpoint {key} mismatch for {directory}"
++                )
++        if (
++            receipt.get("schema_version") != _FURNITURE_CHECKPOINT_SCHEMA
++            or receipt.get("status") != "pass"
++            or receipt.get("input_scene_content_hash") != input_scene_hash
++            or receipt.get("attestation") != _receipt_attestation(receipt)
++        ):
++            raise RuntimeError(f"Manipuland checkpoint contract mismatch: {directory}")
++
++        state_path = directory / "scene_state.json"
++        directive_path = directory / "scene.dmd.yaml"
++        artifacts = receipt.get("artifacts")
++        if not isinstance(artifacts, dict) or set(artifacts) != {
++            "scene_state",
++            "drake_directive",
++        }:
++            raise RuntimeError(f"Manipuland checkpoint artifacts are missing: {directory}")
++        self._verify_file_record(
++            state_path, artifacts.get("scene_state"), label="checkpoint scene state"
++        )
++        self._verify_file_record(
++            directive_path,
++            artifacts.get("drake_directive"),
++            label="checkpoint Drake directive",
++        )
++        try:
++            state = json.loads(state_path.read_text(encoding="utf-8"))
++        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
++            raise RuntimeError("Cannot parse checkpoint scene state") from exc
++        live_input_state = self.scene.to_state_dict()
++        live_input_objects = live_input_state.get("objects")
++        if not isinstance(live_input_objects, dict):
++            raise RuntimeError("Live checkpoint input scene has no object mapping")
++        live_input_object_ids = set(live_input_objects)
++        referenced_ids = receipt["referenced_asset_object_ids"]
++        added_ids = receipt["added_manipuland_ids"]
++        if (
++            not isinstance(referenced_ids, list)
++            or not referenced_ids
++            or referenced_ids != sorted(set(referenced_ids))
++            or not all(
++                isinstance(value, str) and _SAFE_CHECKPOINT_ID.fullmatch(value)
++                for value in referenced_ids
++            )
++            or str(furniture_selection.furniture_id) not in referenced_ids
++        ):
++            raise RuntimeError("Checkpoint referenced object inventory is malformed")
++        if (
++            not isinstance(added_ids, list)
++            or not added_ids
++            or added_ids != sorted(set(added_ids))
++            or not all(
++                isinstance(value, str) and _SAFE_CHECKPOINT_ID.fullmatch(value)
++                for value in added_ids
++            )
++            or set(referenced_ids)
++            != set(added_ids) | {str(furniture_selection.furniture_id)}
++        ):
++            raise RuntimeError("Checkpoint added manipuland inventory is malformed")
++        state_objects = state.get("objects")
++        if (
++            not isinstance(state_objects, dict)
++            or not live_input_object_ids.issubset(state_objects)
++            or set(state_objects) - live_input_object_ids != set(added_ids)
++        ):
++            raise RuntimeError("Checkpoint restored object delta mismatch")
++        _verify_referenced_asset_records(
++            receipt["referenced_asset_files"],
++            scene_state=state,
++            room_root=Path(self.scene.scene_dir),
++            object_ids=set(referenced_ids),
++        )
++        accepted_dir = (
++            self.logger.output_dir
++            / "scene_states"
++            / f"manipuland_furniture_{furniture_selection.furniture_id}"
++        )
++        if not _evidence_matches(
++            _accepted_render_evidence(
++                accepted_dir, minimum_score=self._minimum_accepted_score()
++            ),
++            receipt.get("accepted_evidence"),
++        ):
++            raise RuntimeError(f"Accepted manipuland evidence changed: {accepted_dir}")
++        self._verify_legacy_checkpoint_source(
++            receipt["legacy_source"],
++            accepted_evidence=receipt["accepted_evidence"],
++            scene_state=state,
++            furniture_selection=furniture_selection,
++            furniture_index=furniture_index,
++            input_scene_hash=input_scene_hash,
++            input_object_ids=live_input_object_ids,
++            live_input_scene_state=live_input_state,
++        )
++        required = getattr(self, "_required_legacy_recovery", None)
++        satisfies_required = False
++        if required is not None and required[:2] == (
++            furniture_index,
++            str(furniture_selection.furniture_id),
++        ):
++            source = receipt["legacy_source"]
++            if (
++                not isinstance(source, dict)
++                or source.get("authorization", {}).get("manifest_sha256")
++                != required[2]
++            ):
++                raise RuntimeError(
++                    "Required legacy target checkpoint lacks exact authorization"
++                )
++            satisfies_required = True
++
++        previous = self.scene.to_state_dict()
++        try:
++            self.scene.restore_from_state_dict(state)
++            if self.scene.content_hash() != receipt.get("output_scene_content_hash"):
++                raise RuntimeError("Restored manipuland checkpoint content hash mismatch")
++        except Exception:
++            self.scene.restore_from_state_dict(previous)
++            raise
++        if satisfies_required:
++            self._legacy_recovery_satisfied = True
++        console_logger.info(
++            "Restored durable manipuland checkpoint for %s",
++            furniture_selection.furniture_id,
++        )
++        return True
++
++    def _load_explicit_legacy_manifest(
++        self,
++    ) -> tuple[dict[str, Any], Path, str] | None:
++        manifest_value = os.environ.get(
++            "SCENESMITH_LEGACY_MANIPULAND_RECOVERY_MANIFEST", ""
++        ).strip()
++        expected_sha = os.environ.get(
++            "SCENESMITH_LEGACY_MANIPULAND_RECOVERY_SHA256", ""
++        ).strip()
++        if not manifest_value and not expected_sha:
++            return None
++        if not manifest_value or not re.fullmatch(r"[0-9a-f]{64}", expected_sha):
++            raise RuntimeError(
++                "Legacy manipuland recovery requires both an explicit manifest "
++                "path and its lowercase SHA-256"
++            )
++        lexical_manifest = Path(manifest_value)
++        if (
++            "%" in manifest_value
++            or not lexical_manifest.is_absolute()
++            or str(lexical_manifest) != manifest_value
++            or any(part in {"", ".", ".."} for part in lexical_manifest.parts[1:])
++        ):
++            raise RuntimeError("Legacy recovery manifest path must be canonical absolute")
++        manifest_path = _regular_file_without_symlink_components(
++            lexical_manifest,
++            label="legacy recovery manifest",
++        )
++        output_root = self.logger.output_dir.resolve(strict=True)
++        if manifest_path.is_relative_to(output_root):
++            raise RuntimeError("Legacy recovery manifest must be outside room output")
++        if _sha256_file(manifest_path) != expected_sha:
++            raise RuntimeError("Legacy recovery manifest SHA-256 mismatch")
++        try:
++            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
++        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
++            raise RuntimeError("Cannot parse legacy recovery manifest") from exc
++        manifest = _validate_legacy_recovery_manifest_document(
++            manifest,
++            expected_room_id=str(getattr(self.scene, "room_id", "")),
++        )
++        return manifest, manifest_path, expected_sha
++
++    def _validate_explicit_legacy_plan(
++        self, selections: list[FurnitureSelection]
++    ) -> None:
++        self._required_legacy_recovery = None
++        self._legacy_recovery_satisfied = False
++        loaded = self._load_explicit_legacy_manifest()
++        if loaded is None:
++            return
++        manifest, _, expected_sha = loaded
++        index = manifest["furniture_index"]
++        target = manifest["furniture_id"]
++        if index >= len(selections) or str(selections[index].furniture_id) != target:
++            raise RuntimeError(
++                "Legacy recovery target/index is absent or moved in furniture plan"
++            )
++        self._required_legacy_recovery = (index, target, expected_sha)
++
++    def _legacy_render_candidate(
++        self,
++        furniture_selection: FurnitureSelection,
++        furniture_index: int,
++        input_scene_hash: str,
++    ) -> tuple[Path, dict[str, Any], dict[str, Any], dict[str, Any]] | None:
++        if self._legacy_recovery_consumed:
++            return None
++        loaded = self._load_explicit_legacy_manifest()
++        if loaded is None:
++            return None
++        manifest, manifest_path, expected_sha = loaded
++        furniture_id = str(furniture_selection.furniture_id)
++        if (
++            manifest["furniture_index"] != furniture_index
++            or manifest["furniture_id"] != furniture_id
++            or manifest["input_scene_content_hash"] != input_scene_hash
++        ):
++            # A manifest for an earlier furniture is harmless after that exact
++            # target has already been restored from its durable checkpoint.
++            if manifest.get("furniture_id") != furniture_id:
++                return None
++            raise RuntimeError("Legacy recovery manifest target/input mismatch")
++
++        root = self.logger.output_dir.resolve(strict=True)
++
++        def resolve_relative(raw: Any, *, label: str) -> Path:
++            if (
++                not isinstance(raw, str)
++                or not raw
++                or raw != raw.strip()
++                or "\\" in raw
++                or "%" in raw
++            ):
++                raise RuntimeError(f"Unsafe {label} in legacy manifest")
++            relative = PurePosixPath(raw)
++            if (
++                relative.is_absolute()
++                or relative.as_posix() != raw
++                or any(part in {"", ".", ".."} for part in relative.parts)
++            ):
++                raise RuntimeError(f"Unsafe {label} in legacy manifest")
++            path = root
++            for part in relative.parts:
++                path = path / part
++                if path.is_symlink():
++                    raise RuntimeError(f"Legacy {label} contains a symlink")
++            resolved = path.resolve(strict=True)
++            if not resolved.is_relative_to(root):
++                raise RuntimeError(f"Legacy {label} escapes the room output")
++            return resolved
++
++        input_state_path = resolve_relative(
++            manifest["input_scene_state_path"], label="input scene-state path"
++        )
++        self._verify_file_record(
++            input_state_path,
++            manifest["input_scene_state"],
++            label="legacy input scene state",
++        )
++        input_document = json.loads(input_state_path.read_text(encoding="utf-8"))
++        current_document = self.scene.to_state_dict()
++        input_objects = input_document.get("objects")
++        current_objects = current_document.get("objects")
++        if (
++            self.scene.content_hash() != manifest["input_scene_content_hash"]
++            or not isinstance(input_objects, dict)
++            or not isinstance(current_objects, dict)
++            or set(input_objects) != set(current_objects)
++        ):
++            raise RuntimeError(
++                "Legacy manifest input semantics are not the live base scene"
++            )
++        candidate_dir = resolve_relative(
++            manifest["render_directory"], label="render directory"
++        )
++        if candidate_dir.is_symlink() or not candidate_dir.is_dir():
++            raise RuntimeError(f"Legacy render directory is invalid: {candidate_dir}")
++        accepted_dir = (
++            self.logger.output_dir
++            / "scene_states"
++            / f"manipuland_furniture_{furniture_id}"
++        )
++        accepted = _accepted_render_evidence(
++            accepted_dir, minimum_score=self._minimum_accepted_score()
++        )
++        rendered = _accepted_render_evidence(
++            candidate_dir,
++            minimum_score=self._minimum_accepted_score(),
++            allowed_extra=frozenset({"scene_state.json", "scene.dmd.yaml"}),
++        )
++        if accepted != rendered or accepted != manifest["accepted_evidence"]:
++            raise RuntimeError("Legacy accepted score/view evidence mismatch")
++        self._verify_file_record(
++            candidate_dir / "scene_state.json",
++            manifest["scene_state"],
++            label="legacy render scene state",
++        )
++        self._verify_file_record(
++            candidate_dir / "scene.dmd.yaml",
++            manifest["drake_directive"],
++            label="legacy render Drake directive",
++        )
++        authorization = {
++            "manifest_path": str(manifest_path.resolve(strict=True)),
++            "manifest_size_bytes": manifest_path.stat().st_size,
++            "manifest_sha256": expected_sha,
++        }
++        return candidate_dir, accepted, authorization, manifest
++
++    def _restore_legacy_accepted_render(
++        self,
++        furniture_selection: FurnitureSelection,
++        furniture_index: int,
++        input_scene_hash: str,
++    ) -> dict[str, Any] | None:
++        """Recover the exact accepted render state, never an arbitrary iteration."""
++
++        match = self._legacy_render_candidate(
++            furniture_selection, furniture_index, input_scene_hash
++        )
++        if match is None:
++            return None
++        candidate_dir, accepted, authorization, manifest = match
++        state_path = candidate_dir / "scene_state.json"
++        directive_path = candidate_dir / "scene.dmd.yaml"
++        state_record = _file_record(state_path)
++        directive_record = _file_record(directive_path)
++        candidate = json.loads(state_path.read_text(encoding="utf-8"))
++        current = self.scene.to_state_dict()
++        for document in (candidate, current):
++            document.pop("timestamp", None)
++        if (
++            candidate.get("room_geometry") != current.get("room_geometry")
++            or candidate.get("text_description") != current.get("text_description")
++            or not isinstance(candidate.get("objects"), dict)
++            or not isinstance(current.get("objects"), dict)
++        ):
++            raise RuntimeError("Legacy manipuland state is not based on this room")
++
++        current_objects = current["objects"]
++        candidate_objects = candidate["objects"]
++        missing = sorted(set(current_objects) - set(candidate_objects))
++        added = sorted(set(candidate_objects) - set(current_objects))
++        if missing or not added:
++            raise RuntimeError(
++                f"Legacy manipuland object delta is invalid: missing={missing}, added={added}"
++            )
++        target_id = str(furniture_selection.furniture_id)
++        target = candidate_objects.get(target_id)
++        if not isinstance(target, dict) or not target.get("support_surfaces"):
++            raise RuntimeError("Legacy target furniture has no authored support surfaces")
++        surface_ids = {
++            item.get("surface_id")
++            for item in target["support_surfaces"]
++            if isinstance(item, dict)
++        }
++        if None in surface_ids or not surface_ids:
++            raise RuntimeError("Legacy target support-surface inventory is malformed")
++
++        for object_id, before in current_objects.items():
++            after = candidate_objects[object_id]
++            if not isinstance(before, dict) or not isinstance(after, dict):
++                raise RuntimeError(f"Legacy object {object_id} is malformed")
++            allowed_schema_delta = {"support_surfaces"} if object_id == target_id else set()
++            schema_delta = set(before) ^ set(after)
++            if schema_delta - allowed_schema_delta or not _transforms_equivalent(
++                before.get("transform"), after.get("transform")
++            ):
++                raise RuntimeError(
++                    f"Legacy render changed the transform/schema of {object_id}"
++                )
++            ignored = {"transform"}
++            if object_id == target_id:
++                ignored.add("support_surfaces")
++            changed = {
++                key
++                for key in before
++                if key not in ignored and before.get(key) != after.get(key)
++            }
++            if changed:
++                raise RuntimeError(
++                    f"Legacy render changed protected fields on {object_id}: {changed}"
++                )
++        for object_id in added:
++            item = candidate_objects[object_id]
++            placement = item.get("placement_info")
++            metadata = item.get("metadata")
++            if (
++                item.get("object_type") != "manipuland"
++                or not isinstance(placement, dict)
++                or placement.get("parent_surface_id") not in surface_ids
++                or not isinstance(metadata, dict)
++            ):
++                raise RuntimeError(
++                    f"Legacy added object is not an exact supported manipuland: {object_id}"
++                )
++            composite_type = metadata.get("composite_type")
++            if composite_type is None:
++                if metadata.get("asset_source") != "objaverse":
++                    raise RuntimeError(
++                        f"Legacy manipuland lacks ObjectThor provenance: {object_id}"
++                    )
++                if not item.get("geometry_path") or not item.get("sdf_path"):
++                    raise RuntimeError(f"Legacy manipuland lacks assets: {object_id}")
++            else:
++                if composite_type not in {"stack", "pile", "fill"}:
++                    raise RuntimeError(
++                        f"Legacy manipuland has unknown composite type: {object_id}"
++                    )
++                members = metadata.get("member_assets")
++                if not isinstance(members, list) or not members:
++                    raise RuntimeError(f"Legacy composite has no members: {object_id}")
++                for member_index, member in enumerate(members):
++                    if not isinstance(member, dict):
++                        raise RuntimeError(f"Legacy composite member is malformed: {object_id}")
++                    if not member.get("geometry_path") or not member.get("sdf_path"):
++                        raise RuntimeError(
++                            f"Legacy composite member lacks assets: "
++                            f"{object_id} member {member_index}"
++                        )
++
++        added_asset_files = _referenced_room_asset_records(
++            candidate,
++            room_root=Path(self.scene.scene_dir),
++            object_ids=set(added),
++        )
++        referenced_asset_object_ids = sorted(set(added) | {target_id})
++        referenced_asset_files = _referenced_room_asset_records(
++            candidate,
++            room_root=Path(self.scene.scene_dir),
++            object_ids=set(referenced_asset_object_ids),
++        )
++        if added != manifest["added_manipuland_ids"]:
++            raise RuntimeError("Legacy manifest added manipuland inventory mismatch")
++        if added_asset_files != manifest["added_asset_files"]:
++            raise RuntimeError("Legacy manifest added asset inventory mismatch")
++        if (
++            referenced_asset_object_ids
++            != manifest["referenced_asset_object_ids"]
++            or referenced_asset_files != manifest["referenced_asset_files"]
++        ):
++            raise RuntimeError("Legacy manifest referenced asset inventory mismatch")
++
++        previous = self.scene.to_state_dict()
++        try:
++            self.scene.restore_from_state_dict(candidate)
++            if self.scene.content_hash() != manifest["output_scene_content_hash"]:
++                raise RuntimeError("Legacy manifest output scene content hash mismatch")
++        except Exception:
++            self.scene.restore_from_state_dict(previous)
++            raise
++        console_logger.info(
++            "Recovered exact accepted legacy render for %s from %s",
++            target_id,
++            candidate_dir,
++        )
++        self._legacy_recovery_consumed = True
++        return {
++            "authorization": authorization,
++            "render_directory": str(candidate_dir.relative_to(self.logger.output_dir)),
++            "scene_state": state_record,
++            "drake_directive": directive_record,
++            "output_scene_content_hash": manifest["output_scene_content_hash"],
++            "accepted_evidence": accepted,
++            "added_manipuland_ids": added,
++            "added_asset_files": added_asset_files,
++            "referenced_asset_object_ids": referenced_asset_object_ids,
++            "referenced_asset_files": referenced_asset_files,
++        }
++
++    def _run_per_furniture_postprocessing(self, furniture_id: UniqueID) -> None:
++        if not self.cfg.per_furniture_postprocessing.enabled:
++            return
++        sim_cfg = self.cfg.per_furniture_postprocessing.simulation
++        sim_html_path = None
++        if sim_cfg.save_html:
++            sim_html_path = (
++                self.scene.scene_dir
++                / "simulation"
++                / "per_furniture"
++                / f"{furniture_id}_simulation.html"
++            )
++        self.scene = apply_per_furniture_postprocessing(
++            full_scene=self.scene,
++            furniture_id=furniture_id,
++            config=self.cfg.per_furniture_postprocessing,
++            simulation_html_path=sim_html_path,
++        )
++
++    def _publish_furniture_checkpoint(
++        self,
++        *,
++        furniture_selection: FurnitureSelection,
++        furniture_index: int,
++        input_scene_hash: str,
++        input_object_ids: set[str],
++        legacy_source: dict[str, Any] | None,
++    ) -> None:
++        scene_states = self.logger.output_dir / "scene_states"
++        with _exclusive_checkpoint_lock(scene_states):
++            self._publish_furniture_checkpoint_unlocked(
++                furniture_selection=furniture_selection,
++                furniture_index=furniture_index,
++                input_scene_hash=input_scene_hash,
++                input_object_ids=input_object_ids,
++                legacy_source=legacy_source,
++            )
++
++    def _publish_furniture_checkpoint_unlocked(
++        self,
++        *,
++        furniture_selection: FurnitureSelection,
++        furniture_index: int,
++        input_scene_hash: str,
++        input_object_ids: set[str],
++        legacy_source: dict[str, Any] | None,
++    ) -> None:
++        final = self._checkpoint_directory(furniture_selection, furniture_index)
++        if final.exists():
++            raise RuntimeError(f"Refusing to replace existing checkpoint: {final}")
++        final.parent.mkdir(parents=True, exist_ok=True)
++        stale = sorted(final.parent.glob(f".{final.name}.tmp.*"))
++        if stale:
++            raise RuntimeError(f"Stale manipuland checkpoint transaction exists: {stale}")
++        accepted_dir = (
++            self.logger.output_dir
++            / "scene_states"
++            / f"manipuland_furniture_{furniture_selection.furniture_id}"
++        )
++        accepted_evidence = _accepted_render_evidence(
++            accepted_dir, minimum_score=self._minimum_accepted_score()
++        )
++        output_state = self.scene.to_state_dict()
++        output_objects = output_state.get("objects")
++        if not isinstance(output_objects, dict) or not input_object_ids.issubset(
++            output_objects
++        ):
++            raise RuntimeError("Manipuland checkpoint input object inventory changed")
++        added_ids = set(output_objects) - input_object_ids
++        if not added_ids:
++            raise RuntimeError("Manipuland checkpoint has no added manipulands")
++        target_id = str(furniture_selection.furniture_id)
++        if target_id not in output_objects:
++            raise RuntimeError("Manipuland checkpoint target disappeared")
++        referenced_object_ids = sorted(added_ids | {target_id})
++        referenced_asset_files = _referenced_room_asset_records(
++            output_state,
++            room_root=Path(self.scene.scene_dir),
++            object_ids=set(referenced_object_ids),
++        )
++        normal_render_records: dict[str, dict[str, Any]] | None = None
++        if legacy_source is None:
++            render_dir = getattr(self, "final_render_dir", None) or getattr(
++                self, "checkpoint_render_dir", None
++            )
++            if render_dir is None:
++                raise RuntimeError("Current manipuland render evidence is unavailable")
++            current_evidence = _accepted_render_evidence(
++                Path(render_dir),
++                minimum_score=self._minimum_accepted_score(),
++                allowed_extra=frozenset({"scene_state.json", "scene.dmd.yaml"}),
++            )
++            if current_evidence != accepted_evidence:
++                raise RuntimeError(
++                    "Copied manipuland evidence does not match current accepted render"
++                )
++            render_state_path = Path(render_dir) / "scene_state.json"
++            render_directive_path = Path(render_dir) / "scene.dmd.yaml"
++            normal_render_records = {
++                "scene_state": _file_record(render_state_path),
++                "drake_directive": _file_record(render_directive_path),
++            }
++            try:
++                render_state = json.loads(render_state_path.read_text(encoding="utf-8"))
++            except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
++                raise RuntimeError("Cannot parse current accepted render state") from exc
++            render_objects = render_state.get("objects")
++            if not isinstance(render_objects, dict) or not input_object_ids.issubset(
++                render_objects
++            ):
++                raise RuntimeError("Current accepted render object inventory is invalid")
++            accepted_added_ids = set(render_objects) - input_object_ids
++            if accepted_added_ids != added_ids:
++                raise RuntimeError(
++                    "Accepted manipulands did not survive post-processing exactly"
++                )
++            render_asset_files = _referenced_room_asset_records(
++                render_state,
++                room_root=Path(self.scene.scene_dir),
++                object_ids=set(referenced_object_ids),
++            )
++            if render_asset_files != referenced_asset_files:
++                raise RuntimeError(
++                    "Accepted manipuland assets changed during post-processing"
++                )
++        else:
++            self._verify_legacy_checkpoint_source(
++                legacy_source,
++                accepted_evidence=accepted_evidence,
++                scene_state=output_state,
++                furniture_selection=furniture_selection,
++                furniture_index=furniture_index,
++                input_scene_hash=input_scene_hash,
++                input_object_ids=input_object_ids,
++            )
++        stage = final.with_name(f".{final.name}.tmp.{os.getpid()}.{uuid.uuid4().hex}")
++        if stage.exists():
++            raise RuntimeError(f"Checkpoint staging path already exists: {stage}")
++        try:
++            stage.mkdir()
++            self.logger.log_scene(scene=self.scene, output_dir=stage)
++            if {path.name for path in stage.iterdir()} != {
++                "scene_state.json",
++                "scene.dmd.yaml",
++            }:
++                raise RuntimeError("Scene logger emitted unexpected checkpoint artifacts")
++            _fsync_file(stage / "scene_state.json")
++            _fsync_file(stage / "scene.dmd.yaml")
++            state_record = _file_record(stage / "scene_state.json")
++            directive_record = _file_record(stage / "scene.dmd.yaml")
++            receipt = {
++                "schema_version": _FURNITURE_CHECKPOINT_SCHEMA,
++                "status": "pass",
++                **self._checkpoint_context(furniture_selection, furniture_index),
++                "input_scene_content_hash": input_scene_hash,
++                "output_scene_content_hash": self.scene.content_hash(),
++                "accepted_evidence": accepted_evidence,
++                "added_manipuland_ids": sorted(added_ids),
++                "referenced_asset_object_ids": referenced_object_ids,
++                "referenced_asset_files": referenced_asset_files,
++                "legacy_source": legacy_source,
++                "artifacts": {
++                    "scene_state": state_record,
++                    "drake_directive": directive_record,
++                },
++            }
++            receipt["attestation"] = _receipt_attestation(receipt)
++            _write_json_fsynced(stage / "completion_receipt.json", receipt)
++            _verify_referenced_asset_records(
++                referenced_asset_files,
++                scene_state=output_state,
++                room_root=Path(self.scene.scene_dir),
++                object_ids=set(referenced_object_ids),
++            )
++            if (
++                _accepted_render_evidence(
++                    accepted_dir, minimum_score=self._minimum_accepted_score()
++                )
++                != accepted_evidence
++            ):
++                raise RuntimeError(
++                    "Copied manipuland evidence changed during checkpoint publication"
++                )
++            if legacy_source is not None:
++                self._verify_legacy_checkpoint_source(
++                    legacy_source,
++                    accepted_evidence=accepted_evidence,
++                    scene_state=output_state,
++                    furniture_selection=furniture_selection,
++                    furniture_index=furniture_index,
++                    input_scene_hash=input_scene_hash,
++                    input_object_ids=input_object_ids,
++                )
++            elif (
++                _accepted_render_evidence(
++                    Path(render_dir),
++                    minimum_score=self._minimum_accepted_score(),
++                    allowed_extra=frozenset({"scene_state.json", "scene.dmd.yaml"}),
++                )
++                != accepted_evidence
++            ):
++                raise RuntimeError(
++                    "Current render evidence changed during checkpoint publication"
++                )
++            if normal_render_records is not None:
++                self._verify_file_record(
++                    Path(render_dir) / "scene_state.json",
++                    normal_render_records["scene_state"],
++                    label="current render scene state",
++                )
++                self._verify_file_record(
++                    Path(render_dir) / "scene.dmd.yaml",
++                    normal_render_records["drake_directive"],
++                    label="current render Drake directive",
++                )
++            _fsync_directory(stage)
++            stage.rename(final)
++            _fsync_directory(final.parent)
++        except Exception:
++            if stage.exists():
++                shutil.rmtree(stage)
++                _fsync_directory(final.parent)
++            raise
++        console_logger.info(
++            "Published durable manipuland checkpoint for %s: %s",
++            furniture_selection.furniture_id,
++            final,
++        )
++
+     async def add_manipulands(self, scene: RoomScene) -> None:
+         """Add manipulands to furniture surfaces in the scene.
+ 
+@@ -713,9 +2741,8 @@ class StatefulManipulandAgent(BaseStatefulAgent, BaseManipulandAgent):
+                 placement.
+ 
+         Raises:
+-            Exception: If support surface extraction fails (indicates invalid
+-                furniture geometry). Agent execution errors are logged but do
+-                not halt processing of remaining furniture.
++            Exception: If a selected furniture target, its support extraction,
++                its workflow, post-processing, or checkpoint publication fails.
+         """
+         console_logger.info("Starting manipuland placement")
+         self.scene = scene
+@@ -724,10 +2751,16 @@ class StatefulManipulandAgent(BaseStatefulAgent, BaseManipulandAgent):
+         # This prevents cache key collisions when object IDs are reused.
+         self.rendering_manager.clear_cache()
+ 
+-        # Phase 1: Initial analysis - identify which furniture to populate.
+-        furniture_data = await self._analyze_furniture_for_placement(scene)
+-        furniture_data = self._apply_furniture_target_limit(scene, furniture_data)
++        # Phase 1: restore an exact prior plan, or analyze once and durably bind
++        # the complete ordered selection/context before mutating the scene.
++        initial_scene_hash = self.scene.content_hash()
++        furniture_data = self._load_furniture_plan(initial_scene_hash)
++        new_plan = furniture_data is None
++        if furniture_data is None:
++            furniture_data = await self._analyze_furniture_for_placement(scene)
++            furniture_data = self._apply_furniture_target_limit(scene, furniture_data)
+ 
++        self._validate_explicit_legacy_plan(furniture_data)
+         if not furniture_data:
+             console_logger.info("No furniture identified for manipuland placement")
+             return
+@@ -737,7 +2770,7 @@ class StatefulManipulandAgent(BaseStatefulAgent, BaseManipulandAgent):
+         )
+ 
+         # Phase 1b: Select context furniture for each selection.
+-        if self.cfg.context_furniture.enabled:
++        if new_plan and self.cfg.context_furniture.enabled:
+             # Get path to furniture_selection images (already rendered).
+             furniture_selection_dir = (
+                 self.rendering_manager._base_output_dir
+@@ -760,8 +2793,11 @@ class StatefulManipulandAgent(BaseStatefulAgent, BaseManipulandAgent):
+                     selection.furniture_id, []
+                 )
+ 
++        if new_plan:
++            self._publish_furniture_plan(initial_scene_hash, furniture_data)
++
+         # Phase 2: Per-furniture loop.
+-        for furniture_selection in furniture_data:
++        for furniture_index, furniture_selection in enumerate(furniture_data):
+             furniture_id = furniture_selection.furniture_id
+             # Create custom span for this furniture's manipuland placement.
+             with custom_span(
+@@ -781,11 +2817,50 @@ class StatefulManipulandAgent(BaseStatefulAgent, BaseManipulandAgent):
+                     )
+ 
+                 # Extract support surface for this furniture.
+-                furniture = scene.get_object(furniture_id)
++                furniture = self.scene.get_object(furniture_id)
+                 if not furniture:
+-                    console_logger.warning(
+-                        f"Furniture {furniture_id} not found, skipping"
++                    raise RuntimeError(
++                        f"Selected furniture {furniture_id} is missing from the scene"
++                    )
++
++                input_scene_state = self.scene.to_state_dict()
++                input_objects = input_scene_state.get("objects")
++                if not isinstance(input_objects, dict):
++                    raise RuntimeError("Manipuland input scene has no object mapping")
++                input_object_ids = set(input_objects)
++                input_scene_hash = self.scene.content_hash()
++                if self._restore_completed_furniture_checkpoint(
++                    furniture_selection=furniture_selection,
++                    furniture_index=furniture_index,
++                    input_scene_hash=input_scene_hash,
++                ):
++                    continue
++
++                legacy_source = self._restore_legacy_accepted_render(
++                    furniture_selection,
++                    furniture_index,
++                    input_scene_hash,
++                )
++                if legacy_source is not None:
++                    if not self.cfg.per_furniture_postprocessing.enabled:
++                        raise RuntimeError(
++                            "Legacy accepted render cannot be promoted without "
++                            "per-furniture post-processing"
++                        )
++                    self._run_per_furniture_postprocessing(furniture_id)
++                    self._publish_furniture_checkpoint(
++                        furniture_selection=furniture_selection,
++                        furniture_index=furniture_index,
++                        input_scene_hash=input_scene_hash,
++                        legacy_source=legacy_source,
++                        input_object_ids=input_object_ids,
+                     )
++                    required = self._required_legacy_recovery
++                    if required is not None and required[:2] == (
++                        furniture_index,
++                        str(furniture_id),
++                    ):
++                        self._legacy_recovery_satisfied = True
+                     continue
+ 
+                 # Extract all support surfaces using HSM algorithm.
+@@ -802,10 +2877,9 @@ class StatefulManipulandAgent(BaseStatefulAgent, BaseManipulandAgent):
+ 
+                 # Skip furniture with no support surfaces (e.g., plants, unsuitable geometry).
+                 if not surfaces:
+-                    console_logger.warning(
+-                        f"No support surfaces found for {furniture_id}, skipping manipuland placement"
++                    raise RuntimeError(
++                        f"Selected furniture {furniture_id} has no usable support surfaces"
+                     )
+-                    continue
+ 
+                 try:
+                     # Set up per-furniture context.
+@@ -820,7 +2894,7 @@ class StatefulManipulandAgent(BaseStatefulAgent, BaseManipulandAgent):
+                     self._initialize_checkpoint_state()
+ 
+                     # Get furniture description for agent prompts.
+-                    furniture_obj = scene.get_object(furniture_id)
++                    furniture_obj = self.scene.get_object(furniture_id)
+                     furniture_description = (
+                         furniture_obj.description if furniture_obj else "furniture"
+                     )
+@@ -834,31 +2908,27 @@ class StatefulManipulandAgent(BaseStatefulAgent, BaseManipulandAgent):
+                     # Run multi-agent workflow.
+                     await self._run_furniture_workflow(furniture_id)
+ 
+-                    # Per-furniture post-processing (after manipulands placed).
+-                    if self.cfg.per_furniture_postprocessing.enabled:
+-                        sim_cfg = self.cfg.per_furniture_postprocessing.simulation
+-                        sim_html_path = None
+-                        if sim_cfg.save_html:
+-                            sim_html_path = (
+-                                self.scene.scene_dir
+-                                / "simulation"
+-                                / "per_furniture"
+-                                / f"{furniture_id}_simulation.html"
+-                            )
+-                        self.scene = apply_per_furniture_postprocessing(
+-                            full_scene=self.scene,
+-                            furniture_id=furniture_id,
+-                            config=self.cfg.per_furniture_postprocessing,
+-                            simulation_html_path=sim_html_path,
+-                        )
++                    # Per-furniture post-processing is part of the durable output,
++                    # so the checkpoint is published only after it succeeds.
++                    self._run_per_furniture_postprocessing(furniture_id)
++                    self._publish_furniture_checkpoint(
++                        furniture_selection=furniture_selection,
++                        furniture_index=furniture_index,
++                        input_scene_hash=input_scene_hash,
++                        legacy_source=None,
++                        input_object_ids=input_object_ids,
++                    )
+ 
+                 except Exception as e:
+-                    console_logger.error(
+-                        f"Error populating furniture {furniture_id}: {e}", exc_info=True
+-                    )
+-                    # Continue to next furniture piece.
+-                    continue
++                    raise RuntimeError(
++                        f"Required manipuland target {furniture_id} failed"
++                    ) from e
+ 
++        if (
++            self._required_legacy_recovery is not None
++            and not self._legacy_recovery_satisfied
++        ):
++            raise RuntimeError("Required legacy recovery was not consumed or restored")
+         console_logger.info("Manipuland placement complete")
+ 
+     def _apply_furniture_target_limit(
+diff --git a/tests/unit/test_manipuland_furniture_checkpoint.py b/tests/unit/test_manipuland_furniture_checkpoint.py
+new file mode 100644
+index 0000000..b5cba06
+--- /dev/null
++++ b/tests/unit/test_manipuland_furniture_checkpoint.py
+@@ -0,0 +1,1281 @@
++"""Durable and legacy per-furniture manipuland checkpoint regressions."""
++
++from __future__ import annotations
++
++import copy
++import hashlib
++import json
++import os
++
++from contextlib import nullcontext
++from pathlib import Path, PurePosixPath
++from types import SimpleNamespace
++
++import pytest
++
++from omegaconf import OmegaConf
++
++from scenesmith.agent_utils.room import UniqueID
++from scenesmith.agent_utils.scene_analyzer import FurnitureSelection
++from scenesmith.manipuland_agents import stateful_manipuland_agent as checkpoint
++from scenesmith.manipuland_agents.stateful_manipuland_agent import (
++    StatefulManipulandAgent,
++)
++
++
++class _FakeScene:
++    def __init__(self, state: dict, scene_dir: Path):
++        self._state = copy.deepcopy(state)
++        self.scene_dir = scene_dir
++        self.room_id = "classroom_01"
++
++    def to_state_dict(self) -> dict:
++        return copy.deepcopy(self._state)
++
++    def restore_from_state_dict(self, state: dict) -> None:
++        self._state = copy.deepcopy(state)
++
++    def content_hash(self) -> str:
++        value = copy.deepcopy(self._state)
++        value.pop("timestamp", None)
++        return hashlib.sha256(
++            json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
++        ).hexdigest()
++
++
++class _FakeLogger:
++    def __init__(self, output_dir: Path):
++        self.output_dir = output_dir
++
++    def log_scene(self, scene, name=None, output_dir=None):
++        assert output_dir is not None
++        output_dir.mkdir(parents=True, exist_ok=True)
++        (output_dir / "scene_state.json").write_text(
++            json.dumps(scene.to_state_dict()), encoding="utf-8"
++        )
++        (output_dir / "scene.dmd.yaml").write_text("directives:\n", encoding="utf-8")
++        return output_dir
++
++
++def _base_state() -> dict:
++    return {
++        "room_geometry": {"room_id": "classroom_01"},
++        "text_description": "room",
++        "objects": {
++            "teacher_desk_0": {
++                "object_id": "teacher_desk_0",
++                "object_type": "furniture",
++                "transform": {
++                    "translation": [0, 0, 0],
++                    "rotation_wxyz": [1, 0, 0, 0],
++                },
++                "support_surfaces": [],
++                "metadata": {"authority": "bound"},
++                "geometry_path": "generated_assets/furniture/teacher_desk.gltf",
++                "sdf_path": "generated_assets/furniture/teacher_desk.sdf",
++            },
++            "chair_0": {
++                "object_id": "chair_0",
++                "object_type": "furniture",
++                "transform": {
++                    "translation": [1, 0, 0],
++                    "rotation_wxyz": [1, 0, 0, 0],
++                },
++                "support_surfaces": [],
++                "metadata": {"authority": "bound"},
++            },
++        },
++        "timestamp": 1.0,
++    }
++
++
++def _accepted_state() -> dict:
++    state = _base_state()
++    state["timestamp"] = 2.0
++    state["objects"]["teacher_desk_0"]["transform"] = {
++        "translation": [1e-16, 0, 0],
++        "rotation_wxyz": [-1, 0, 0, 0],
++    }
++    state["objects"]["teacher_desk_0"]["support_surfaces"] = [
++        {"surface_id": "S_0"}
++    ]
++    state["objects"]["chair_0"]["transform"] = {
++        "translation": [1, 1e-16, 0],
++        "rotation_wxyz": [1, 0, 0, 0],
++    }
++    state["objects"]["gradebook_0"] = {
++        "object_id": "gradebook_0",
++        "object_type": "manipuland",
++        "transform": {
++            "translation": [0, 0, 1],
++            "rotation_wxyz": [1, 0, 0, 0],
++        },
++        "geometry_path": "generated_assets/manipuland/gradebook.gltf",
++        "sdf_path": "generated_assets/manipuland/gradebook.sdf",
++        "support_surfaces": [],
++        "metadata": {"asset_source": "objaverse"},
++        "placement_info": {
++            "placement_method": "surface_placement",
++            "parent_surface_id": "S_0",
++        },
++    }
++    return state
++
++
++def _selection() -> FurnitureSelection:
++    return FurnitureSelection(
++        furniture_id=UniqueID("teacher_desk_0"),
++        suggested_items="gradebook",
++        prompt_constraints="teacher materials",
++        style_notes="organized",
++        context_furniture_ids=[UniqueID("chair_0")],
++    )
++
++
++def _write_evidence(directory: Path, *, state: dict | None = None) -> None:
++    directory.mkdir(parents=True)
++    score = {
++        category: {"grade": 8, "comment": "passes"}
++        for category in checkpoint._SCORE_CATEGORIES
++    }
++    score["summary"] = "accepted"
++    (directory / "scores.yaml").write_text(
++        __import__("yaml").safe_dump(score, sort_keys=False), encoding="utf-8"
++    )
++    for name in ("0_side.png", "0_top.png", "1_side.png", "2_side.png", "3_side.png"):
++        (directory / name).write_bytes(("image:" + name).encode())
++    if state is not None:
++        (directory / "scene_state.json").write_text(
++            json.dumps(state), encoding="utf-8"
++        )
++        (directory / "scene.dmd.yaml").write_text("directives:\n", encoding="utf-8")
++
++
++def _write_added_assets(root: Path) -> None:
++    directory = root / "generated_assets" / "manipuland"
++    directory.mkdir(parents=True, exist_ok=True)
++    binary = b"gradebook-bin"
++    (directory / "gradebook.bin").write_bytes(binary)
++    (directory / "gradebook.gltf").write_text(
++        json.dumps(
++            {
++                "asset": {"version": "2.0"},
++                "buffers": [
++                    {"uri": "gradebook.bin", "byteLength": len(binary)}
++                ],
++            }
++        ),
++        encoding="utf-8",
++    )
++    (directory / "gradebook_collision.obj").write_text(
++        "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n",
++        encoding="utf-8",
++    )
++    (directory / "gradebook.sdf").write_text(
++        "<sdf version='1.7'><model name='gradebook'><link name='base'>"
++        "<visual><geometry><mesh><uri>gradebook.gltf</uri></mesh></geometry></visual>"
++        "<collision><geometry><mesh><uri>gradebook_collision.obj</uri></mesh>"
++        "</geometry></collision></link></model></sdf>",
++        encoding="utf-8",
++    )
++    furniture = root / "generated_assets" / "furniture"
++    furniture.mkdir(parents=True, exist_ok=True)
++    teacher_binary = b"teacher-desk-bin"
++    (furniture / "teacher_desk.bin").write_bytes(teacher_binary)
++    (furniture / "teacher_desk.gltf").write_text(
++        json.dumps(
++            {
++                "asset": {"version": "2.0"},
++                "buffers": [
++                    {"uri": "teacher_desk.bin", "byteLength": len(teacher_binary)}
++                ],
++            }
++        ),
++        encoding="utf-8",
++    )
++    (furniture / "teacher_desk_collision.obj").write_text(
++        "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n", encoding="utf-8"
++    )
++    (furniture / "teacher_desk.sdf").write_text(
++        "<sdf version='1.7'><model name='teacher_desk'><link name='base'>"
++        "<visual><geometry><mesh><uri>teacher_desk.gltf</uri></mesh></geometry>"
++        "</visual><collision><geometry><mesh><uri>teacher_desk_collision.obj</uri>"
++        "</mesh></geometry></collision></link></model></sdf>",
++        encoding="utf-8",
++    )
++
++
++def _authorize_legacy_recovery(
++    tmp_path: Path,
++    monkeypatch: pytest.MonkeyPatch,
++    *,
++    agent: StatefulManipulandAgent,
++    render_dir: Path,
++) -> Path:
++    input_dir = tmp_path / "scene_states" / "scene_after_ceiling_objects"
++    input_dir.mkdir(parents=True, exist_ok=True)
++    input_path = input_dir / "scene_state.json"
++    input_path.write_text(json.dumps(agent.scene.to_state_dict()), encoding="utf-8")
++    accepted_dir = tmp_path / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    candidate = json.loads((render_dir / "scene_state.json").read_text(encoding="utf-8"))
++    added_ids = sorted(
++        set(candidate["objects"]) - set(agent.scene.to_state_dict()["objects"])
++    )
++    referenced_ids = sorted(set(added_ids) | {"teacher_desk_0"})
++    manifest = {
++        "schema_version": checkpoint._LEGACY_RECOVERY_SCHEMA,
++        "status": "authorized",
++        "purpose": "one_time_legacy_manipuland_recovery",
++        "room_id": "classroom_01",
++        "furniture_index": 0,
++        "furniture_id": "teacher_desk_0",
++        "input_scene_content_hash": agent.scene.content_hash(),
++        "output_scene_content_hash": _FakeScene(
++            candidate, tmp_path
++        ).content_hash(),
++        "input_scene_state_path": input_path.relative_to(tmp_path).as_posix(),
++        "input_scene_state": checkpoint._file_record(input_path),
++        "render_directory": render_dir.relative_to(tmp_path).as_posix(),
++        "scene_state": checkpoint._file_record(render_dir / "scene_state.json"),
++        "drake_directive": checkpoint._file_record(render_dir / "scene.dmd.yaml"),
++        "accepted_evidence": checkpoint._accepted_render_evidence(
++            accepted_dir, minimum_score=8
++        ),
++        "added_manipuland_ids": added_ids,
++        "added_asset_files": checkpoint._referenced_room_asset_records(
++            candidate,
++            room_root=tmp_path,
++            object_ids=set(added_ids),
++        ),
++        "referenced_asset_object_ids": referenced_ids,
++        "referenced_asset_files": checkpoint._referenced_room_asset_records(
++            candidate,
++            room_root=tmp_path,
++            object_ids=set(referenced_ids),
++        ),
++    }
++    manifest_path = tmp_path.parent / f"{tmp_path.name}_legacy_recovery.json"
++    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
++    monkeypatch.setenv(
++        "SCENESMITH_LEGACY_MANIPULAND_RECOVERY_MANIFEST", str(manifest_path)
++    )
++    monkeypatch.setenv(
++        "SCENESMITH_LEGACY_MANIPULAND_RECOVERY_SHA256",
++        checkpoint._sha256_file(manifest_path),
++    )
++    return manifest_path
++
++
++def _rewrite_authorization(
++    manifest_path: Path,
++    monkeypatch: pytest.MonkeyPatch,
++    mutate,
++) -> None:
++    document = json.loads(manifest_path.read_text(encoding="utf-8"))
++    mutate(document)
++    manifest_path.write_text(json.dumps(document), encoding="utf-8")
++    monkeypatch.setenv(
++        "SCENESMITH_LEGACY_MANIPULAND_RECOVERY_SHA256",
++        checkpoint._sha256_file(manifest_path),
++    )
++
++
++def _agent(tmp_path: Path, state: dict) -> StatefulManipulandAgent:
++    _write_added_assets(tmp_path)
++    agent = StatefulManipulandAgent.__new__(StatefulManipulandAgent)
++    agent.logger = _FakeLogger(tmp_path)
++    agent.scene = _FakeScene(state, tmp_path)
++    agent.cfg = OmegaConf.create(
++        {"checkpoint_test": True, "early_finish_min_score": 8}
++    )
++    agent._legacy_recovery_consumed = False
++    agent._legacy_recovery_satisfied = False
++    agent._required_legacy_recovery = None
++    current_render = tmp_path / "current_render"
++    _write_evidence(current_render, state=state)
++    agent.final_render_dir = current_render
++    agent.checkpoint_render_dir = None
++    return agent
++
++
++def _authorized_legacy_case(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> tuple[StatefulManipulandAgent, Path, str]:
++    accepted_dir = tmp_path / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    render_dir = (
++        tmp_path
++        / "scene_renders"
++        / "manipulands_teacher_desk_0"
++        / "renders_003"
++    )
++    _write_evidence(accepted_dir)
++    _write_evidence(render_dir, state=_accepted_state())
++    agent = _agent(tmp_path, _base_state())
++    manifest = _authorize_legacy_recovery(
++        tmp_path, monkeypatch, agent=agent, render_dir=render_dir
++    )
++    return agent, manifest, agent.scene.content_hash()
++
++
++def test_exact_accepted_legacy_render_is_restored(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    accepted_dir = tmp_path / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    render_dir = (
++        tmp_path
++        / "scene_renders"
++        / "manipulands_teacher_desk_0"
++        / "renders_003"
++    )
++    _write_evidence(accepted_dir)
++    _write_evidence(render_dir, state=_accepted_state())
++    _write_added_assets(tmp_path)
++    agent = _agent(tmp_path, _base_state())
++    _authorize_legacy_recovery(
++        tmp_path, monkeypatch, agent=agent, render_dir=render_dir
++    )
++
++    source = agent._restore_legacy_accepted_render(
++        _selection(), 0, agent.scene.content_hash()
++    )
++
++    assert source is not None
++    assert source["render_directory"].endswith("renders_003")
++    assert source["added_manipuland_ids"] == ["gradebook_0"]
++    assert "gradebook_0" in agent.scene.to_state_dict()["objects"]
++
++
++def test_legacy_input_accepts_hash_preserving_quaternion_roundtrip_drift(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    accepted_dir = tmp_path / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    render_dir = (
++        tmp_path
++        / "scene_renders"
++        / "manipulands_teacher_desk_0"
++        / "renders_003"
++    )
++    _write_evidence(accepted_dir)
++    _write_evidence(render_dir, state=_accepted_state())
++    agent = _agent(tmp_path, _base_state())
++    input_hash = agent.scene.content_hash()
++    _authorize_legacy_recovery(
++        tmp_path, monkeypatch, agent=agent, render_dir=render_dir
++    )
++    exact_to_state_dict = agent.scene.to_state_dict
++
++    def roundtripped_state() -> dict:
++        state = exact_to_state_dict()
++        for item in state["objects"].values():
++            item["transform"]["rotation_wxyz"][1] += 1e-18
++        return state
++
++    monkeypatch.setattr(agent.scene, "to_state_dict", roundtripped_state)
++    assert agent.scene.content_hash() == input_hash
++    source = agent._restore_legacy_accepted_render(_selection(), 0, input_hash)
++    assert source is not None
++    assert source["added_manipuland_ids"] == ["gradebook_0"]
++
++
++def test_legacy_render_cannot_change_protected_provenance(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    accepted = _accepted_state()
++    accepted["objects"]["chair_0"]["metadata"] = {"authority": "substituted"}
++    _write_evidence(
++        tmp_path / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    )
++    render_dir = (
++        tmp_path
++        / "scene_renders"
++        / "manipulands_teacher_desk_0"
++        / "renders_003"
++    )
++    _write_evidence(render_dir, state=accepted)
++    _write_added_assets(tmp_path)
++    agent = _agent(tmp_path, _base_state())
++    _authorize_legacy_recovery(
++        tmp_path, monkeypatch, agent=agent, render_dir=render_dir
++    )
++
++    with pytest.raises(RuntimeError, match="protected fields"):
++        agent._restore_legacy_accepted_render(
++            _selection(), 0, agent.scene.content_hash()
++        )
++
++
++def test_published_checkpoint_restores_only_exact_hash_chain(tmp_path: Path) -> None:
++    _write_evidence(
++        tmp_path / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    )
++    base = _base_state()
++    output = _accepted_state()
++    agent = _agent(tmp_path, output)
++    input_hash = _FakeScene(base, tmp_path).content_hash()
++    agent._publish_furniture_checkpoint(
++        furniture_selection=_selection(),
++        furniture_index=0,
++        input_scene_hash=input_hash,
++        input_object_ids=set(base["objects"]),
++        legacy_source=None,
++    )
++    agent.scene.restore_from_state_dict(base)
++
++    assert agent._restore_completed_furniture_checkpoint(
++        furniture_selection=_selection(),
++        furniture_index=0,
++        input_scene_hash=input_hash,
++    )
++    assert agent.scene.content_hash() == _FakeScene(output, tmp_path).content_hash()
++
++    agent.scene.restore_from_state_dict(base)
++    with pytest.raises(RuntimeError, match="contract mismatch"):
++        agent._restore_completed_furniture_checkpoint(
++            furniture_selection=_selection(),
++            furniture_index=0,
++            input_scene_hash="0" * 64,
++        )
++
++
++def test_legacy_recovery_is_never_automatic(tmp_path: Path) -> None:
++    _write_evidence(
++        tmp_path / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    )
++    render_dir = (
++        tmp_path
++        / "scene_renders"
++        / "manipulands_teacher_desk_0"
++        / "renders_003"
++    )
++    _write_evidence(render_dir, state=_accepted_state())
++    agent = _agent(tmp_path, _base_state())
++    assert (
++        agent._restore_legacy_accepted_render(
++            _selection(), 0, agent.scene.content_hash()
++        )
++        is None
++    )
++
++
++def test_legacy_transform_drift_is_rejected(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    accepted = _accepted_state()
++    accepted["objects"]["chair_0"]["transform"]["translation"][0] += 0.001
++    accepted_dir = tmp_path / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    render_dir = (
++        tmp_path
++        / "scene_renders"
++        / "manipulands_teacher_desk_0"
++        / "renders_003"
++    )
++    _write_evidence(accepted_dir)
++    _write_evidence(render_dir, state=accepted)
++    _write_added_assets(tmp_path)
++    agent = _agent(tmp_path, _base_state())
++    _authorize_legacy_recovery(
++        tmp_path, monkeypatch, agent=agent, render_dir=render_dir
++    )
++    with pytest.raises(RuntimeError, match="transform/schema"):
++        agent._restore_legacy_accepted_render(
++            _selection(), 0, agent.scene.content_hash()
++        )
++
++
++def test_legacy_target_may_add_support_surface_field(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    base = _base_state()
++    del base["objects"]["teacher_desk_0"]["support_surfaces"]
++    accepted = _accepted_state()
++    accepted_dir = tmp_path / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    render_dir = (
++        tmp_path
++        / "scene_renders"
++        / "manipulands_teacher_desk_0"
++        / "renders_003"
++    )
++    _write_evidence(accepted_dir)
++    _write_evidence(render_dir, state=accepted)
++    _write_added_assets(tmp_path)
++    agent = _agent(tmp_path, base)
++    _authorize_legacy_recovery(
++        tmp_path, monkeypatch, agent=agent, render_dir=render_dir
++    )
++
++    assert (
++        agent._restore_legacy_accepted_render(
++            _selection(), 0, agent.scene.content_hash()
++        )
++        is not None
++    )
++
++
++def test_low_score_cannot_be_accepted(tmp_path: Path) -> None:
++    directory = tmp_path / "evidence"
++    _write_evidence(directory)
++    scores = __import__("yaml").safe_load((directory / "scores.yaml").read_text())
++    scores["Layout"]["grade"] = 7
++    (directory / "scores.yaml").write_text(
++        __import__("yaml").safe_dump(scores, sort_keys=False), encoding="utf-8"
++    )
++    with pytest.raises(RuntimeError, match="does not pass 8"):
++        checkpoint._accepted_render_evidence(directory, minimum_score=8)
++
++
++def test_exact_furniture_plan_is_reused(tmp_path: Path) -> None:
++    agent = _agent(tmp_path, _base_state())
++    input_hash = agent.scene.content_hash()
++    agent._publish_furniture_plan(input_hash, [_selection()])
++    restored = agent._load_furniture_plan(input_hash)
++    assert restored is not None
++    assert [checkpoint._selection_payload(item) for item in restored] == [
++        checkpoint._selection_payload(_selection())
++    ]
++    with pytest.raises(RuntimeError, match="input_scene_content_hash mismatch"):
++        agent._load_furniture_plan("f" * 64)
++
++
++def test_checkpoint_extra_file_is_rejected(tmp_path: Path) -> None:
++    _write_evidence(
++        tmp_path / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    )
++    base = _base_state()
++    agent = _agent(tmp_path, _accepted_state())
++    input_hash = _FakeScene(base, tmp_path).content_hash()
++    agent._publish_furniture_checkpoint(
++        furniture_selection=_selection(),
++        furniture_index=0,
++        input_scene_hash=input_hash,
++        input_object_ids=set(base["objects"]),
++        legacy_source=None,
++    )
++    directory = agent._checkpoint_directory(_selection(), 0)
++    (directory / "substituted.txt").write_text("bad", encoding="utf-8")
++    agent.scene.restore_from_state_dict(base)
++    with pytest.raises(RuntimeError, match="inventory mismatch"):
++        agent._restore_completed_furniture_checkpoint(
++            furniture_selection=_selection(),
++            furniture_index=0,
++            input_scene_hash=input_hash,
++        )
++
++
++def test_atomic_checkpoint_failure_leaves_no_publication(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    _write_evidence(
++        tmp_path / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    )
++    agent = _agent(tmp_path, _accepted_state())
++    original_rename = Path.rename
++
++    def fail_publication(path: Path, target: Path):
++        if path.name.startswith(".manipuland_checkpoint_"):
++            raise OSError("injected rename failure")
++        return original_rename(path, target)
++
++    monkeypatch.setattr(Path, "rename", fail_publication)
++    with pytest.raises(OSError, match="injected rename failure"):
++        agent._publish_furniture_checkpoint(
++            furniture_selection=_selection(),
++            furniture_index=0,
++            input_scene_hash="a" * 64,
++            input_object_ids=set(_base_state()["objects"]),
++            legacy_source=None,
++        )
++    final = agent._checkpoint_directory(_selection(), 0)
++    assert not final.exists()
++    assert not list(final.parent.glob(f".{final.name}.tmp.*"))
++
++
++def test_stale_checkpoint_transaction_fails_closed(tmp_path: Path) -> None:
++    _write_evidence(
++        tmp_path / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    )
++    agent = _agent(tmp_path, _accepted_state())
++    final = agent._checkpoint_directory(_selection(), 0)
++    stale = final.with_name(f".{final.name}.tmp.crashed")
++    stale.mkdir(parents=True)
++    with pytest.raises(RuntimeError, match="Stale manipuland checkpoint transaction"):
++        agent._publish_furniture_checkpoint(
++            furniture_selection=_selection(),
++            furniture_index=0,
++            input_scene_hash="a" * 64,
++            input_object_ids=set(_base_state()["objects"]),
++            legacy_source=None,
++        )
++
++
++def test_checkpoint_state_tamper_is_detected(tmp_path: Path) -> None:
++    _write_evidence(
++        tmp_path / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    )
++    base = _base_state()
++    agent = _agent(tmp_path, _accepted_state())
++    input_hash = _FakeScene(base, tmp_path).content_hash()
++    agent._publish_furniture_checkpoint(
++        furniture_selection=_selection(),
++        furniture_index=0,
++        input_scene_hash=input_hash,
++        input_object_ids=set(base["objects"]),
++        legacy_source=None,
++    )
++    directory = agent._checkpoint_directory(_selection(), 0)
++    (directory / "scene_state.json").write_text("{}", encoding="utf-8")
++    agent.scene.restore_from_state_dict(base)
++    with pytest.raises(RuntimeError, match="hash/size mismatch"):
++        agent._restore_completed_furniture_checkpoint(
++            furniture_selection=_selection(),
++            furniture_index=0,
++            input_scene_hash=input_hash,
++        )
++
++
++def test_checkpoint_receipt_extra_field_is_rejected(tmp_path: Path) -> None:
++    _write_evidence(
++        tmp_path / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    )
++    base = _base_state()
++    agent = _agent(tmp_path, _accepted_state())
++    input_hash = _FakeScene(base, tmp_path).content_hash()
++    agent._publish_furniture_checkpoint(
++        furniture_selection=_selection(),
++        furniture_index=0,
++        input_scene_hash=input_hash,
++        input_object_ids=set(base["objects"]),
++        legacy_source=None,
++    )
++    directory = agent._checkpoint_directory(_selection(), 0)
++    receipt_path = directory / "completion_receipt.json"
++    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
++    receipt["substitution"] = "not allowed"
++    receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
++    agent.scene.restore_from_state_dict(base)
++    with pytest.raises(RuntimeError, match="receipt schema mismatch"):
++        agent._restore_completed_furniture_checkpoint(
++            furniture_selection=_selection(),
++            furniture_index=0,
++            input_scene_hash=input_hash,
++        )
++
++
++def test_legacy_checkpoint_revalidates_added_asset_hashes(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    accepted_dir = tmp_path / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    render_dir = (
++        tmp_path
++        / "scene_renders"
++        / "manipulands_teacher_desk_0"
++        / "renders_003"
++    )
++    _write_evidence(accepted_dir)
++    _write_evidence(render_dir, state=_accepted_state())
++    _write_added_assets(tmp_path)
++    base = _base_state()
++    agent = _agent(tmp_path, base)
++    input_hash = agent.scene.content_hash()
++    _authorize_legacy_recovery(
++        tmp_path, monkeypatch, agent=agent, render_dir=render_dir
++    )
++    source = agent._restore_legacy_accepted_render(
++        _selection(), 0, input_hash
++    )
++    assert source is not None
++    agent._publish_furniture_checkpoint(
++        furniture_selection=_selection(),
++        furniture_index=0,
++        input_scene_hash=input_hash,
++        input_object_ids=set(base["objects"]),
++        legacy_source=source,
++    )
++    (tmp_path / "generated_assets" / "manipuland" / "gradebook.bin").write_bytes(
++        b"substituted"
++    )
++    agent.scene.restore_from_state_dict(base)
++    with pytest.raises(RuntimeError, match="referenced asset inventory mismatch"):
++        agent._restore_completed_furniture_checkpoint(
++            furniture_selection=_selection(),
++            furniture_index=0,
++            input_scene_hash=input_hash,
++        )
++
++
++def test_asset_changed_after_authorization_cannot_be_promoted(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    agent, _, input_hash = _authorized_legacy_case(tmp_path, monkeypatch)
++    (
++        tmp_path / "generated_assets" / "manipuland" / "gradebook.bin"
++    ).write_bytes(b"substituted-after-authorization")
++    with pytest.raises(RuntimeError, match="added asset inventory mismatch"):
++        agent._restore_legacy_accepted_render(_selection(), 0, input_hash)
++
++
++def test_target_transitive_asset_changed_after_authorization_cannot_be_promoted(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    agent, _, input_hash = _authorized_legacy_case(tmp_path, monkeypatch)
++    (
++        tmp_path / "generated_assets" / "furniture" / "teacher_desk.bin"
++    ).write_bytes(b"substituted-target-after-authorization")
++    with pytest.raises(RuntimeError, match="referenced asset inventory mismatch"):
++        agent._restore_legacy_accepted_render(_selection(), 0, input_hash)
++
++
++def test_manifest_output_hash_must_match_candidate_scene(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    agent, manifest, input_hash = _authorized_legacy_case(tmp_path, monkeypatch)
++    _rewrite_authorization(
++        manifest,
++        monkeypatch,
++        lambda document: document.__setitem__(
++            "output_scene_content_hash", "0" * 64
++        ),
++    )
++    with pytest.raises(RuntimeError, match="output scene content hash mismatch"):
++        agent._restore_legacy_accepted_render(_selection(), 0, input_hash)
++
++
++@pytest.mark.parametrize("mutation", ["authorization", "render", "asset"])
++def test_legacy_source_is_revalidated_between_restore_and_checkpoint_publish(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, mutation: str
++) -> None:
++    agent, manifest, input_hash = _authorized_legacy_case(tmp_path, monkeypatch)
++    base = _base_state()
++    source = agent._restore_legacy_accepted_render(_selection(), 0, input_hash)
++    assert source is not None
++
++    if mutation == "authorization":
++        manifest.write_bytes(manifest.read_bytes() + b"\n")
++        expected = "authorization manifest changed"
++    elif mutation == "render":
++        render_dir = tmp_path / source["render_directory"]
++        (render_dir / "scene.dmd.yaml").write_text(
++            "directives:\n- substituted\n", encoding="utf-8"
++        )
++        expected = "Drake directive hash/size mismatch"
++    else:
++        (
++            tmp_path / "generated_assets" / "manipuland" / "gradebook.bin"
++        ).write_bytes(b"substituted-after-restore")
++        expected = "referenced asset inventory mismatch"
++
++    with pytest.raises(RuntimeError, match=expected):
++        agent._publish_furniture_checkpoint(
++            furniture_selection=_selection(),
++            furniture_index=0,
++            input_scene_hash=input_hash,
++            input_object_ids=set(base["objects"]),
++            legacy_source=source,
++        )
++
++
++def test_manifest_added_ids_or_assets_must_match_exactly(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    agent, manifest, input_hash = _authorized_legacy_case(tmp_path, monkeypatch)
++
++    def substitute_ids(document: dict) -> None:
++        document["added_manipuland_ids"] = ["substituted_0"]
++        document["referenced_asset_object_ids"] = [
++            "substituted_0",
++            "teacher_desk_0",
++        ]
++
++    _rewrite_authorization(
++        manifest,
++        monkeypatch,
++        substitute_ids,
++    )
++    with pytest.raises(RuntimeError, match="added manipuland inventory mismatch"):
++        agent._restore_legacy_accepted_render(_selection(), 0, input_hash)
++
++    agent, manifest, input_hash = _authorized_legacy_case(
++        tmp_path / "second_room", monkeypatch
++    )
++    _rewrite_authorization(
++        manifest,
++        monkeypatch,
++        lambda document: document["added_asset_files"][0].__setitem__(
++            "sha256", "0" * 64
++        ),
++    )
++    with pytest.raises(RuntimeError, match="added asset inventory mismatch"):
++        agent._restore_legacy_accepted_render(_selection(), 0, input_hash)
++
++
++def test_resigned_checkpoint_cannot_substitute_manifest_bound_legacy_source(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    agent, _, input_hash = _authorized_legacy_case(tmp_path, monkeypatch)
++    base = _base_state()
++    source = agent._restore_legacy_accepted_render(_selection(), 0, input_hash)
++    assert source is not None
++    agent._publish_furniture_checkpoint(
++        furniture_selection=_selection(),
++        furniture_index=0,
++        input_scene_hash=input_hash,
++        input_object_ids=set(base["objects"]),
++        legacy_source=source,
++    )
++    receipt_path = (
++        agent._checkpoint_directory(_selection(), 0) / "completion_receipt.json"
++    )
++    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
++    receipt["legacy_source"]["output_scene_content_hash"] = "f" * 64
++    receipt["attestation"] = checkpoint._receipt_attestation(receipt)
++    receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
++    agent.scene.restore_from_state_dict(base)
++    with pytest.raises(RuntimeError, match="does not match authorization manifest"):
++        agent._restore_completed_furniture_checkpoint(
++            furniture_selection=_selection(),
++            furniture_index=0,
++            input_scene_hash=input_hash,
++        )
++
++
++def test_extra_object_after_legacy_restore_cannot_be_published(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    agent, _, input_hash = _authorized_legacy_case(tmp_path, monkeypatch)
++    base = _base_state()
++    source = agent._restore_legacy_accepted_render(_selection(), 0, input_hash)
++    assert source is not None
++    changed = agent.scene.to_state_dict()
++    changed["objects"]["unexpected_0"] = copy.deepcopy(
++        changed["objects"]["gradebook_0"]
++    )
++    changed["objects"]["unexpected_0"]["object_id"] = "unexpected_0"
++    agent.scene.restore_from_state_dict(changed)
++    with pytest.raises(RuntimeError, match="postprocessed object delta mismatch"):
++        agent._publish_furniture_checkpoint(
++            furniture_selection=_selection(),
++            furniture_index=0,
++            input_scene_hash=input_hash,
++            input_object_ids=set(base["objects"]),
++            legacy_source=source,
++        )
++
++def test_manifest_inside_room_output_is_rejected(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    agent, manifest, _ = _authorized_legacy_case(tmp_path, monkeypatch)
++    inside = tmp_path / "inside_authorization.json"
++    inside.write_bytes(manifest.read_bytes())
++    monkeypatch.setenv(
++        "SCENESMITH_LEGACY_MANIPULAND_RECOVERY_MANIFEST", str(inside)
++    )
++    monkeypatch.setenv(
++        "SCENESMITH_LEGACY_MANIPULAND_RECOVERY_SHA256",
++        checkpoint._sha256_file(inside),
++    )
++    with pytest.raises(RuntimeError, match="must be outside room output"):
++        agent._load_explicit_legacy_manifest()
++
++
++@pytest.mark.parametrize("mode", ["absent", "moved"])
++def test_explicit_legacy_target_must_match_exact_plan(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, mode: str
++) -> None:
++    agent, _, _ = _authorized_legacy_case(tmp_path, monkeypatch)
++    chair = FurnitureSelection(
++        furniture_id=UniqueID("chair_0"),
++        suggested_items="",
++        prompt_constraints="",
++        style_notes="",
++        context_furniture_ids=[],
++    )
++    selections = [chair] if mode == "absent" else [chair, _selection()]
++    with pytest.raises(RuntimeError, match="absent or moved"):
++        agent._validate_explicit_legacy_plan(selections)
++
++
++def test_canonical_absolute_inside_room_is_normalized_and_unsafe_paths_fail(
++    tmp_path: Path,
++) -> None:
++    inside = tmp_path / "assets" / "inside.bin"
++    inside.parent.mkdir()
++    inside.write_bytes(b"inside")
++    if os.name != "nt":
++        resolved, record = checkpoint._room_asset_file_record(
++            inside.resolve().as_posix(),
++            room_root=tmp_path,
++            label="inside",
++        )
++        assert resolved == inside.resolve()
++        assert record["path"] == "assets/inside.bin"
++
++    for raw in (
++        "./assets/inside.bin",
++        "assets/../assets/inside.bin",
++        "assets\\inside.bin",
++    ):
++        with pytest.raises(RuntimeError, match="not canonical"):
++            checkpoint._room_asset_file_record(
++                raw,
++                room_root=tmp_path,
++                label="unsafe",
++            )
++    outside = tmp_path.parent / f"{tmp_path.name}_outside.bin"
++    outside.write_bytes(b"outside")
++    with pytest.raises(RuntimeError, match="escapes the room"):
++        checkpoint._room_asset_file_record(
++            outside.resolve().as_posix(),
++            room_root=tmp_path,
++            label="outside",
++        )
++
++
++def test_transitive_asset_inventory_is_exact_and_ignores_unreferenced_files(
++    tmp_path: Path,
++) -> None:
++    _write_added_assets(tmp_path)
++    (tmp_path / "generated_assets" / "manipuland" / "unused.bin").write_bytes(
++        b"unused"
++    )
++    state = _accepted_state()
++    records = checkpoint._referenced_room_asset_records(
++        state,
++        room_root=tmp_path,
++        object_ids={"gradebook_0"},
++    )
++    assert [record["path"] for record in records] == [
++        "generated_assets/manipuland/gradebook.bin",
++        "generated_assets/manipuland/gradebook.gltf",
++        "generated_assets/manipuland/gradebook.sdf",
++        "generated_assets/manipuland/gradebook_collision.obj",
++    ]
++
++
++@pytest.mark.parametrize("uri", ["a//b.bin", "a/./b.bin", "a/b.bin/"])
++def test_noncanonical_dependency_uri_is_rejected(uri: str) -> None:
++    with pytest.raises(RuntimeError, match="unsafe or unsupported"):
++        checkpoint._dependency_relative_path(
++            uri,
++            owner_relative=PurePosixPath("asset/model.gltf"),
++            label="test",
++            allowed_suffixes=frozenset({".bin"}),
++        )
++
++
++def test_sdf_dependency_cycle_and_unsupported_gltf_uri_fail_closed(
++    tmp_path: Path,
++) -> None:
++    root = tmp_path / "assets"
++    root.mkdir()
++    (root / "a.sdf").write_text(
++        "<sdf><include><uri>b.sdf</uri></include></sdf>", encoding="utf-8"
++    )
++    (root / "b.sdf").write_text(
++        "<sdf><include><uri>a.sdf</uri></include></sdf>", encoding="utf-8"
++    )
++    state = {
++        "objects": {
++            "item": {
++                "geometry_path": None,
++                "sdf_path": "assets/a.sdf",
++                "metadata": {},
++            }
++        }
++    }
++    with pytest.raises(RuntimeError, match="dependency cycle"):
++        checkpoint._referenced_room_asset_records(
++            state, room_root=tmp_path, object_ids={"item"}
++        )
++
++    (root / "bad.gltf").write_text(
++        json.dumps({"buffers": [{"uri": "nested.gltf"}]}), encoding="utf-8"
++    )
++    state["objects"]["item"] = {
++        "geometry_path": "assets/bad.gltf",
++        "sdf_path": None,
++        "metadata": {},
++    }
++    with pytest.raises(RuntimeError, match="unsafe or unsupported"):
++        checkpoint._referenced_room_asset_records(
++            state, room_root=tmp_path, object_ids={"item"}
++        )
++
++
++def test_referenced_glb_is_rejected_without_an_exact_dependency_audit(
++    tmp_path: Path,
++) -> None:
++    root = tmp_path / "assets"
++    root.mkdir()
++    (root / "model.glb").write_bytes(b"glTF" + b"\x00" * 16)
++    state = {
++        "objects": {
++            "item": {
++                "geometry_path": "assets/model.glb",
++                "sdf_path": None,
++                "metadata": {},
++            }
++        }
++    }
++    with pytest.raises(RuntimeError, match="unsupported direct asset suffix"):
++        checkpoint._referenced_room_asset_records(
++            state, room_root=tmp_path, object_ids={"item"}
++        )
++
++    (root / "model.sdf").write_text(
++        "<sdf><model><link><visual><geometry><mesh>"
++        "<uri>model.glb</uri></mesh></geometry></visual></link></model></sdf>",
++        encoding="utf-8",
++    )
++    state["objects"]["item"] = {
++        "geometry_path": None,
++        "sdf_path": "assets/model.sdf",
++        "metadata": {},
++    }
++    with pytest.raises(RuntimeError, match="unsafe or unsupported"):
++        checkpoint._referenced_room_asset_records(
++            state, room_root=tmp_path, object_ids={"item"}
++        )
++
++
++@pytest.mark.parametrize("suffix", [".dae", ".usd", ".foo"])
++def test_unknown_direct_geometry_suffix_is_rejected(
++    tmp_path: Path, suffix: str
++) -> None:
++    asset = tmp_path / f"model{suffix}"
++    asset.write_bytes(b"external-dependency-capable")
++    state = {
++        "objects": {
++            "item": {
++                "geometry_path": asset.name,
++                "sdf_path": None,
++                "metadata": {},
++            }
++        }
++    }
++    with pytest.raises(RuntimeError, match="unsupported direct asset suffix"):
++        checkpoint._referenced_room_asset_records(
++            state, room_root=tmp_path, object_ids={"item"}
++        )
++
++
++def test_sdf_dae_and_unconsumed_uri_nodes_are_rejected(tmp_path: Path) -> None:
++    (tmp_path / "model.dae").write_text("<COLLADA/>", encoding="utf-8")
++    sdf = tmp_path / "model.sdf"
++    state = {
++        "objects": {
++            "item": {
++                "geometry_path": None,
++                "sdf_path": "model.sdf",
++                "metadata": {},
++            }
++        }
++    }
++    sdf.write_text(
++        "<sdf><model><link><visual><geometry><mesh><uri>model.dae</uri>"
++        "</mesh></geometry></visual></link></model></sdf>",
++        encoding="utf-8",
++    )
++    with pytest.raises(RuntimeError, match="unsafe or unsupported"):
++        checkpoint._referenced_room_asset_records(
++            state, room_root=tmp_path, object_ids={"item"}
++        )
++
++    (tmp_path / "terrain.png").write_bytes(b"png")
++    sdf.write_text(
++        "<sdf><model><link><visual><geometry><heightmap>"
++        "<uri>terrain.png</uri></heightmap></geometry></visual></link></model></sdf>",
++        encoding="utf-8",
++    )
++    with pytest.raises(RuntimeError, match="unsupported URI elements"):
++        checkpoint._referenced_room_asset_records(
++            state, room_root=tmp_path, object_ids={"item"}
++        )
++
++
++@pytest.mark.asyncio
++async def test_required_legacy_recovery_must_be_consumed_before_completion(
++    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
++) -> None:
++    agent = _agent(tmp_path, _base_state())
++    agent.rendering_manager = SimpleNamespace(clear_cache=lambda: None)
++    agent._load_furniture_plan = lambda _: [_selection()]
++
++    def require_exact_recovery(_selections) -> None:
++        agent._required_legacy_recovery = (0, "teacher_desk_0", "a" * 64)
++        agent._legacy_recovery_satisfied = False
++
++    agent._validate_explicit_legacy_plan = require_exact_recovery
++    agent._restore_completed_furniture_checkpoint = lambda **_: True
++    monkeypatch.setattr(checkpoint, "custom_span", lambda **_: nullcontext())
++    monkeypatch.setattr(
++        agent.scene,
++        "get_object",
++        lambda object_id: agent.scene.to_state_dict()["objects"].get(str(object_id)),
++        raising=False,
++    )
++
++    with pytest.raises(RuntimeError, match="not consumed or restored"):
++        await agent.add_manipulands(agent.scene)
++
++
++def test_room_asset_hardlink_is_rejected(tmp_path: Path) -> None:
++    source = tmp_path / "source.bin"
++    alias = tmp_path / "alias.bin"
++    source.write_bytes(b"hardlink")
++    try:
++        os.link(source, alias)
++    except OSError as exc:
++        pytest.skip(f"hardlink unavailable: {exc}")
++    with pytest.raises(RuntimeError, match="hard-linked"):
++        checkpoint._room_asset_file_record(
++            "source.bin", room_root=tmp_path, label="hardlink"
++        )
++
++
++def test_normal_checkpoint_revalidates_transitive_asset_bytes(tmp_path: Path) -> None:
++    _write_evidence(
++        tmp_path / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    )
++    base = _base_state()
++    agent = _agent(tmp_path, _accepted_state())
++    input_hash = _FakeScene(base, tmp_path).content_hash()
++    agent._publish_furniture_checkpoint(
++        furniture_selection=_selection(),
++        furniture_index=0,
++        input_scene_hash=input_hash,
++        input_object_ids=set(base["objects"]),
++        legacy_source=None,
++    )
++    (
++        tmp_path / "generated_assets" / "manipuland" / "gradebook.bin"
++    ).write_bytes(b"changed")
++    agent.scene.restore_from_state_dict(base)
++    with pytest.raises(RuntimeError, match="referenced asset inventory mismatch"):
++        agent._restore_completed_furniture_checkpoint(
++            furniture_selection=_selection(),
++            furniture_index=0,
++            input_scene_hash=input_hash,
++        )
++
++
++@pytest.mark.parametrize("mutation", ["extra", "removed_input"])
++def test_resigned_checkpoint_state_requires_exact_live_input_delta(
++    tmp_path: Path, mutation: str
++) -> None:
++    _write_evidence(
++        tmp_path / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    )
++    base = _base_state()
++    agent = _agent(tmp_path, _accepted_state())
++    input_hash = _FakeScene(base, tmp_path).content_hash()
++    agent._publish_furniture_checkpoint(
++        furniture_selection=_selection(),
++        furniture_index=0,
++        input_scene_hash=input_hash,
++        input_object_ids=set(base["objects"]),
++        legacy_source=None,
++    )
++    directory = agent._checkpoint_directory(_selection(), 0)
++    state_path = directory / "scene_state.json"
++    receipt_path = directory / "completion_receipt.json"
++    state = json.loads(state_path.read_text(encoding="utf-8"))
++    if mutation == "extra":
++        state["objects"]["unlisted_0"] = copy.deepcopy(
++            state["objects"]["gradebook_0"]
++        )
++        state["objects"]["unlisted_0"]["object_id"] = "unlisted_0"
++    else:
++        del state["objects"]["chair_0"]
++    state_path.write_text(json.dumps(state), encoding="utf-8")
++    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
++    receipt["artifacts"]["scene_state"] = checkpoint._file_record(state_path)
++    receipt["output_scene_content_hash"] = _FakeScene(state, tmp_path).content_hash()
++    receipt["attestation"] = checkpoint._receipt_attestation(receipt)
++    receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
++    agent.scene.restore_from_state_dict(base)
++    with pytest.raises(RuntimeError, match="restored object delta mismatch"):
++        agent._restore_completed_furniture_checkpoint(
++            furniture_selection=_selection(),
++            furniture_index=0,
++            input_scene_hash=input_hash,
++        )
++
++
++@pytest.mark.parametrize("mutation", ["extra", "missing"])
++def test_checkpoint_referenced_asset_inventory_is_exact(
++    tmp_path: Path, mutation: str
++) -> None:
++    _write_evidence(
++        tmp_path / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    )
++    base = _base_state()
++    agent = _agent(tmp_path, _accepted_state())
++    input_hash = _FakeScene(base, tmp_path).content_hash()
++    agent._publish_furniture_checkpoint(
++        furniture_selection=_selection(),
++        furniture_index=0,
++        input_scene_hash=input_hash,
++        input_object_ids=set(base["objects"]),
++        legacy_source=None,
++    )
++    receipt_path = (
++        agent._checkpoint_directory(_selection(), 0) / "completion_receipt.json"
++    )
++    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
++    if mutation == "missing":
++        receipt["referenced_asset_files"].pop()
++    else:
++        receipt["referenced_asset_files"].append(
++            {
++                "path": "substituted.bin",
++                "name": "substituted.bin",
++                "size_bytes": 1,
++                "sha256": "0" * 64,
++            }
++        )
++    receipt["attestation"] = checkpoint._receipt_attestation(receipt)
++    receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
++    agent.scene.restore_from_state_dict(base)
++    with pytest.raises(RuntimeError, match="referenced asset inventory mismatch"):
++        agent._restore_completed_furniture_checkpoint(
++            furniture_selection=_selection(),
++            furniture_index=0,
++            input_scene_hash=input_hash,
++        )
++
++
++def test_stale_copied_evidence_and_dropped_render_object_fail_publication(
++    tmp_path: Path,
++) -> None:
++    accepted_dir = (
++        tmp_path / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    )
++    _write_evidence(accepted_dir)
++    base = _base_state()
++    agent = _agent(tmp_path, _accepted_state())
++    (accepted_dir / "0_side.png").write_bytes(b"stale-substitution")
++    with pytest.raises(RuntimeError, match="does not match current accepted render"):
++        agent._publish_furniture_checkpoint(
++            furniture_selection=_selection(),
++            furniture_index=0,
++            input_scene_hash=_FakeScene(base, tmp_path).content_hash(),
++            input_object_ids=set(base["objects"]),
++            legacy_source=None,
++        )
++
++    second = tmp_path / "second"
++    second_accepted = (
++        second / "scene_states" / "manipuland_furniture_teacher_desk_0"
++    )
++    _write_evidence(second_accepted)
++    agent = _agent(second, _accepted_state())
++    (agent.final_render_dir / "scene_state.json").write_text(
++        json.dumps(base), encoding="utf-8"
++    )
++    with pytest.raises(RuntimeError, match="did not survive post-processing"):
++        agent._publish_furniture_checkpoint(
++            furniture_selection=_selection(),
++            furniture_index=0,
++            input_scene_hash=_FakeScene(base, second).content_hash(),
++            input_object_ids=set(base["objects"]),
++            legacy_source=None,
++        )
