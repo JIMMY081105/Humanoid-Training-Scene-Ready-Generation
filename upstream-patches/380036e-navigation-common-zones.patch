@@ -1,0 +1,449 @@
+diff --git a/scenesmith/agent_utils/house.py b/scenesmith/agent_utils/house.py
+index 925f90d..a86753e 100644
+--- a/scenesmith/agent_utils/house.py
++++ b/scenesmith/agent_utils/house.py
+@@ -1,5 +1,6 @@
+ """House layout and room geometry data structures."""
+ 
++import copy
+ import hashlib
+ import json
+ import logging
+@@ -851,6 +852,15 @@ class HouseLayout:
+     windows: list[Window] = field(default_factory=list)
+     """All windows in the house."""
+ 
++    navigation_common_zones: list[dict[str, Any]] = field(default_factory=list)
++    """Explicit non-room circulation carve-outs used by navigation validation.
++
++    These records remain JSON-native because the full-quality validator owns
++    the strict, project-specific school schema.  HouseLayout must nevertheless
++    preserve them exactly through checkpoints, final export, and reload; an
++    unknown top-level JSON overlay would otherwise be silently discarded.
++    """
++
+     # Materials per room (interior walls + floors).
+     room_materials: dict[str, RoomMaterials] = field(default_factory=dict)
+     """Materials for each room (room_id -> RoomMaterials)."""
+@@ -1002,6 +1012,9 @@ class HouseLayout:
+             "placed_rooms": placed_rooms_data,
+             "doors": [door.to_dict() for door in self.doors],
+             "windows": [window.to_dict() for window in self.windows],
++            "navigation_common_zones": copy.deepcopy(
++                self.navigation_common_zones
++            ),
+             "room_materials": {
+                 room_id: materials.to_dict()
+                 for room_id, materials in self.room_materials.items()
+@@ -1114,6 +1127,11 @@ class HouseLayout:
+         room_specs = [RoomSpec.from_dict(r) for r in data.get("rooms", [])]
+         doors = [Door.from_dict(d) for d in data.get("doors", [])]
+         windows = [Window.from_dict(w) for w in data.get("windows", [])]
++        raw_navigation_common_zones = data.get("navigation_common_zones", [])
++        if not isinstance(raw_navigation_common_zones, list) or not all(
++            isinstance(zone, dict) for zone in raw_navigation_common_zones
++        ):
++            raise ValueError("navigation_common_zones must be a list of objects")
+ 
+         # Restore room materials.
+         room_materials = {
+@@ -1154,6 +1172,7 @@ class HouseLayout:
+             placed_rooms=placed_rooms,
+             doors=doors,
+             windows=windows,
++            navigation_common_zones=copy.deepcopy(raw_navigation_common_zones),
+             room_materials=room_materials,
+             exterior_material=exterior_material,
+             placement_valid=data.get("placement_valid", False),
+@@ -1200,6 +1219,9 @@ class HouseLayout:
+             "exterior_material": (
+                 str(self.exterior_material.path) if self.exterior_material else None
+             ),
++            "navigation_common_zones": copy.deepcopy(
++                self.navigation_common_zones
++            ),
+         }
+         content_json = json.dumps(state, sort_keys=True)
+         return hashlib.sha256(content_json.encode()).hexdigest()[:16]
+diff --git a/scenesmith/floor_plan_agents/tools/floor_plan_tools.py b/scenesmith/floor_plan_agents/tools/floor_plan_tools.py
+index 5d01ae9..69946fd 100644
+--- a/scenesmith/floor_plan_agents/tools/floor_plan_tools.py
++++ b/scenesmith/floor_plan_agents/tools/floor_plan_tools.py
+@@ -6,6 +6,7 @@ including rooms, doors, windows, and materials.
+ 
+ import json
+ import logging
++import math
+ 
+ from dataclasses import dataclass, field
+ from typing import Literal
+@@ -317,6 +318,30 @@ class FloorPlanTools(DoorWindowMixin, OpenPlanMixin):
+             """
+             return self._set_wall_height_impl(height_meters=height_meters)
+ 
++        @function_tool
++        def set_navigation_common_zones(
++            navigation_common_zones_json: str,
++        ) -> Result:
++            """Persist explicit common-circulation carve-outs for validation.
++
++            Call this only after room placement is final. The JSON array must
++            contain zones with id, position [x,y], width, depth, a detailed
++            reason, carved_from room IDs, and connections. Each connection
++            needs id and to. A connection leaving the carved rooms must name
++            its real backing_door_id; width, position, and orientation are
++            derived from that generated wall opening. Internal carve
++            thresholds need width >=0.9m, position [x,y], and orientation.
++
++            Args:
++                navigation_common_zones_json: JSON array of common-zone records.
++
++            Returns:
++                Result indicating whether the metadata was safely stored.
++            """
++            return self._set_navigation_common_zones_impl(
++                navigation_common_zones_json
++            )
++
+         @function_tool
+         def add_door(
+             wall_id: str, position: str, width: float = 0.9, height: float = 2.1
+@@ -469,6 +494,7 @@ class FloorPlanTools(DoorWindowMixin, OpenPlanMixin):
+             "add_open_connection": add_open_connection,
+             "remove_open_connection": remove_open_connection,
+             "set_wall_height": set_wall_height,
++            "set_navigation_common_zones": set_navigation_common_zones,
+             "add_door": add_door,
+             "remove_door": remove_door,
+             "add_window": add_window,
+@@ -610,6 +636,7 @@ class FloorPlanTools(DoorWindowMixin, OpenPlanMixin):
+         # Clear openings from previous layout (wall labels may have changed).
+         self.layout.doors.clear()
+         self.layout.windows.clear()
++        self.layout.navigation_common_zones.clear()
+ 
+         # Invalidate all cached geometry (room specs completely changed).
+         invalidated = self.layout.invalidate_all_room_geometries()
+@@ -704,6 +731,8 @@ class FloorPlanTools(DoorWindowMixin, OpenPlanMixin):
+             )
+             self.layout.placed_rooms = placed_rooms
+             self.layout.placement_valid = True
++            # Bounds changed, so a previous carve-out is necessarily stale.
++            self.layout.navigation_common_zones.clear()
+         except PlacementError as e:
+             # Rollback: restore old dimensions, keep layout valid.
+             spec.length = old_width
+@@ -812,6 +841,7 @@ class FloorPlanTools(DoorWindowMixin, OpenPlanMixin):
+             )
+             self.layout.placed_rooms = placed_rooms
+             self.layout.placement_valid = True
++            self.layout.navigation_common_zones.clear()
+         except PlacementError as e:
+             # Rollback: remove connections we added.
+             if added_b_to_a:
+@@ -923,6 +953,186 @@ class FloorPlanTools(DoorWindowMixin, OpenPlanMixin):
+ 
+         return Result(success=True, message=msg)
+ 
++    def _set_navigation_common_zones_impl(
++        self, navigation_common_zones_json: str
++    ) -> Result:
++        """Validate and persist JSON-native navigation common-zone metadata."""
++
++        console_logger.info("Tool called: set_navigation_common_zones(...)")
++        if not self.layout.placed_rooms:
++            return self._fail(
++                "Place rooms before setting navigation common zones."
++            )
++        try:
++            records = json.loads(navigation_common_zones_json)
++        except json.JSONDecodeError as exc:
++            return self._fail(f"Invalid navigation common-zone JSON: {exc}")
++        if not isinstance(records, list):
++            return self._fail("Navigation common zones must be a JSON array.")
++
++        room_ids = set(self.layout.room_ids)
++        zone_ids: set[str] = set()
++        for index, record in enumerate(records):
++            if not isinstance(record, dict):
++                return self._fail(f"Common zone {index} must be an object.")
++            zone_id = str(record.get("id") or "").strip()
++            if not zone_id or zone_id in room_ids or zone_id in zone_ids:
++                return self._fail(
++                    f"Common zone {index} has a missing, duplicate, or room-colliding ID."
++                )
++            zone_ids.add(zone_id)
++
++        portal_ids: set[str] = set()
++        for record in records:
++            zone_id = str(record["id"])
++            position = record.get("position")
++            dimensions = (record.get("width"), record.get("depth"))
++            if (
++                not isinstance(position, list)
++                or len(position) != 2
++                or not all(
++                    isinstance(value, (int, float)) and math.isfinite(value)
++                    for value in position
++                )
++                or not all(
++                    isinstance(value, (int, float))
++                    and math.isfinite(value)
++                    and value >= 0.9
++                    for value in dimensions
++                )
++            ):
++                return self._fail(
++                    f"Common zone {zone_id} needs finite position and width/depth >=0.9m."
++                )
++            if len(str(record.get("reason") or "").strip()) < 20:
++                return self._fail(
++                    f"Common zone {zone_id} needs an explicit circulation reason."
++                )
++            carved_from = record.get("carved_from")
++            if (
++                not isinstance(carved_from, list)
++                or not carved_from
++                or any(str(room_id) not in room_ids for room_id in carved_from)
++            ):
++                return self._fail(
++                    f"Common zone {zone_id}.carved_from must contain known room IDs."
++                )
++            connections = record.get("connections")
++            if not isinstance(connections, list) or not connections:
++                return self._fail(
++                    f"Common zone {zone_id} needs explicit connections."
++                )
++            has_backed_connection = False
++            for connection in connections:
++                if not isinstance(connection, dict):
++                    return self._fail(
++                        f"Common zone {zone_id} has a non-object connection."
++                    )
++                portal_id = str(connection.get("id") or "").strip()
++                endpoint = str(connection.get("to") or "").strip()
++                backing_door_id = str(
++                    connection.get("backing_door_id") or ""
++                ).strip()
++                if backing_door_id:
++                    door = next(
++                        (
++                            candidate
++                            for candidate in self.layout.doors
++                            if candidate.id == backing_door_id
++                        ),
++                        None,
++                    )
++                    if door is None:
++                        return self._fail(
++                            f"Common-zone portal {portal_id} backing door was not found."
++                        )
++                    door_rooms = {door.room_a, door.room_b}
++                    backing_rooms = door_rooms & set(carved_from)
++                    if endpoint not in door_rooms or len(backing_rooms) != 1:
++                        return self._fail(
++                            f"Common-zone portal {portal_id} backing door must join its endpoint to one carved room."
++                        )
++                    backing_room = next(iter(backing_rooms))
++                    placed = self.layout.get_placed_room(backing_room)
++                    opening_record = None
++                    if placed is not None:
++                        for wall in placed.walls:
++                            for opening in wall.openings:
++                                if opening.opening_id == backing_door_id:
++                                    opening_record = (wall, opening)
++                                    break
++                            if opening_record is not None:
++                                break
++                    if opening_record is None:
++                        return self._fail(
++                            f"Common-zone portal {portal_id} backing door has no generated wall opening."
++                        )
++                    wall, opening = opening_record
++                    dx = wall.end_point[0] - wall.start_point[0]
++                    dy = wall.end_point[1] - wall.start_point[1]
++                    wall_length = math.hypot(dx, dy)
++                    if wall_length <= 0.0:
++                        return self._fail(
++                            f"Common-zone portal {portal_id} backing wall is degenerate."
++                        )
++                    center_distance = (
++                        opening.position_along_wall + opening.width / 2.0
++                    )
++                    connection["width"] = float(opening.width)
++                    connection["position"] = [
++                        wall.start_point[0]
++                        + dx * center_distance / wall_length,
++                        wall.start_point[1]
++                        + dy * center_distance / wall_length,
++                    ]
++                    connection["orientation"] = (
++                        "horizontal" if abs(dx) >= abs(dy) else "vertical"
++                    )
++                    has_backed_connection = True
++                width = connection.get("width")
++                point = connection.get("position")
++                orientation = str(connection.get("orientation") or "").lower()
++                if not portal_id or portal_id in portal_ids:
++                    return self._fail(
++                        f"Common zone {zone_id} has a missing or duplicate portal ID."
++                    )
++                portal_ids.add(portal_id)
++                if endpoint not in room_ids | zone_ids or endpoint == zone_id:
++                    return self._fail(
++                        f"Common-zone portal {portal_id} has an invalid endpoint."
++                    )
++                if (
++                    not isinstance(width, (int, float))
++                    or not math.isfinite(width)
++                    or width < 0.9
++                ):
++                    return self._fail(
++                        f"Common-zone portal {portal_id} width must be >=0.9m."
++                    )
++                if (
++                    not isinstance(point, list)
++                    or len(point) != 2
++                    or not all(
++                        isinstance(value, (int, float)) and math.isfinite(value)
++                        for value in point
++                    )
++                    or orientation not in {"horizontal", "vertical"}
++                ):
++                    return self._fail(
++                        f"Common-zone portal {portal_id} needs a finite position and orientation."
++                    )
++            if not has_backed_connection:
++                return self._fail(
++                    f"Common zone {zone_id} needs at least one real backing_door_id."
++                )
++
++        # JSON round-trip provides a detached, JSON-only deep copy.
++        self.layout.navigation_common_zones = json.loads(json.dumps(records))
++        return Result(
++            success=True,
++            message=f"Stored {len(records)} navigation common zone(s).",
++        )
++
+     def _set_wall_height_impl(self, height_meters: float) -> Result:
+         """Set wall/ceiling height for entire house.
+ 
+diff --git a/tests/unit/test_floor_plan_tools.py b/tests/unit/test_floor_plan_tools.py
+index ba1aca7..32bb5b3 100644
+--- a/tests/unit/test_floor_plan_tools.py
++++ b/tests/unit/test_floor_plan_tools.py
+@@ -68,6 +68,80 @@ class TestOpeningPreservation(unittest.TestCase):
+ 
+         return layout, tools
+ 
++    def test_navigation_common_zones_are_tool_authored_serialized_and_reset(self):
++        layout, tools = self._create_two_room_layout()
++        wall_id = next(
++            label
++            for label, endpoints in layout.boundary_labels.items()
++            if set(endpoints[:2]) == {"living_room", "kitchen"}
++        )
++        door_result = tools._add_door_impl(
++            wall_id=wall_id, position="left", width=0.9, height=2.1
++        )
++        assert door_result.success, door_result.message
++        backing_door_id = layout.doors[0].id
++        zones = [
++            {
++                "id": "shared_foyer",
++                "position": [0.0, 0.0],
++                "width": 2.0,
++                "depth": 1.0,
++                "reason": "A physical shared circulation strip for independent access.",
++                "carved_from": ["living_room"],
++                "connections": [
++                    {
++                        "id": "foyer_to_kitchen",
++                        "to": "kitchen",
++                        "backing_door_id": backing_door_id,
++                    }
++                ],
++            }
++        ]
++
++        result = tools._set_navigation_common_zones_impl(json.dumps(zones))
++
++        assert result.success, result.message
++        persisted = layout.to_dict()["navigation_common_zones"]
++        portal = persisted[0]["connections"][0]
++        assert portal["backing_door_id"] == backing_door_id
++        assert portal["width"] == 0.9
++        assert len(portal["position"]) == 2
++        assert portal["orientation"] in {"horizontal", "vertical"}
++        restored = HouseLayout.from_dict(layout.to_dict())
++        assert restored.navigation_common_zones == persisted
++
++        # A fresh placement cannot retain carve coordinates from the old plan.
++        rooms = [
++            {
++                "type": "classroom",
++                "prompt": "A replacement classroom",
++                "width": 5.0,
++                "depth": 4.0,
++            }
++        ]
++        replaced = tools._generate_room_specs_impl(json.dumps(rooms))
++        assert replaced.success
++        assert layout.navigation_common_zones == []
++
++    def test_navigation_common_zone_tool_rejects_unsafe_schema(self):
++        layout, tools = self._create_two_room_layout()
++        bad = [
++            {
++                "id": "shared_foyer",
++                "position": [0.0, 0.0],
++                "width": 2.0,
++                "depth": 1.0,
++                "reason": "too short",
++                "carved_from": ["unknown_room"],
++                "connections": [],
++            }
++        ]
++
++        result = tools._set_navigation_common_zones_impl(json.dumps(bad))
++
++        assert not result.success
++        assert layout.navigation_common_zones == []
++
+     def test_door_preserved_after_room_resize_when_fits(self):
+         """Door should be preserved and repositioned when room is resized if it still fits."""
+         layout, tools = self._create_single_room_layout()
+diff --git a/tests/unit/test_house.py b/tests/unit/test_house.py
+index 3f7658c..e7a5d8e 100644
+--- a/tests/unit/test_house.py
++++ b/tests/unit/test_house.py
+@@ -225,6 +225,17 @@ class TestRoundTrip(unittest.TestCase):
+                     sill_height=0.9,
+                 ),
+             ],
++            navigation_common_zones=[
++                {
++                    "id": "entry_foyer",
++                    "position": [0.0, 0.0],
++                    "width": 2.0,
++                    "depth": 1.0,
++                    "reason": "Explicit common circulation at the entrance.",
++                    "carved_from": ["living_room"],
++                    "connections": [],
++                }
++            ],
+             room_materials={
+                 "living_room": RoomMaterials(
+                     wall_material=Material.from_path(Path("materials/plaster")),
+@@ -272,6 +283,11 @@ class TestRoundTrip(unittest.TestCase):
+         assert restored.doors[0].id == original.doors[0].id
+         assert len(restored.windows) == 1
+         assert restored.windows[0].id == original.windows[0].id
++        assert (
++            restored.navigation_common_zones
++            == original.navigation_common_zones
++        )
++        assert restored.navigation_common_zones is not original.navigation_common_zones
+         assert "living_room" in restored.room_materials
+         assert len(restored.placed_rooms) == 1
+         assert restored.placed_rooms[0].room_id == original.placed_rooms[0].room_id
