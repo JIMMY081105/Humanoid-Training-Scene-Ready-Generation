@@ -1,0 +1,23 @@
+diff --git a/scenesmith/experiments/indoor_scene_generation.py b/scenesmith/experiments/indoor_scene_generation.py
+--- a/scenesmith/experiments/indoor_scene_generation.py
++++ b/scenesmith/experiments/indoor_scene_generation.py
+@@ -2025,10 +2025,14 @@ class IndoorSceneGenerationExperiment(BaseExperiment):
+ 
+         try:
+-            # Start GPU servers (CUDA init happens here).
+-            self._start_geometry_server()
+-            self._start_hssd_server()
+-            self._start_objaverse_server()
+-            self._start_articulated_server()
++            # A floor-plan-only run must not preload room-stage models. In
++            # particular, SAM3D alone consumes most of a 24 GB A10 before any
++            # floor-plan work starts. Room workers start these services later.
++            if stop_stage != "floor_plan":
++                self._start_geometry_server()
++                self._start_hssd_server()
++                self._start_objaverse_server()
++                self._start_articulated_server()
++
+             # Thin wall coverings use semantic material retrieval for poster art.
+             self._start_materials_server()
+ 
