@@ -1,0 +1,497 @@
+diff --git a/scenesmith/agent_utils/asset_router/router.py b/scenesmith/agent_utils/asset_router/router.py
+index 2cede9e..e874b24 100644
+--- a/scenesmith/agent_utils/asset_router/router.py
++++ b/scenesmith/agent_utils/asset_router/router.py
+@@ -1413,7 +1413,9 @@ class AssetRouter:
+         """
+         # Determine asset source (text-to-3D vs library retrieval).
+         asset_source = self.cfg.asset_manager.general_asset_source
+-        if self._should_use_primitive_manipuland_fallback(item):
++        if asset_source == "hssd" and self._should_use_primitive_manipuland_fallback(
++            item
++        ):
+             console_logger.info(
+                 f"Using direct primitive manipuland fallback for '{item.description}'"
+             )
+@@ -1537,7 +1539,9 @@ class AssetRouter:
+                 item=item, geometry_dir=geometry_dir
+             )
+ 
+-        if self._should_use_primitive_manipuland_fallback(item):
++        if asset_source == "hssd" and self._should_use_primitive_manipuland_fallback(
++            item
++        ):
+             return self._create_primitive_manipuland_fallback_geometry(
+                 item=item, geometry_dir=geometry_dir
+             )
+diff --git a/scenesmith/experiments/base_experiment.py b/scenesmith/experiments/base_experiment.py
+index 1604548..ae47767 100644
+--- a/scenesmith/experiments/base_experiment.py
++++ b/scenesmith/experiments/base_experiment.py
+@@ -207,6 +207,9 @@ class BaseExperiment(ABC):
+         # Extract HSSD retrieval server config from experiment config.
+         hssd_server_config = experiment_config.hssd_retrieval_server
+ 
++        # Extract Objaverse/ObjectThor retrieval server config from experiment config.
++        objaverse_server_config = experiment_config.objaverse_retrieval_server
++
+         # Extract articulated retrieval server config from experiment config.
+         articulated_server_config = experiment_config.articulated_retrieval_server
+ 
+@@ -220,6 +223,8 @@ class BaseExperiment(ABC):
+             geometry_server_port=geometry_server_config.port,
+             hssd_server_host=hssd_server_config.host,
+             hssd_server_port=hssd_server_config.port,
++            objaverse_server_host=objaverse_server_config.host,
++            objaverse_server_port=objaverse_server_config.port,
+             articulated_server_host=articulated_server_config.host,
+             articulated_server_port=articulated_server_config.port,
+             materials_server_host=materials_server_config.host,
+diff --git a/scenesmith/experiments/indoor_scene_generation.py b/scenesmith/experiments/indoor_scene_generation.py
+index b7489d6..4f087b5 100644
+--- a/scenesmith/experiments/indoor_scene_generation.py
++++ b/scenesmith/experiments/indoor_scene_generation.py
+@@ -1508,32 +1508,44 @@ class IndoorSceneGenerationExperiment(BaseExperiment):
+ 
+     def _start_objaverse_server(self) -> None:
+         """Start Objaverse retrieval server (if general_asset_source == 'objaverse')."""
+-        # Only start if at least one agent uses objaverse strategy.
+-        furniture_uses_objaverse = (
+-            self.cfg.furniture_agent.asset_manager.general_asset_source == "objaverse"
+-        )
+-        manipuland_uses_objaverse = (
+-            self.cfg.manipuland_agent.asset_manager.general_asset_source == "objaverse"
+-        )
+-        wall_uses_objaverse = (
+-            self.cfg.wall_agent.asset_manager.general_asset_source == "objaverse"
+-        )
+-        ceiling_uses_objaverse = (
+-            self.cfg.ceiling_agent.asset_manager.general_asset_source == "objaverse"
+-        )
+-
+-        if not (
+-            furniture_uses_objaverse
+-            or manipuland_uses_objaverse
+-            or wall_uses_objaverse
+-            or ceiling_uses_objaverse
++        # Use the data contract of the agents that actually consume this service.
++        # The old implementation always read the furniture config, which silently
++        # reduced a manipuland-only ObjectThor service to furniture's top_k=1.
++        enabled_configs = []
++        for agent_name in (
++            "furniture_agent",
++            "manipuland_agent",
++            "wall_agent",
++            "ceiling_agent",
+         ):
++            asset_manager_cfg = getattr(self.cfg, agent_name).asset_manager
++            if asset_manager_cfg.general_asset_source == "objaverse":
++                enabled_configs.append(asset_manager_cfg.objaverse)
++
++        if not enabled_configs:
+             return
+ 
++        path_pairs = {
++            (
++                str(Path(str(config.data_path)).expanduser().resolve(strict=False)),
++                str(
++                    Path(str(config.preprocessed_path))
++                    .expanduser()
++                    .resolve(strict=False)
++                ),
++            )
++            for config in enabled_configs
++        }
++        if len(path_pairs) != 1:
++            raise RuntimeError(
++                "Enabled Objaverse/ObjectThor agents disagree on data paths: "
++                f"{sorted(path_pairs)!r}"
++            )
++        objaverse_data_path, objaverse_preprocessed_path = next(iter(path_pairs))
++        objaverse_top_k = max(int(config.use_top_k) for config in enabled_configs)
++
+         # Get server configuration from experiment config.
+         server_config = self.cfg.experiment.objaverse_retrieval_server
+-        # Get Objaverse data configuration from asset manager config.
+-        objaverse_config = self.cfg.furniture_agent.asset_manager.objaverse
+ 
+         retrieval_device = _get_retrieval_gpu_device()
+         console_logger.info(
+@@ -1546,9 +1558,9 @@ class IndoorSceneGenerationExperiment(BaseExperiment):
+             host=server_config.host,
+             port=server_config.port,
+             preload_retriever=True,
+-            objaverse_data_path=str(objaverse_config.data_path),
+-            objaverse_preprocessed_path=str(objaverse_config.preprocessed_path),
+-            objaverse_top_k=objaverse_config.use_top_k,
++            objaverse_data_path=objaverse_data_path,
++            objaverse_preprocessed_path=objaverse_preprocessed_path,
++            objaverse_top_k=objaverse_top_k,
+             clip_device=retrieval_device,
+         )
+ 
+diff --git a/scenesmith/manipuland_agents/base_manipuland_agent.py b/scenesmith/manipuland_agents/base_manipuland_agent.py
+index 6a7d94a..c0f504b 100644
+--- a/scenesmith/manipuland_agents/base_manipuland_agent.py
++++ b/scenesmith/manipuland_agents/base_manipuland_agent.py
+@@ -55,6 +55,8 @@ class BaseManipulandAgent(ABC):
+         materials_server_port: int = 7008,
+         num_workers: int = 1,
+         render_gpu_id: int | None = None,
++        objaverse_server_host: str = "127.0.0.1",
++        objaverse_server_port: int = 7009,
+     ):
+         """Initialize base manipuland agent.
+ 
+@@ -65,6 +67,8 @@ class BaseManipulandAgent(ABC):
+             geometry_server_port: Port for geometry generation server.
+             hssd_server_host: Host for HSSD retrieval server.
+             hssd_server_port: Port for HSSD retrieval server.
++            objaverse_server_host: Host for Objaverse/ObjectThor retrieval server.
++            objaverse_server_port: Port for Objaverse/ObjectThor retrieval server.
+             articulated_server_host: Host for articulated retrieval server.
+             articulated_server_port: Port for articulated retrieval server.
+             materials_server_host: Host for materials retrieval server.
+@@ -129,6 +133,8 @@ class BaseManipulandAgent(ABC):
+             geometry_server_port=geometry_server_port,
+             hssd_server_host=hssd_server_host,
+             hssd_server_port=hssd_server_port,
++            objaverse_server_host=objaverse_server_host,
++            objaverse_server_port=objaverse_server_port,
+             articulated_server_host=articulated_server_host,
+             articulated_server_port=articulated_server_port,
+             materials_server_host=materials_server_host,
+diff --git a/scenesmith/manipuland_agents/stateful_manipuland_agent.py b/scenesmith/manipuland_agents/stateful_manipuland_agent.py
+index 36a84a6..659bf28 100644
+--- a/scenesmith/manipuland_agents/stateful_manipuland_agent.py
++++ b/scenesmith/manipuland_agents/stateful_manipuland_agent.py
+@@ -79,6 +79,8 @@ class StatefulManipulandAgent(BaseStatefulAgent, BaseManipulandAgent):
+         materials_server_port: int = 7008,
+         num_workers: int = 1,
+         render_gpu_id: int | None = None,
++        objaverse_server_host: str = "127.0.0.1",
++        objaverse_server_port: int = 7009,
+     ):
+         # Initialize base agent (sessions, checkpoint state, prompt registry).
+         BaseStatefulAgent.__init__(
+@@ -99,6 +101,8 @@ class StatefulManipulandAgent(BaseStatefulAgent, BaseManipulandAgent):
+             geometry_server_port=geometry_server_port,
+             hssd_server_host=hssd_server_host,
+             hssd_server_port=hssd_server_port,
++            objaverse_server_host=objaverse_server_host,
++            objaverse_server_port=objaverse_server_port,
+             articulated_server_host=articulated_server_host,
+             articulated_server_port=articulated_server_port,
+             materials_server_host=materials_server_host,
+diff --git a/tests/unit/test_manipuland_agent.py b/tests/unit/test_manipuland_agent.py
+index 019ddfe..120e903 100644
+--- a/tests/unit/test_manipuland_agent.py
++++ b/tests/unit/test_manipuland_agent.py
+@@ -74,7 +74,12 @@ class TestBaseManipulandAgent(unittest.TestCase):
+         # Configure mock BlenderServer.
+         mock_blender_server_class.return_value.is_running.return_value = True
+ 
+-        agent = ConcreteManipulandAgent(cfg=self.config, logger=self.mock_logger)
++        agent = ConcreteManipulandAgent(
++            cfg=self.config,
++            logger=self.mock_logger,
++            objaverse_server_host="objectthor.internal",
++            objaverse_server_port=7109,
++        )
+ 
+         self.assertEqual(agent.cfg, self.config)
+         self.assertEqual(agent.logger, self.mock_logger)
+@@ -93,6 +98,8 @@ class TestBaseManipulandAgent(unittest.TestCase):
+             geometry_server_port=7000,
+             hssd_server_host="127.0.0.1",
+             hssd_server_port=7001,
++            objaverse_server_host="objectthor.internal",
++            objaverse_server_port=7109,
+             articulated_server_host="127.0.0.1",
+             articulated_server_port=7002,
+             materials_server_host="127.0.0.1",
+diff --git a/tests/unit/test_objathor_manipuland_routing.py b/tests/unit/test_objathor_manipuland_routing.py
+new file mode 100644
+index 0000000..316057e
+--- /dev/null
++++ b/tests/unit/test_objathor_manipuland_routing.py
+@@ -0,0 +1,279 @@
++from __future__ import annotations
++
++from pathlib import Path
++from unittest.mock import MagicMock, call, patch
++
++import pytest
++
++from omegaconf import OmegaConf
++
++from scenesmith.agent_utils.asset_router.dataclasses import AssetItem
++from scenesmith.agent_utils.asset_router.router import AssetRouter
++from scenesmith.agent_utils.room import ObjectType
++from scenesmith.experiments.base_experiment import BaseExperiment
++from scenesmith.experiments.indoor_scene_generation import (
++    IndoorSceneGenerationExperiment,
++)
++from scenesmith.manipuland_agents.stateful_manipuland_agent import (
++    StatefulManipulandAgent,
++)
++
++
++class _CaptureAgent:
++    def __init__(self, **kwargs):
++        self.kwargs = kwargs
++
++
++def _agent_config(
++    source: str,
++    data_path: Path,
++    preprocessed_path: Path,
++    top_k: int,
++):
++    return {
++        "asset_manager": {
++            "general_asset_source": source,
++            "objaverse": {
++                "data_path": str(data_path),
++                "preprocessed_path": str(preprocessed_path),
++                "use_top_k": top_k,
++            },
++        }
++    }
++
++
++def test_build_manipuland_agent_propagates_objathor_endpoint() -> None:
++    cfg = OmegaConf.create(
++        {
++            "manipuland_agent": {"_name": "capture"},
++            "experiment": {
++                "geometry_generation_server": {"host": "geometry", "port": 7000},
++                "hssd_retrieval_server": {"host": "hssd", "port": 7001},
++                "objaverse_retrieval_server": {
++                    "host": "objectthor.internal",
++                    "port": 7109,
++                },
++                "articulated_retrieval_server": {
++                    "host": "articulated",
++                    "port": 7002,
++                },
++                "materials_retrieval_server": {"host": "materials", "port": 7008},
++                "num_workers": 1,
++            },
++        }
++    )
++
++    agent = BaseExperiment.build_manipuland_agent(
++        cfg_dict=cfg,
++        compatible_agents={"capture": _CaptureAgent},
++        logger=MagicMock(),
++    )
++
++    assert agent.kwargs["objaverse_server_host"] == "objectthor.internal"
++    assert agent.kwargs["objaverse_server_port"] == 7109
++
++
++def test_stateful_manipuland_agent_forwards_objathor_endpoint() -> None:
++    agent = object.__new__(StatefulManipulandAgent)
++    cfg = MagicMock()
++    logger = MagicMock()
++
++    with (
++        patch(
++            "scenesmith.manipuland_agents.stateful_manipuland_agent."
++            "BaseStatefulAgent.__init__",
++            return_value=None,
++        ) as stateful_init,
++        patch(
++            "scenesmith.manipuland_agents.stateful_manipuland_agent."
++            "BaseManipulandAgent.__init__",
++            return_value=None,
++        ) as manipuland_init,
++    ):
++        StatefulManipulandAgent.__init__(
++            agent,
++            cfg=cfg,
++            logger=logger,
++            objaverse_server_host="objectthor.internal",
++            objaverse_server_port=7109,
++        )
++
++    stateful_init.assert_called_once()
++    assert "objaverse_server_host" not in stateful_init.call_args.kwargs
++    assert "objaverse_server_port" not in stateful_init.call_args.kwargs
++    assert manipuland_init.call_args.kwargs["objaverse_server_host"] == (
++        "objectthor.internal"
++    )
++    assert manipuland_init.call_args.kwargs["objaverse_server_port"] == 7109
++
++
++def test_objathor_server_uses_enabled_agent_paths_and_max_top_k(tmp_path: Path) -> None:
++    data_path = tmp_path / "objathor-assets"
++    preprocessed_path = data_path / "preprocessed"
++    cfg = OmegaConf.create(
++        {
++            "experiment": {
++                "objaverse_retrieval_server": {
++                    "host": "127.0.0.1",
++                    "port": 7109,
++                }
++            },
++            "furniture_agent": _agent_config(
++                "generated", tmp_path / "unused", tmp_path / "unused-index", 1
++            ),
++            "manipuland_agent": _agent_config(
++                "objaverse", data_path, preprocessed_path, 10
++            ),
++            "wall_agent": _agent_config(
++                "objaverse", data_path, preprocessed_path, 6
++            ),
++            "ceiling_agent": _agent_config(
++                "generated", tmp_path / "unused", tmp_path / "unused-index", 1
++            ),
++        }
++    )
++    experiment = object.__new__(IndoorSceneGenerationExperiment)
++    experiment.cfg = cfg
++    experiment.objaverse_server = None
++
++    with (
++        patch(
++            "scenesmith.experiments.indoor_scene_generation."
++            "ObjaverseRetrievalServer"
++        ) as server_class,
++        patch(
++            "scenesmith.experiments.indoor_scene_generation."
++            "_get_retrieval_gpu_device",
++            return_value="cpu",
++        ),
++    ):
++        experiment._start_objaverse_server()
++
++    server_class.assert_called_once_with(
++        host="127.0.0.1",
++        port=7109,
++        preload_retriever=True,
++        objaverse_data_path=str(data_path.resolve()),
++        objaverse_preprocessed_path=str(preprocessed_path.resolve()),
++        objaverse_top_k=10,
++        clip_device="cpu",
++    )
++    assert experiment.objaverse_server is server_class.return_value
++    assert server_class.return_value.mock_calls[-2:] == [
++        call.start(),
++        call.wait_until_ready(timeout_s=60.0),
++    ]
++
++
++def test_objathor_server_rejects_enabled_agent_path_mismatch(tmp_path: Path) -> None:
++    cfg = OmegaConf.create(
++        {
++            "experiment": {
++                "objaverse_retrieval_server": {
++                    "host": "127.0.0.1",
++                    "port": 7109,
++                }
++            },
++            "furniture_agent": _agent_config(
++                "objaverse", tmp_path / "furniture", tmp_path / "furniture-index", 1
++            ),
++            "manipuland_agent": _agent_config(
++                "objaverse", tmp_path / "manipuland", tmp_path / "manipuland-index", 10
++            ),
++            "wall_agent": _agent_config(
++                "generated", tmp_path / "unused", tmp_path / "unused-index", 1
++            ),
++            "ceiling_agent": _agent_config(
++                "generated", tmp_path / "unused", tmp_path / "unused-index", 1
++            ),
++        }
++    )
++    experiment = object.__new__(IndoorSceneGenerationExperiment)
++    experiment.cfg = cfg
++    experiment.objaverse_server = None
++
++    with pytest.raises(RuntimeError, match="disagree on data paths"):
++        experiment._start_objaverse_server()
++
++
++def _school_supply() -> AssetItem:
++    return AssetItem(
++        description="blue ballpoint pen",
++        short_name="ballpoint_pen",
++        dimensions=[0.14, 0.012, 0.012],
++        object_type=ObjectType.MANIPULAND,
++        strategies=["generated"],
++    )
++
++
++def _try_generated(router: AssetRouter, tmp_path: Path, *, max_retries: int = 0):
++    return router._try_generated_strategy(
++        item=_school_supply(),
++        max_retries=max_retries,
++        geometry_client=None,
++        hssd_client=MagicMock(name="hssd_client"),
++        objaverse_client=MagicMock(name="objaverse_client"),
++        image_generator=None,
++        images_dir=None,
++        geometry_dir=tmp_path / "geometry",
++        debug_dir=tmp_path / "debug",
++    )
++
++
++def test_objathor_school_supply_uses_retrieval_not_primitive(tmp_path: Path) -> None:
++    router = object.__new__(AssetRouter)
++    router.cfg = OmegaConf.create(
++        {"asset_manager": {"general_asset_source": "objaverse"}}
++    )
++    retrieved = MagicMock(name="retrieved")
++    acquired = MagicMock(name="acquired")
++    router._fetch_objaverse_candidates = MagicMock(return_value=[retrieved])
++    router._acquire_generated_candidate = MagicMock(return_value=acquired)
++    router._create_primitive_manipuland_fallback_geometry = MagicMock()
++
++    assert _try_generated(router, tmp_path) is acquired
++    router._fetch_objaverse_candidates.assert_called_once()
++    router._create_primitive_manipuland_fallback_geometry.assert_not_called()
++
++
++def test_objathor_validation_exhaustion_does_not_use_hssd_primitive(
++    tmp_path: Path,
++) -> None:
++    router = object.__new__(AssetRouter)
++    router.cfg = OmegaConf.create(
++        {
++            "asset_manager": {
++                "general_asset_source": "objaverse",
++                "objaverse": {"use_lenient_validation": False},
++            }
++        }
++    )
++    retrieved = MagicMock(name="retrieved")
++    acquired = MagicMock(name="acquired", geometry_path=tmp_path / "candidate.glb")
++    router._fetch_objaverse_candidates = MagicMock(return_value=[retrieved])
++    router._acquire_generated_candidate = MagicMock(return_value=acquired)
++    router.validate_asset = MagicMock(
++        return_value=MagicMock(
++            is_acceptable=False,
++            reason="wrong object",
++            suggestions="try another candidate",
++        )
++    )
++    router._create_primitive_manipuland_fallback_geometry = MagicMock()
++
++    assert _try_generated(router, tmp_path, max_retries=1) is None
++    router._fetch_objaverse_candidates.assert_called_once()
++    router.validate_asset.assert_called_once()
++    router._create_primitive_manipuland_fallback_geometry.assert_not_called()
++
++
++def test_hssd_school_supply_retains_primitive_fallback(tmp_path: Path) -> None:
++    router = object.__new__(AssetRouter)
++    router.cfg = OmegaConf.create({"asset_manager": {"general_asset_source": "hssd"}})
++    primitive = MagicMock(name="primitive")
++    router._create_primitive_manipuland_fallback_geometry = MagicMock(
++        return_value=primitive
++    )
++
++    assert _try_generated(router, tmp_path) is primitive
++    router._create_primitive_manipuland_fallback_geometry.assert_called_once()
