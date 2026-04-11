@@ -1,0 +1,159 @@
+diff --git a/configurations/experiment/base_experiment.yaml b/configurations/experiment/base_experiment.yaml
+index 2a0fa58..017ad1f 100644
+--- a/configurations/experiment/base_experiment.yaml
++++ b/configurations/experiment/base_experiment.yaml
+@@ -32,5 +32,8 @@ pipeline:
+   # Max concurrent rooms when parallel_rooms=true.
+   max_parallel_rooms: 1
++  # Contract runs use staged room workers and the provenance-gated external
++  # assembler. Generic SceneSmith runs retain the built-in assembly behavior.
++  final_assembly_policy: "builtin"  # builtin | external_artiverse_gated
+ 
+ # Geometry generation server settings
+ geometry_generation_server:
+diff --git a/scenesmith/experiments/indoor_scene_generation.py b/scenesmith/experiments/indoor_scene_generation.py
+index 063ecdc..0278e92 100644
+--- a/scenesmith/experiments/indoor_scene_generation.py
++++ b/scenesmith/experiments/indoor_scene_generation.py
+@@ -69,5 +72,39 @@ STAGE_ASSET_DIRS = {
+ }
+ 
+ 
++def _require_external_gated_assembly(pipeline_cfg: dict) -> bool:
++    """Reject direct post-floor-plan runs for the full-quality contract."""
++
++    policy = str(pipeline_cfg.get("final_assembly_policy", "builtin")).strip().lower()
++    allowed_policies = {"builtin", "external_artiverse_gated"}
++    if policy not in allowed_policies:
++        raise ValueError(
++            f"Invalid final_assembly_policy={policy!r}; expected one of "
++            f"{sorted(allowed_policies)}"
++        )
++
++    raw_env = os.environ.get("SCENESMITH_REQUIRE_GATED_FINAL_ASSEMBLY")
++    env_required = False
++    if raw_env is not None:
++        normalized = raw_env.strip().lower()
++        if normalized in {"1", "true", "yes", "on"}:
++            env_required = True
++        elif normalized not in {"0", "false", "no", "off", ""}:
++            raise ValueError(
++                "SCENESMITH_REQUIRE_GATED_FINAL_ASSEMBLY must be a boolean value"
++            )
++
++    required = policy == "external_artiverse_gated" or env_required
++    stop_stage = str(pipeline_cfg.get("stop_stage", "")).strip().lower()
++    if required and stop_stage != "floor_plan":
++        raise RuntimeError(
++            "Direct SceneSmith post-floor-plan generation/assembly is disabled for "
++            "this full-quality contract. Use staged run_single_room_worker.py jobs "
++            "followed by scripts/assemble_final_house_and_render.py so compulsory "
++            "Artiverse placement and final survival are validated."
++        )
++    return required
++
++
+ def _get_retrieval_gpu_device() -> str | None:
+     """Get GPU device for retrieval servers.
+@@ -1649,6 +1686,11 @@ class IndoorSceneGenerationExperiment(BaseExperiment):
+         # Reset any SDK state inherited via fork (defense in depth).
+         _reset_inherited_sdk_state()
+ 
++        pipeline_cfg = cfg_dict["experiment"]["pipeline"]
++        _require_external_gated_assembly(pipeline_cfg)
++        start_stage = pipeline_cfg["start_stage"]
++        stop_stage = pipeline_cfg["stop_stage"]
++
+         faulthandler.enable()
+ 
+         scene_generation_start_time = time.time()
+@@ -1681,11 +1723,6 @@ class IndoorSceneGenerationExperiment(BaseExperiment):
+         # Create a logger for this scene.
+         logger = ConsoleLogger(output_dir=scene_dir)
+ 
+-        # Get pipeline stage configuration.
+-        pipeline_cfg = cfg_dict["experiment"]["pipeline"]
+-        start_stage = pipeline_cfg["start_stage"]
+-        stop_stage = pipeline_cfg["stop_stage"]
+-
+         # Validate stages.
+         if start_stage not in PIPELINE_STAGES:
+             raise ValueError(
+@@ -1989,6 +2026,8 @@ class IndoorSceneGenerationExperiment(BaseExperiment):
+ 
+     def generate_scenes(self) -> None:
+         """Generate scenes with parallel support."""
++        _require_external_gated_assembly(self.cfg.experiment.pipeline)
++
+         # Load prompts from CSV or YAML config.
+         csv_path = self.cfg.experiment.csv_path
+         if csv_path:
+diff --git a/tests/unit/test_full_quality_assembly_guard.py b/tests/unit/test_full_quality_assembly_guard.py
+new file mode 100644
+index 0000000..4071164
+--- /dev/null
++++ b/tests/unit/test_full_quality_assembly_guard.py
+@@ -0,0 +1,63 @@
++"""Tests for the opt-in full-quality external assembly guard."""
++
++import pytest
++
++from scenesmith.experiments.indoor_scene_generation import (
++    _require_external_gated_assembly,
++)
++
++
++def _pipeline(stop_stage="manipuland", policy="builtin"):
++    return {"stop_stage": stop_stage, "final_assembly_policy": policy}
++
++
++def test_default_builtin_pipeline_is_unchanged(monkeypatch):
++    monkeypatch.delenv("SCENESMITH_REQUIRE_GATED_FINAL_ASSEMBLY", raising=False)
++    assert _require_external_gated_assembly(_pipeline()) is False
++
++
++def test_external_policy_allows_floor_plan_only(monkeypatch):
++    monkeypatch.delenv("SCENESMITH_REQUIRE_GATED_FINAL_ASSEMBLY", raising=False)
++    assert (
++        _require_external_gated_assembly(
++            _pipeline("floor_plan", "external_artiverse_gated")
++        )
++        is True
++    )
++
++
++@pytest.mark.parametrize(
++    "stage", ["furniture", "wall_mounted", "ceiling_mounted", "manipuland"]
++)
++def test_external_policy_rejects_direct_room_or_assembly_stages(monkeypatch, stage):
++    monkeypatch.delenv("SCENESMITH_REQUIRE_GATED_FINAL_ASSEMBLY", raising=False)
++    with pytest.raises(RuntimeError, match="Direct SceneSmith"):
++        _require_external_gated_assembly(
++            _pipeline(stage, "external_artiverse_gated")
++        )
++
++
++def test_environment_guard_tightens_builtin_policy(monkeypatch):
++    monkeypatch.setenv("SCENESMITH_REQUIRE_GATED_FINAL_ASSEMBLY", "1")
++    with pytest.raises(RuntimeError, match="compulsory Artiverse"):
++        _require_external_gated_assembly(_pipeline())
++
++
++def test_false_environment_cannot_weaken_external_policy(monkeypatch):
++    monkeypatch.setenv("SCENESMITH_REQUIRE_GATED_FINAL_ASSEMBLY", "false")
++    with pytest.raises(RuntimeError, match="compulsory Artiverse"):
++        _require_external_gated_assembly(
++            _pipeline("manipuland", "external_artiverse_gated")
++        )
++
++
++def test_invalid_policy_fails_closed(monkeypatch):
++    monkeypatch.delenv("SCENESMITH_REQUIRE_GATED_FINAL_ASSEMBLY", raising=False)
++    with pytest.raises(ValueError, match="Invalid final_assembly_policy"):
++        _require_external_gated_assembly(_pipeline(policy="skip_checks"))
++
++
++def test_invalid_environment_value_fails_closed(monkeypatch):
++    monkeypatch.setenv("SCENESMITH_REQUIRE_GATED_FINAL_ASSEMBLY", "maybe")
++    with pytest.raises(ValueError, match="must be a boolean"):
++        _require_external_gated_assembly(_pipeline("floor_plan"))
