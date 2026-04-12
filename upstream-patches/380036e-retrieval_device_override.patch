@@ -1,0 +1,20 @@
+diff --git a/scenesmith/experiments/indoor_scene_generation.py b/scenesmith/experiments/indoor_scene_generation.py
+--- a/scenesmith/experiments/indoor_scene_generation.py
++++ b/scenesmith/experiments/indoor_scene_generation.py
+@@ -79,11 +79,16 @@ def _get_retrieval_gpu_device() -> str | None:
+     generation (which use lower-indexed GPUs).
+ 
+     This respects CUDA_VISIBLE_DEVICES - PyTorch remaps physical GPUs
+     to logical indices 0, 1, 2, ... so we use the last logical index.
++    ``SCENESMITH_RETRIEVAL_DEVICE`` can explicitly select ``cpu`` or CUDA.
+ 
+     Returns:
+         Device string like "cuda:7" or None if single GPU / detection fails.
+     """
++    explicit_device = os.environ.get("SCENESMITH_RETRIEVAL_DEVICE")
++    if explicit_device:
++        return explicit_device
++
+     try:
+         # Import torch inside function to avoid CUDA initialization before
+         # ProcessPoolExecutor forks workers (fork-after-CUDA causes corruption).
