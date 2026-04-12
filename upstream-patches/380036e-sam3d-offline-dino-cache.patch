@@ -1,0 +1,197 @@
+diff --git a/scenesmith/agent_utils/geometry_generation_server/sam3d_pipeline_manager.py b/scenesmith/agent_utils/geometry_generation_server/sam3d_pipeline_manager.py
+--- a/scenesmith/agent_utils/geometry_generation_server/sam3d_pipeline_manager.py
++++ b/scenesmith/agent_utils/geometry_generation_server/sam3d_pipeline_manager.py
+@@ -16,6 +16,7 @@ ensure_cuda_env()
+ # Now safe to import CUDA-dependent code.
+ import gc
+ import logging
++import os
+ import threading
+ import time
+ 
+@@ -68,6 +69,78 @@ class SAM3DPipelineManager:
+ 
+         return cls._sam3_model, cls._sam3d_pipeline
+ 
++    @classmethod
++    def _install_offline_torch_hub_guard(
++        cls,
++    ) -> tuple[Any, list[str], Path] | None:
++        """Redirect DINOv2 torch-hub loads to the verified local cache.
++
++        The upstream DINO embedder defaults to ``source="github"``. PyTorch
++        Hub does not honor the Hugging Face offline variables and may contact
++        GitHub even when its source and weights are cached. Contract runs must
++        either use the one canonical local checkout or fail before a request.
++        """
++        offline_variables = (
++            "HF_HUB_OFFLINE",
++            "TRANSFORMERS_OFFLINE",
++            "DIFFUSERS_OFFLINE",
++        )
++        if not any(os.environ.get(name) == "1" for name in offline_variables):
++            return None
++
++        hub_root = Path(torch.hub.get_dir()).resolve()
++        source_candidates = sorted(hub_root.glob("facebookresearch_dinov2_*"))
++        main_candidates = [
++            path for path in source_candidates if path.name.endswith("_main")
++        ]
++        if main_candidates:
++            source_candidates = main_candidates
++        if len(source_candidates) != 1:
++            raise RuntimeError(
++                "Offline SAM3D requires exactly one cached DINOv2 source tree; "
++                f"found {[str(path) for path in source_candidates]}"
++            )
++        source_dir = source_candidates[0].resolve()
++        if not (source_dir / "hubconf.py").is_file():
++            raise RuntimeError(
++                f"Cached DINOv2 source has no hubconf.py: {source_dir}"
++            )
++
++        original_load = torch.hub.load
++        loaded_models: list[str] = []
++
++        def offline_load(
++            repo_or_dir: str,
++            model: str,
++            *args: Any,
++            source: str = "github",
++            **kwargs: Any,
++        ) -> Any:
++            is_official_dino = str(repo_or_dir) == "facebookresearch/dinov2"
++            is_bound_local = (
++                source == "local" and Path(repo_or_dir).resolve() == source_dir
++            )
++            if not (is_official_dino or is_bound_local):
++                raise RuntimeError(
++                    "Offline SAM3D blocked unexpected torch.hub load: "
++                    f"repo_or_dir={repo_or_dir!r}, source={source!r}"
++                )
++            weight_candidates = sorted(
++                (hub_root / "checkpoints").glob(f"{model}*.pth")
++            )
++            if len(weight_candidates) != 1:
++                raise RuntimeError(
++                    f"Offline SAM3D requires exactly one cached weight for "
++                    f"{model}; found {[str(path) for path in weight_candidates]}"
++                )
++            loaded_models.append(str(model))
++            return original_load(
++                str(source_dir), model, *args, source="local", **kwargs
++            )
++
++        torch.hub.load = offline_load
++        return original_load, loaded_models, source_dir
++
+     @classmethod
+     def _initialize_pipelines(
+         cls, sam3_checkpoint: Path, sam3d_checkpoint: Path
+@@ -178,8 +251,25 @@ class SAM3DPipelineManager:
+         # Use Hydra to instantiate the entire pipeline with all nested configs.
+         # This properly handles depth_model, preprocessors, and other nested components.
+         console_logger.debug("Instantiating SAM3D pipeline (this may take a while)...")
++        hub_guard = cls._install_offline_torch_hub_guard()
+         instantiate_start = time.time()
+-        cls._sam3d_pipeline = instantiate(config)
++        try:
++            pipeline = instantiate(config)
++        finally:
++            if hub_guard is not None:
++                torch.hub.load = hub_guard[0]
++        if hub_guard is not None:
++            _original_load, loaded_models, source_dir = hub_guard
++            if not loaded_models:
++                raise RuntimeError(
++                    "Offline SAM3D pipeline did not load a bound DINOv2 model"
++                )
++            console_logger.info(
++                "Loaded %d DINO embedder(s) from offline torch-hub cache %s",
++                len(loaded_models),
++                source_dir,
++            )
++        cls._sam3d_pipeline = pipeline
+         console_logger.debug(
+             f"SAM3D pipeline instantiated in {time.time() - instantiate_start:.2f}s"
+         )
+@@ -420,6 +517,32 @@ def generate_mask(
+     return mask
+ 
+ 
++def _release_transient_cuda_memory() -> None:
++    """Release request-scoped CUDA memory without unloading cached models.
++
++    Cleanup is deliberately best-effort so it never replaces the original
++    generation exception.  ``gc.collect`` clears Python reference cycles that
++    can retain SAM3D output tensors, while ``empty_cache`` returns only unused
++    allocator blocks; live model weights remain resident and unchanged.
++    """
++    try:
++        gc.collect()
++    except Exception:
++        console_logger.warning(
++            "Python garbage collection failed after a SAM3D request",
++            exc_info=True,
++        )
++
++    try:
++        if torch.cuda.is_available():
++            torch.cuda.empty_cache()
++    except Exception:
++        console_logger.warning(
++            "CUDA cache cleanup failed after a SAM3D request",
++            exc_info=True,
++        )
++
++
+ def generate_3d_from_mask(
+     image: Image.Image, mask: np.ndarray, sam3d_pipeline: Any, output_path: Path
+ ) -> None:
+@@ -441,19 +564,33 @@ def generate_3d_from_mask(
+     # Mask becomes the alpha channel (0=transparent/background, 255=opaque/foreground).
+     rgba_image = np.concatenate([image_np, mask_uint8[..., None]], axis=-1)
+ 
+-    # Generate 3D mesh using SAM 3D Objects pipeline.
+-    # Pass RGBA image with mask=None (mask is in alpha channel).
+-    output = sam3d_pipeline.run(
+-        rgba_image,
+-        mask=None,
+-        with_mesh_postprocess=True,
+-        with_texture_baking=True,
+-        with_layout_postprocess=True,
+-        use_vertex_color=False,  # Use UV-mapped textures from texture baking
+-    )
+-
+-    # Export GLB mesh.
+-    output["glb"].export(str(output_path))
++    # A cached SAM3D pipeline keeps the model weights resident, but no
++    # request-scoped tensors or allocator fragments should survive between
++    # assets.  Clean once before inference as a fail-safe for a preceding
++    # failed request, then again after dropping the full output dictionary.
++    _release_transient_cuda_memory()
++    output: dict[str, Any] | None = None
++    try:
++        # Generate 3D mesh using SAM 3D Objects pipeline.
++        # Pass RGBA image with mask=None (mask is in alpha channel).
++        output = sam3d_pipeline.run(
++            rgba_image,
++            mask=None,
++            with_mesh_postprocess=True,
++            with_texture_baking=True,
++            with_layout_postprocess=True,
++            use_vertex_color=False,  # Use UV-mapped textures from texture baking
++        )
++
++        # Export GLB mesh.
++        output["glb"].export(str(output_path))
++    finally:
++        # The returned dictionary contains Gaussian, mesh, point-map, and pose
++        # tensors in addition to the exported GLB.  Release that graph before
++        # emptying PyTorch's cache; the singleton model pipelines remain held
++        # by SAM3DPipelineManager and are not reloaded.
++        output = None
++        _release_transient_cuda_memory()
+ 
+ 
+ def generate_with_sam3d(
