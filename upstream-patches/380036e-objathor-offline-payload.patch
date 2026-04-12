@@ -1,0 +1,336 @@
+diff --git a/scenesmith/agent_utils/objaverse_retrieval/clip_similarity.py b/scenesmith/agent_utils/objaverse_retrieval/clip_similarity.py
+index fbb35b4..505f703 100644
+--- a/scenesmith/agent_utils/objaverse_retrieval/clip_similarity.py
++++ b/scenesmith/agent_utils/objaverse_retrieval/clip_similarity.py
+@@ -7,22 +7,46 @@ pre-computed embeddings.
+ 
+ import logging
+ 
++from pathlib import Path
++
+ import numpy as np
+ import open_clip
+ import torch
+ 
++from huggingface_hub import hf_hub_download
++
+ from scenesmith.agent_utils.objaverse_retrieval.data_loader import (
+     ObjaversePreprocessedData,
+ )
+ 
+ console_logger = logging.getLogger(__name__)
+ 
++OBJATHOR_CLIP_REPO = "laion/CLIP-ViT-L-14-laion2B-s32B-b82K"
++OBJATHOR_CLIP_REVISION = "1627032197142fbe2a7cfec626f4ced3ae60d07a"
++OBJATHOR_CLIP_FILENAME = "open_clip_pytorch_model.safetensors"
++
+ # Cache OpenCLIP model for Objaverse (ViT-L/14, 768-dim).
+ _cached_model = None
+ _cached_tokenizer = None
+ _device = None
+ 
+ 
++def resolve_objaverse_clip_weights(*, local_files_only: bool = True) -> Path:
++    """Resolve the immutable ObjectThor text-encoder weights from local cache."""
++
++    path = Path(
++        hf_hub_download(
++            repo_id=OBJATHOR_CLIP_REPO,
++            revision=OBJATHOR_CLIP_REVISION,
++            filename=OBJATHOR_CLIP_FILENAME,
++            local_files_only=local_files_only,
++        )
++    ).absolute()
++    if not path.is_file() or path.stat().st_size < 1:
++        raise FileNotFoundError(f"ObjectThor CLIP weights are missing: {path}")
++    return path
++
++
+ def _get_objaverse_clip_model(device: str | None = None):
+     """Get cached OpenCLIP model for Objaverse (ViT-L/14) or load if not cached.
+ 
+@@ -57,16 +81,17 @@ def _get_objaverse_clip_model(device: str | None = None):
+         # This MUST match the model used to compute the pre-computed embeddings.
+         # See: https://github.com/allenai/Holodeck
+         model_name = "ViT-L-14"
+-        pretrained = "laion2b_s32b_b82k"
++        pretrained = resolve_objaverse_clip_weights(local_files_only=True)
+         _device = target_device
+ 
+         _cached_model, _, _ = open_clip.create_model_and_transforms(
+-            model_name, pretrained=pretrained, device=_device
++            model_name, pretrained=str(pretrained), device=_device
+         )
+         _cached_tokenizer = open_clip.get_tokenizer(model_name)
+ 
+         console_logger.info(
+-            f"Loaded Objaverse CLIP model: {model_name} ({pretrained}) on {_device}"
++            f"Loaded Objaverse CLIP model: {model_name} "
++            f"({OBJATHOR_CLIP_REPO}@{OBJATHOR_CLIP_REVISION}) on {_device}"
+         )
+ 
+     return _cached_model, _cached_tokenizer, _device
+diff --git a/scenesmith/agent_utils/objaverse_retrieval/data_loader.py b/scenesmith/agent_utils/objaverse_retrieval/data_loader.py
+index dc2cd94..d704498 100644
+--- a/scenesmith/agent_utils/objaverse_retrieval/data_loader.py
++++ b/scenesmith/agent_utils/objaverse_retrieval/data_loader.py
+@@ -2,6 +2,7 @@
+ 
+ import json
+ import logging
++import re
+ 
+ from dataclasses import dataclass, field
+ from pathlib import Path
+@@ -183,24 +184,32 @@ def load_preprocessed_data(preprocessed_path: Path) -> ObjaversePreprocessedData
+ 
+ 
+ def construct_objaverse_mesh_path(data_path: Path, uid: str) -> Path:
+-    """Construct the file path for an Objaverse mesh.
++    """Resolve the publisher payload for an ObjectThor mesh.
+ 
+-    ObjectThor stores assets in {data_path}/assets/{uid}/{uid}.glb structure.
++    ObjectThor's released archives store Unity-ready ``.pkl.gz`` payloads.
++    Development exports may instead contain a ``.glb``. Both hold the same
++    render mesh and are consumed by :class:`ObjaverseRetriever`.
+ 
+     Args:
+         data_path: Root directory of Objaverse data (containing assets/ subdir).
+         uid: Objaverse mesh UID.
+ 
+     Returns:
+-        Path to the GLB mesh file.
++        Path to the GLB or canonical ObjectThor payload.
+ 
+     Raises:
+         FileNotFoundError: If the constructed path does not exist.
+     """
+-    # ObjectThor stores assets in assets/ subdirectory.
+-    mesh_path = data_path / "assets" / uid / f"{uid}.glb"
+-
+-    if not mesh_path.exists():
+-        raise FileNotFoundError(f"Objaverse mesh not found: {mesh_path}")
+-
+-    return mesh_path
++    if not re.fullmatch(r"[A-Za-z0-9_-]+", uid):
++        raise ValueError(f"Invalid Objaverse UID: {uid!r}")
++
++    asset_dir = data_path / "assets" / uid
++    candidates = (asset_dir / f"{uid}.glb", asset_dir / f"{uid}.pkl.gz")
++    for mesh_path in candidates:
++        if mesh_path.is_file():
++            return mesh_path
++
++    raise FileNotFoundError(
++        "Objaverse mesh not found; expected one of: "
++        + ", ".join(str(path) for path in candidates)
++    )
+diff --git a/scenesmith/agent_utils/objaverse_retrieval/retrieval.py b/scenesmith/agent_utils/objaverse_retrieval/retrieval.py
+index 7f05c77..9aababe 100644
+--- a/scenesmith/agent_utils/objaverse_retrieval/retrieval.py
++++ b/scenesmith/agent_utils/objaverse_retrieval/retrieval.py
+@@ -1,12 +1,16 @@
+ """Main Objaverse retrieval logic with two-stage process: CLIP -> size ranking."""
+ 
++import gzip
+ import logging
++import pickle
+ 
+ from dataclasses import dataclass
+ 
+ import numpy as np
+ import trimesh
+ 
++from PIL import Image
++
+ from scenesmith.agent_utils.objaverse_retrieval.clip_similarity import (
+     get_top_k_similar_meshes,
+ )
+@@ -20,6 +24,87 @@ from scenesmith.agent_utils.objaverse_retrieval.data_loader import (
+ console_logger = logging.getLogger(__name__)
+ 
+ 
++def _xyz_array(values: object, *, label: str) -> np.ndarray:
++    """Convert ObjectThor ``{x,y,z}`` vectors to a finite NumPy array."""
++
++    if not isinstance(values, list) or not values:
++        raise ValueError(f"ObjectThor {label} must be a non-empty list")
++    try:
++        array = np.asarray(
++            [[value["x"], value["y"], value["z"]] for value in values],
++            dtype=np.float64,
++        )
++    except (KeyError, TypeError, ValueError) as exc:
++        raise ValueError(f"Malformed ObjectThor {label}") from exc
++    if array.ndim != 2 or array.shape[1] != 3 or not np.isfinite(array).all():
++        raise ValueError(f"Malformed ObjectThor {label} shape/values: {array.shape}")
++    return array
++
++
++def _load_objathor_payload(payload_path) -> trimesh.Trimesh:
++    """Build a textured Trimesh from the publisher's compressed THOR payload."""
++
++    with gzip.open(payload_path, "rb") as stream:
++        payload = pickle.load(stream)
++    if not isinstance(payload, dict):
++        raise ValueError(f"ObjectThor payload is not a mapping: {payload_path}")
++
++    vertices = _xyz_array(payload.get("vertices"), label="vertices")
++    faces = np.asarray(payload.get("triangles"), dtype=np.int64)
++    if faces.ndim == 1:
++        if len(faces) == 0 or len(faces) % 3:
++            raise ValueError(
++                "ObjectThor triangle index count is not divisible by three"
++            )
++        faces = faces.reshape((-1, 3))
++    if faces.ndim != 2 or faces.shape[1] != 3:
++        raise ValueError(f"Malformed ObjectThor triangle array: {faces.shape}")
++    if faces.min() < 0 or faces.max() >= len(vertices):
++        raise ValueError("ObjectThor triangle index is outside the vertex array")
++
++    normals = None
++    if payload.get("normals"):
++        candidate_normals = _xyz_array(payload["normals"], label="normals")
++        if len(candidate_normals) == len(vertices):
++            normals = candidate_normals
++
++    visual = None
++    if payload.get("uvs"):
++        try:
++            uvs = np.asarray(
++                [[value["x"], value["y"]] for value in payload["uvs"]],
++                dtype=np.float64,
++            )
++        except (KeyError, TypeError, ValueError) as exc:
++            raise ValueError("Malformed ObjectThor UV coordinates") from exc
++        albedo_name = str(payload.get("albedoTexturePath") or "albedo.jpg")
++        albedo_path = (
++            payload_path.parent / albedo_name.replace("\\", "/").split("/")[-1]
++        )
++        if (
++            len(uvs) == len(vertices)
++            and np.isfinite(uvs).all()
++            and albedo_path.is_file()
++        ):
++            with Image.open(albedo_path) as source_image:
++                image = source_image.convert("RGB").copy()
++            material = trimesh.visual.texture.SimpleMaterial(image=image)
++            visual = trimesh.visual.texture.TextureVisuals(
++                uv=uvs, material=material
++            )
++
++    mesh = trimesh.Trimesh(
++        vertices=vertices,
++        faces=faces,
++        vertex_normals=normals,
++        visual=visual,
++        process=False,
++    )
++    if mesh.is_empty:
++        raise ValueError(f"ObjectThor payload produced an empty mesh: {payload_path}")
++    return mesh
++
++
+ @dataclass
+ class RetrievalCandidate:
+     """Candidate mesh for retrieval."""
+@@ -105,7 +190,10 @@ class ObjaverseRetriever:
+             data_path=self.config.data_path, uid=uid
+         )
+ 
+-        mesh = trimesh.load(mesh_path, force="mesh")
++        if mesh_path.name.endswith(".pkl.gz"):
++            mesh = _load_objathor_payload(mesh_path)
++        else:
++            mesh = trimesh.load(mesh_path, force="mesh")
+         if not isinstance(mesh, trimesh.Trimesh):
+             raise ValueError(f"Loaded mesh is not a Trimesh: {type(mesh)}")
+ 
+diff --git a/tests/unit/test_objaverse_retrieval.py b/tests/unit/test_objaverse_retrieval.py
+index 43bc55e..082a7bc 100644
+--- a/tests/unit/test_objaverse_retrieval.py
++++ b/tests/unit/test_objaverse_retrieval.py
+@@ -1,6 +1,8 @@
+ """Unit tests for Objaverse (ObjectThor) retrieval module."""
+ 
+ import json
++import gzip
++import pickle
+ import shutil
+ import tempfile
+ import unittest
+@@ -8,6 +10,7 @@ import unittest
+ from pathlib import Path
+ 
+ import numpy as np
++import trimesh
+ import yaml
+ 
+ from scenesmith.agent_utils.objaverse_retrieval.clip_similarity import (
+@@ -21,6 +24,7 @@ from scenesmith.agent_utils.objaverse_retrieval.data_loader import (
+     construct_objaverse_mesh_path,
+     load_preprocessed_data,
+ )
++from scenesmith.agent_utils.objaverse_retrieval.retrieval import ObjaverseRetriever
+ 
+ 
+ class TestObjaverseConfig(unittest.TestCase):
+@@ -111,6 +115,58 @@ class TestMeshPaths(unittest.TestCase):
+             construct_objaverse_mesh_path(objaverse_dir, uid)
+         self.assertIn("Objaverse mesh not found", str(cm.exception))
+ 
++    def test_construct_mesh_path_accepts_publisher_picklegz_payload(self):
++        """The released ObjectThor archive contains pkl.gz rather than GLB."""
++        objaverse_dir = self.tmp_path / "objathor-assets"
++        uid = "abc123def456"
++        expected_path = objaverse_dir / "assets" / uid / f"{uid}.pkl.gz"
++        expected_path.parent.mkdir(parents=True)
++        expected_path.touch()
++
++        path = construct_objaverse_mesh_path(objaverse_dir, uid)
++
++        self.assertEqual(path, expected_path)
++
++    def test_retriever_loads_released_picklegz_mesh(self):
++        """Publisher vertices, faces, normals, and UVs become a real Trimesh."""
++        objaverse_dir = self.tmp_path / "objathor-assets"
++        uid = "abc123def456"
++        asset_dir = objaverse_dir / "assets" / uid
++        asset_dir.mkdir(parents=True)
++        payload_path = asset_dir / f"{uid}.pkl.gz"
++        payload = {
++            "vertices": [
++                {"x": 0.0, "y": 0.0, "z": 0.0},
++                {"x": 1.0, "y": 0.0, "z": 0.0},
++                {"x": 0.0, "y": 1.0, "z": 0.0},
++            ],
++            "triangles": [0, 1, 2],
++            "normals": [
++                {"x": 0.0, "y": 0.0, "z": 1.0},
++                {"x": 0.0, "y": 0.0, "z": 1.0},
++                {"x": 0.0, "y": 0.0, "z": 1.0},
++            ],
++            "uvs": [
++                {"x": 0.0, "y": 0.0},
++                {"x": 1.0, "y": 0.0},
++                {"x": 0.0, "y": 1.0},
++            ],
++        }
++        with gzip.open(payload_path, "wb") as stream:
++            pickle.dump(payload, stream)
++
++        retriever = object.__new__(ObjaverseRetriever)
++        retriever.config = type("Config", (), {"data_path": objaverse_dir})()
++        mesh = retriever._load_mesh(uid)
++
++        self.assertIsInstance(mesh, trimesh.Trimesh)
++        self.assertEqual(mesh.vertices.shape, (3, 3))
++        self.assertEqual(mesh.faces.shape, (1, 3))
++
++    def test_uid_path_traversal_is_rejected(self):
++        with self.assertRaises(ValueError):
++            construct_objaverse_mesh_path(self.tmp_path, "../outside")
++
+ 
+ class TestClipSimilarity(unittest.TestCase):
+     """Test CLIP similarity computation and filtering algorithms."""
