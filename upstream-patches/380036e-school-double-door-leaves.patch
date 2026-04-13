@@ -1,0 +1,86 @@
+diff --git a/scenesmith/agent_utils/house.py b/scenesmith/agent_utils/house.py
+index 8ac5cd8..925f90d 100644
+--- a/scenesmith/agent_utils/house.py
++++ b/scenesmith/agent_utils/house.py
+@@ -266,6 +266,9 @@ class Door:
+     height: float = 2.1
+     """Designer-chosen within config range (2.0-2.4m)."""
+ 
++    leaf_count: int = 1
++    """Physical door-leaf count; a wide school entrance uses two leaves."""
++
+     def to_dict(self) -> dict:
+         """Serialize door to dictionary."""
+         return {
+@@ -278,6 +281,7 @@ class Door:
+             "room_b": self.room_b,
+             "width": self.width,
+             "height": self.height,
++            "leaf_count": self.leaf_count,
+         }
+ 
+     @classmethod
+@@ -293,6 +297,7 @@ class Door:
+             room_b=data.get("room_b"),
+             width=data.get("width", 1.0),
+             height=data.get("height", 2.1),
++            leaf_count=data.get("leaf_count", 1),
+         )
+ 
+ 
+diff --git a/scenesmith/floor_plan_agents/tools/door_window_mixin.py b/scenesmith/floor_plan_agents/tools/door_window_mixin.py
+index 505636f..9ab64b7 100644
+--- a/scenesmith/floor_plan_agents/tools/door_window_mixin.py
++++ b/scenesmith/floor_plan_agents/tools/door_window_mixin.py
+@@ -277,6 +277,7 @@ class DoorWindowMixin:
+             room_b=room_b,
+             width=width,
+             height=height,
++            leaf_count=2 if door_type == "exterior" and width >= 1.6 else 1,
+         )
+ 
+         # Add Opening to wall(s) for rendering/ASCII.
+diff --git a/tests/unit/test_floor_plan_tools.py b/tests/unit/test_floor_plan_tools.py
+index 3fffa68..ba1aca7 100644
+--- a/tests/unit/test_floor_plan_tools.py
++++ b/tests/unit/test_floor_plan_tools.py
+@@ -30,6 +30,19 @@ class TestOpeningPreservation(unittest.TestCase):
+ 
+         return layout, tools
+ 
++    def test_wide_exterior_door_is_serialized_as_two_physical_leaves(self):
++        layout, tools = self._create_single_room_layout()
++
++        result = tools._add_door_impl(
++            wall_id="A", position="center", width=1.8, height=2.2
++        )
++
++        assert result.success
++        assert len(layout.doors) == 1
++        assert layout.doors[0].door_type == "exterior"
++        assert layout.doors[0].leaf_count == 2
++        assert layout.doors[0].to_dict()["leaf_count"] == 2
++
+     def _create_two_room_layout(self) -> tuple:
+         """Create a layout with two adjacent rooms."""
+         layout = HouseLayout()
+diff --git a/tests/unit/test_house.py b/tests/unit/test_house.py
+index 7223537..3f7658c 100644
+--- a/tests/unit/test_house.py
++++ b/tests/unit/test_house.py
+@@ -53,6 +53,7 @@ class TestRoundTrip(unittest.TestCase):
+             room_b="kitchen",
+             width=0.9,
+             height=2.1,
++            leaf_count=2,
+         )
+         restored = Door.from_dict(original.to_dict())
+         assert restored.id == original.id
+@@ -64,6 +65,7 @@ class TestRoundTrip(unittest.TestCase):
+         assert restored.room_b == original.room_b
+         assert restored.width == original.width
+         assert restored.height == original.height
++        assert restored.leaf_count == original.leaf_count
+ 
+     def test_window_round_trip(self) -> None:
+         """Window survives to_dict/from_dict."""
