@@ -107,23 +107,45 @@ export HTTPS_PROXY="$HTTP_PROXY"
 export http_proxy="$HTTP_PROXY"
 export https_proxy="$HTTP_PROXY"
 
-python scripts/run_single_room_worker.py \
-  --repo-dir "$EXEC" \
-  --run-dir "$RUN" \
-  --csv "$EXEC/inputs/full_quality_school_reference_20260710/prompt.csv" \
-  --run-name "$RUN_NAME" \
-  --room-id "$ROOM_ID" \
-  --start-stage manipuland \
-  --stop-stage manipuland \
-  --asset-pipeline generated_sam3d \
-  --artiverse-data data/artiverse \
-  --artiverse-embeddings data/artiverse/embeddings \
-  --artvip-data data/artvip_sdf \
-  --artvip-embeddings data/artvip_sdf/embeddings \
-  --materials-data data/materials \
-  --materials-source-embeddings data/materials/embeddings \
-  --materials-embeddings data/materials_full_quality_contract/embeddings \
-  --port-offset "$PORT_OFFSET" \
-  --render-gpu-id 0
+runtime_log="$FACTORY/logs/${SLURM_JOB_NAME}-${SLURM_JOB_ID}.runtime.out"
+for attempt in 1 2; do
+  if python scripts/run_single_room_worker.py \
+    --repo-dir "$EXEC" \
+    --run-dir "$RUN" \
+    --csv "$EXEC/inputs/full_quality_school_reference_20260710/prompt.csv" \
+    --run-name "$RUN_NAME" \
+    --room-id "$ROOM_ID" \
+    --start-stage manipuland \
+    --stop-stage manipuland \
+    --asset-pipeline generated_sam3d \
+    --artiverse-data data/artiverse \
+    --artiverse-embeddings data/artiverse/embeddings \
+    --artvip-data data/artvip_sdf \
+    --artvip-embeddings data/artvip_sdf/embeddings \
+    --materials-data data/materials \
+    --materials-source-embeddings data/materials_full_quality_contract/embeddings \
+    --port-offset "$PORT_OFFSET" \
+    --render-gpu-id 0; then
+    break
+  else
+    worker_status=$?
+  fi
+
+  # A durable checkpoint makes a single in-allocation rerun safe after a lost
+  # API connection.  Every quality, physics, VLM, and asset failure remains
+  # fail-closed: only this exact transport class gets one retry.
+  if (( attempt == 1 )) \
+    && tail -n 260 "$runtime_log" | grep -Eq \
+      'openai\.APIConnectionError|httpx\.RemoteProtocolError|Server disconnected without sending a response'; then
+    status=$(curl --connect-timeout 10 --max-time 20 -sS -o /dev/null \
+      -w '%{http_code}' -x "http://127.0.0.1:${GPU_PROXY_PORT}" \
+      https://api.openai.com/v1/models || true)
+    [[ "$status" == 401 ]] || { echo "API proxy lost before retry: $status" >&2; exit 70; }
+    echo "Transient API transport failure; retrying durable manipuland resume once."
+    sleep 10
+    continue
+  fi
+  exit "$worker_status"
+done
 
 echo MANIPULAND_RESUME_PASS "$ROOM_ID"
