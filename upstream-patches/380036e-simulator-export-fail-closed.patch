@@ -1,0 +1,43 @@
+diff --git a/scripts/export_scene_to_mujoco.py b/scripts/export_scene_to_mujoco.py
+--- a/scripts/export_scene_to_mujoco.py
++++ b/scripts/export_scene_to_mujoco.py
+@@ -1705,7 +1705,9 @@ def export_to_usd(output_path: Path, output_dir: Path) -> None:
+             "  source .mujoco_venv/bin/activate\n"
+             "  python scripts/export_scene_to_mujoco.py --sdf ... --usd"
+         )
+-        return
++        raise RuntimeError(
++            "Requested USD export cannot run while bpy is importable in this environment"
++        )
+     except ImportError:
+         pass  # bpy not installed, safe to proceed.
+ 
+@@ -1747,9 +1749,16 @@ def export_to_usd(output_path: Path, output_dir: Path) -> None:
+         # Requires mujoco==3.3.5 and mujoco-usd-converter==0.1.0a3.
+         converter = mujoco_usd_converter.Converter()
+         asset = converter.convert(str(usd_xml_path), str(usd_dir))
++        asset_path = Path(asset.path)
++        if not asset_path.is_file() or asset_path.stat().st_size < 1:
++            raise RuntimeError(
++                f"USD converter did not create its requested root layer: {asset_path}"
++            )
+ 
+         # Open stage and save with comment.
+-        stage: Usd.Stage = Usd.Stage.Open(asset.path)
++        stage: Usd.Stage = Usd.Stage.Open(str(asset_path))
++        if stage is None:
++            raise RuntimeError(f"OpenUSD could not load converted root layer: {asset_path}")
+         usdex.core.saveStage(
+             stage, comment="Exported from scenesmith via mujoco-usd-converter"
+         )
+@@ -1773,8 +1782,10 @@ def export_to_usd(output_path: Path, output_dir: Path) -> None:
+         console_logger.info(f"  USD payloads in: {usd_dir / 'Payload'}")
+     except ImportError as e:
+         console_logger.error(f"USD export requires mujoco-usd-converter: {e}")
++        raise RuntimeError("Requested USD export dependencies are unavailable") from e
+     except Exception as e:
+         console_logger.error(f"USD export failed: {e}")
++        raise RuntimeError("Requested USD export failed") from e
+ 
+ 
+ def validate_mujoco_export(output_path: Path) -> bool:
