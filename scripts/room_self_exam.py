@@ -14,11 +14,23 @@ at the gate directory.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+try:
+    from .school_room_contract import PROFILE as SCHOOL_CONTRACT_PROFILE
+    from .school_room_contract import ROOM_IDS as SCHOOL_ROOM_IDS
+    from .school_room_contract import evaluate_room_inventory
+    from .school_room_contract import object_world_bounds
+except ImportError:  # Direct execution: python scripts/room_self_exam.py
+    from school_room_contract import PROFILE as SCHOOL_CONTRACT_PROFILE  # type: ignore[no-redef]
+    from school_room_contract import ROOM_IDS as SCHOOL_ROOM_IDS  # type: ignore[no-redef]
+    from school_room_contract import evaluate_room_inventory  # type: ignore[no-redef]
+    from school_room_contract import object_world_bounds  # type: ignore[no-redef]
 
 
 PASS_THRESHOLD = 7
@@ -37,6 +49,75 @@ class RoomSpec:
 def _read_json(path: Path) -> dict[str, Any]:
     with path.open(encoding="utf-8") as f:
         return json.load(f)
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _valid_sha256(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == 64
+        and all(character in "0123456789abcdef" for character in value)
+    )
+
+
+def _load_prompt_binding(
+    binding_path: Path, *, expected_layout_path: Path | None
+) -> dict[str, Any]:
+    """Revalidate the prompt-binding receipt and both of its hashed inputs."""
+
+    binding_path = binding_path.resolve()
+    if not binding_path.is_file():
+        raise RuntimeError(f"Missing production room prompt binding: {binding_path}")
+    binding = _read_json(binding_path)
+    if (
+        binding.get("schema_version") != 1
+        or binding.get("status") != "pass"
+        or binding.get("profile") != SCHOOL_CONTRACT_PROFILE
+    ):
+        raise RuntimeError("Room prompt binding schema/status/profile is invalid")
+
+    prompt_hashes = binding.get("room_prompt_sha256")
+    if (
+        not isinstance(prompt_hashes, dict)
+        or set(prompt_hashes) != set(SCHOOL_ROOM_IDS)
+        or any(not _valid_sha256(value) for value in prompt_hashes.values())
+    ):
+        raise RuntimeError("Room prompt binding does not contain all exact prompt hashes")
+    occurrences = binding.get("occurrence_counts")
+    if (
+        not isinstance(occurrences, dict)
+        or set(occurrences) != set(SCHOOL_ROOM_IDS)
+        or any(occurrences[room_id] != 2 for room_id in SCHOOL_ROOM_IDS)
+    ):
+        raise RuntimeError("Room prompt binding occurrence counts are invalid")
+
+    for key, expected_path in (
+        ("layout", expected_layout_path.resolve() if expected_layout_path else None),
+        ("input_manifest", None),
+    ):
+        record = binding.get(key)
+        if not isinstance(record, dict) or not _valid_sha256(record.get("sha256")):
+            raise RuntimeError(f"Room prompt binding {key} record is invalid")
+        raw_path = record.get("path")
+        if not isinstance(raw_path, str) or not raw_path:
+            raise RuntimeError(f"Room prompt binding {key} path is missing")
+        artifact_path = Path(raw_path).resolve()
+        if expected_path is not None and artifact_path != expected_path:
+            raise RuntimeError(
+                f"Room prompt binding layout path differs from active layout: {artifact_path}"
+            )
+        if not artifact_path.is_file() or _sha256_file(artifact_path) != record["sha256"]:
+            raise RuntimeError(f"Room prompt binding {key} artifact changed: {artifact_path}")
+    if not _valid_sha256(binding.get("effective_prompt_sha256")):
+        raise RuntimeError("Room prompt binding effective-prompt hash is invalid")
+    return binding
 
 
 def _as_room_list(placed_rooms: Any) -> list[dict[str, Any]]:
@@ -127,27 +208,10 @@ def _room_dimensions(spec: RoomSpec, room_state: dict[str, Any]) -> tuple[float,
 
 
 def _bbox_bounds(obj: dict[str, Any]) -> tuple[float, float, float, float] | None:
-    transform = obj.get("transform", {})
-    translation = transform.get("translation") if isinstance(transform, dict) else None
-    bbox_min = obj.get("bbox_min")
-    bbox_max = obj.get("bbox_max")
-    if not (
-        isinstance(translation, list)
-        and len(translation) >= 2
-        and isinstance(bbox_min, list)
-        and isinstance(bbox_max, list)
-        and len(bbox_min) >= 2
-        and len(bbox_max) >= 2
-    ):
+    bounds = object_world_bounds(obj)
+    if bounds is None:
         return None
-    tx = float(translation[0])
-    ty = float(translation[1])
-    return (
-        tx + float(bbox_min[0]),
-        tx + float(bbox_max[0]),
-        ty + float(bbox_min[1]),
-        ty + float(bbox_max[1]),
-    )
+    return bounds[0], bounds[1], bounds[2], bounds[3]
 
 
 def _find_review_images(review_dir: Path, room_id: str) -> list[str]:
@@ -175,6 +239,10 @@ def _score_room(
     room_state: dict[str, Any] | None,
     review_images: list[str],
     max_collision_hulls: int,
+    contract_profile: str | None = None,
+    expected_prompt_sha256: str | None = None,
+    asset_root: Path | None = None,
+    production_mode: bool = False,
 ) -> dict[str, Any]:
     issues: list[str] = []
     repairs: list[str] = []
@@ -183,6 +251,7 @@ def _score_room(
         return {
             "room_id": room_id,
             "status": "fail",
+            "contract_profile": contract_profile,
             "scores": {
                 "object_relevance": 0,
                 "placement_realism": 0,
@@ -195,6 +264,13 @@ def _score_room(
             "review_images": review_images,
             "metrics": {},
         }
+
+    production_contract = production_mode or contract_profile is not None
+    if production_contract and contract_profile != SCHOOL_CONTRACT_PROFILE:
+        issues.append(
+            f"Production school room requires contract profile {SCHOOL_CONTRACT_PROFILE}."
+        )
+        repairs.append("Run the production room gate with its immutable contract profile.")
 
     width, depth = _room_dimensions(spec, room_state)
     if width <= 0.0 or depth <= 0.0:
@@ -247,6 +323,12 @@ def _score_room(
         )
         repairs.append("Repair placement or regenerate the room from placement/furniture stage.")
 
+    if unknown_bbox and production_contract:
+        issues.append(
+            f"{unknown_bbox} non-structural objects lack finite rotation-aware 3D bounds."
+        )
+        repairs.append("Regenerate or repair every object with finite 3D pose and bounds.")
+
     room_area = max(width * depth, 1e-6)
     density = object_area / room_area
     if density > 0.65:
@@ -265,6 +347,23 @@ def _score_room(
             f"{collision_hull_risk} objects exceed collision hull cap {max_collision_hulls}."
         )
         repairs.append("Regenerate collision meshes with max hull cap <= 32.")
+
+    inventory_result = None
+    if contract_profile:
+        if contract_profile != SCHOOL_CONTRACT_PROFILE:
+            issues.append(f"Unsupported room contract profile: {contract_profile}")
+            repairs.append("Use the immutable school_reference_20260710 profile.")
+        else:
+            inventory_result = evaluate_room_inventory(
+                room_id,
+                room_state,
+                spec.prompt,
+                expected_prompt_sha256=expected_prompt_sha256,
+                asset_root=asset_root,
+                require_prompt_binding=production_contract,
+            )
+            issues.extend(inventory_result["critical_issues"])
+            repairs.extend(inventory_result["repair_instructions"])
 
     placement = 10
     clearance = 10
@@ -285,6 +384,9 @@ def _score_room(
     if collision_hull_risk:
         collision -= min(5, collision_hull_risk)
     if object_count == 0:
+        relevance = 0
+        prompt_alignment = 0
+    if inventory_result and inventory_result["status"] != "pass":
         relevance = 0
         prompt_alignment = 0
     if not review_images:
@@ -310,6 +412,7 @@ def _score_room(
     return {
         "room_id": room_id,
         "status": status,
+        "contract_profile": contract_profile,
         "scores": scores,
         "critical_issues": issues,
         "repair_instructions": repairs,
@@ -324,6 +427,8 @@ def _score_room(
             if math.isfinite(density)
             else None,
             "max_collision_hulls": max_collision_hulls,
+            "contract_profile": contract_profile,
+            "semantic_inventory": inventory_result,
         },
     }
 
@@ -341,6 +446,18 @@ def main() -> None:
     parser.add_argument("--output-dir")
     parser.add_argument("--rooms", nargs="*", help="Optional room IDs to check.")
     parser.add_argument("--max-collision-hulls", type=int, default=32)
+    parser.add_argument(
+        "--contract-profile",
+        choices=(SCHOOL_CONTRACT_PROFILE,),
+        help="Optional immutable semantic inventory contract.",
+    )
+    parser.add_argument(
+        "--prompt-binding",
+        help=(
+            "Prompt-binding receipt. Required for production school layouts; defaults to "
+            "<scene-dir>/quality_gates/room_prompt_binding.json."
+        ),
+    )
     args = parser.parse_args()
 
     if not args.scene_dir and not args.house_state:
@@ -357,6 +474,37 @@ def main() -> None:
         specs, rooms = _load_from_house_state(house_state)
         default_output = house_state.parent / DEFAULT_GATE_DIR
 
+    school_layout = set(specs) == set(SCHOOL_ROOM_IDS)
+    production_mode = school_layout or args.contract_profile is not None
+    if school_layout and args.contract_profile != SCHOOL_CONTRACT_PROFILE:
+        raise RuntimeError(
+            f"Exact school layout requires --contract-profile {SCHOOL_CONTRACT_PROFILE}"
+        )
+    prompt_hashes: dict[str, str] = {}
+    prompt_binding_summary: dict[str, Any] | None = None
+    if production_mode:
+        if args.prompt_binding:
+            prompt_binding_path = Path(args.prompt_binding).resolve()
+        elif args.scene_dir:
+            prompt_binding_path = (
+                scene_dir / "quality_gates" / "room_prompt_binding.json"
+            ).resolve()
+        else:
+            raise RuntimeError("--prompt-binding is required with --house-state production mode")
+        binding = _load_prompt_binding(
+            prompt_binding_path,
+            expected_layout_path=(scene_dir / "house_layout.json") if args.scene_dir else None,
+        )
+        prompt_hashes = {
+            str(room_id): str(digest)
+            for room_id, digest in binding["room_prompt_sha256"].items()
+        }
+        prompt_binding_summary = {
+            "path": str(prompt_binding_path),
+            "sha256": _sha256_file(prompt_binding_path),
+            "effective_prompt_sha256": binding["effective_prompt_sha256"],
+        }
+
     output_dir = Path(args.output_dir).resolve() if args.output_dir else default_output
     room_ids = args.rooms or sorted(specs)
     if not room_ids:
@@ -368,6 +516,7 @@ def main() -> None:
             result = {
                 "room_id": room_id,
                 "status": "fail",
+                "contract_profile": args.contract_profile,
                 "scores": {
                     "object_relevance": 0,
                     "placement_realism": 0,
@@ -387,6 +536,14 @@ def main() -> None:
                 room_state=rooms.get(room_id),
                 review_images=_find_review_images(review_dir, room_id),
                 max_collision_hulls=args.max_collision_hulls,
+                contract_profile=args.contract_profile,
+                expected_prompt_sha256=prompt_hashes.get(room_id),
+                asset_root=(
+                    scene_dir / f"room_{room_id}"
+                    if args.scene_dir
+                    else house_state.parent
+                ),
+                production_mode=production_mode,
             )
         results.append(result)
         _write_json(output_dir / f"{room_id}.json", result)
@@ -398,6 +555,9 @@ def main() -> None:
         "failed_rooms": failed,
         "room_count": len(results),
         "gate_dir": str(output_dir),
+        "contract_profile": args.contract_profile,
+        "production_mode": production_mode,
+        "prompt_binding": prompt_binding_summary,
     }
     _write_json(output_dir / "summary.json", summary)
 
