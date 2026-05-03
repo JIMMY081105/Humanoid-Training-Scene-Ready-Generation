@@ -12,6 +12,7 @@ import asyncio
 import base64
 import json
 import logging
+import math
 import os
 import re
 import shutil
@@ -20,7 +21,8 @@ import tempfile
 import time
 import uuid
 
-from dataclasses import dataclass, field
+from collections.abc import Mapping
+from dataclasses import dataclass, field, fields, is_dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, AsyncIterator
@@ -731,12 +733,71 @@ def _maybe_write_data_image(value: str, image_dir: Path, index: int) -> Path | N
 
 
 def _safe_model_dump(value: Any) -> Any:
-    if hasattr(value, "model_dump"):
-        return value.model_dump(exclude_unset=True)
-    try:
-        return dict(value)
-    except Exception:
-        return repr(value)
+    """Return a deterministic JSON-only view of Agents SDK model settings.
+
+    ``ModelSettings.extra_args`` can contain provider transport objects such as
+    ``httpx.Timeout`` or ``google.genai._interactions.Timeout``.  Those objects
+    are neither part of the Codex prompt contract nor used by the Codex CLI
+    backend (which has its own ``CodexCLIConfig.timeout_seconds``).  Asking
+    Pydantic to serialize the complete settings object therefore fails before
+    Codex can run.  Read declared fields directly, omit that transport-only
+    timeout, and reject every other non-JSON value instead of silently falling
+    back to a potentially nondeterministic ``repr``.
+    """
+
+    return _json_safe_model_setting(value, path="model_settings")
+
+
+def _json_safe_model_setting(value: Any, *, path: str) -> Any:
+    if value is None or isinstance(value, (str, bool, int)):
+        return value
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise TypeError(f"Non-finite model setting at {path}")
+        return value
+
+    if isinstance(value, Mapping):
+        result: dict[str, Any] = {}
+        for key, item in value.items():
+            if not isinstance(key, str):
+                raise TypeError(f"Non-string model-setting key at {path}: {key!r}")
+            # API-provider timeout objects are transport configuration.  The
+            # Codex subprocess timeout is enforced independently by the client.
+            if path == "model_settings.extra_args" and key == "timeout":
+                continue
+            result[key] = _json_safe_model_setting(item, path=f"{path}.{key}")
+        return result
+
+    if isinstance(value, (list, tuple)):
+        return [
+            _json_safe_model_setting(item, path=f"{path}[{index}]")
+            for index, item in enumerate(value)
+        ]
+
+    if is_dataclass(value) and not isinstance(value, type):
+        declared = {
+            item.name: getattr(value, item.name)
+            for item in fields(value)
+            if getattr(value, item.name) is not None
+        }
+        return _json_safe_model_setting(declared, path=path)
+
+    # Pydantic v2 models expose their declared fields on the class.  Reading
+    # them avoids invoking a serializer that cannot handle a nested provider
+    # timeout object.
+    model_fields = getattr(type(value), "model_fields", None)
+    if isinstance(model_fields, Mapping):
+        declared = {
+            name: getattr(value, name)
+            for name in model_fields
+            if getattr(value, name, None) is not None
+        }
+        return _json_safe_model_setting(declared, path=path)
+
+    raise TypeError(
+        f"Unsupported model-setting value at {path}: "
+        f"{type(value).__module__}.{type(value).__qualname__}"
+    )
 
 
 def _reasoning_effort_exec_args(model_settings: ModelSettings) -> list[str]:
