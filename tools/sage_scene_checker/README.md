@@ -36,6 +36,7 @@ python tools/sage_scene_checker/check_scenesmith_output.py `
   --scene-dir outputs/latest-run/scene_000 `
   --sage-root "E:/Researches/Tsinghua papers/SAGE/sage-main" `
   --out outputs/latest-run/scene_000/validation_report.json `
+  --fail-on-warnings `
   --no-paid-api
 ```
 
@@ -43,6 +44,12 @@ python tools/sage_scene_checker/check_scenesmith_output.py `
 `server/validation.py` and use `validate_room_only_layout()`. If that import
 fails or tries to pull unavailable dependencies, the checker keeps using its
 built-in checks.
+
+By default, failed warning checks are reported but do not change the top-level
+`pass` result. Production acceptance should add `--fail-on-warnings`; this makes
+coarse collisions, blocked doors, missing assets, and every other failed warning
+produce `pass: false` and a nonzero CLI exit. The report records the selected
+policy and its fatal check IDs under `acceptance_policy`.
 
 ## Inputs
 
@@ -72,4 +79,3 @@ The checker is pure Python and does not import SceneSmith runtime modules by
 default. Copy the `tools/sage_scene_checker` directory with the SceneSmith
 checkout on paracloud and run the same command there. Keep paid API environment
 variables unset when using `--no-paid-api`.
-
