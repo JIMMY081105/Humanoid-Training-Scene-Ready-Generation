@@ -1,0 +1,43 @@
+diff --git a/scenesmith/manipuland_agents/stateful_manipuland_agent.py b/scenesmith/manipuland_agents/stateful_manipuland_agent.py
+index d47f925..3930d3b 100644
+--- a/scenesmith/manipuland_agents/stateful_manipuland_agent.py
++++ b/scenesmith/manipuland_agents/stateful_manipuland_agent.py
+@@ -1411,6 +1411,22 @@ def _serialized_scene_content_hash(scene: Any, state: dict[str, Any]) -> str:
+     return value
+ 
+ 
++MANIPULAND_CRITIC_EVIDENCE_CONSTRAINTS = """
++CRITIC EVIDENCE CONSTRAINTS (authoritative): Articulated furniture is
++intentionally rendered fully open so every drawer/door and support surface is
++visible. Never penalize or request changes to drawer/door openness in these
++evidence renders. Rigid manipulands must remain collision-free: close adjacency
++at an object's edge/corner is the functional equivalent of attachment for this
++pipeline. Never request mesh contact, overlap, clipping, or holding between
++rigid collision meshes. If physics reports no manipuland collision, required
++items are present, bounds/clearance and furniture access pass, and density
++matches the assignment, optional micro-styling preferences alone must not hold
++Realism, Functionality, Layout, or Holistic Completeness below 8. Do not repeat
++a refinement that physics already rejected or that caused automatic removal;
++accept the nearest collision-free arrangement.
++""".strip()
++
++
+ class StatefulManipulandAgent(BaseStatefulAgent, BaseManipulandAgent):
+     """Manipuland placement with planner/designer/critic agents per furniture.
+ 
+@@ -1984,11 +2000,14 @@ class StatefulManipulandAgent(BaseStatefulAgent, BaseManipulandAgent):
+         if not selection:
+             raise ValueError("No current furniture selection set")
+ 
++        critic_furniture_description = (
++            f"{furniture_description}\n\n{MANIPULAND_CRITIC_EVIDENCE_CONSTRAINTS}"
++        )
+         return super()._create_critic_agent(
+             tools=tools,
+             prompt_enum=critic_prompt_enum,
+             output_type=ManipulandCritiqueWithScores,
+-            furniture_description=furniture_description,
++            furniture_description=critic_furniture_description,
+             suggested_items=selection.suggested_items,
+             prompt_constraints=selection.prompt_constraints,
+             style_notes=selection.style_notes,
