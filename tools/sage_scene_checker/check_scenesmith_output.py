@@ -53,6 +53,7 @@ def main(argv: list[str] | None = None) -> int:
         out=args.out,
         sage_root=args.sage_root,
         no_paid_api=args.no_paid_api,
+        fail_on_warnings=args.fail_on_warnings,
     )
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(report, indent=2), encoding="utf-8")
@@ -65,6 +66,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--sage-root")
     parser.add_argument("--out", required=True)
     parser.add_argument("--no-paid-api", action="store_true")
+    parser.add_argument(
+        "--fail-on-warnings",
+        action="store_true",
+        help=(
+            "treat every failed warning check as fatal; intended for production "
+            "acceptance while the default remains warning-tolerant"
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -74,6 +83,7 @@ def run_checker(
     out: str | Path | None = None,
     sage_root: str | Path | None = None,
     no_paid_api: bool = False,
+    fail_on_warnings: bool = False,
 ) -> dict[str, Any]:
     scene_path = Path(scene_dir)
     checks: list[Check] = []
@@ -121,7 +131,14 @@ def run_checker(
     warnings = [c for c in checks if c["status"] == "fail" and c["severity"] == "warning"]
     report = {
         "scene_id": scene_path.name,
-        "pass": not errors,
+        "pass": not errors and (not fail_on_warnings or not warnings),
+        "acceptance_policy": {
+            "fail_on_warnings": fail_on_warnings,
+            "fatal_failed_check_ids": [
+                check["id"]
+                for check in errors + (warnings if fail_on_warnings else [])
+            ],
+        },
         "summary": {
             "num_rooms": len(floor_plan.get("rooms", [])) if floor_plan else 0,
             "num_objects": len(floor_plan.get("objects", [])) if floor_plan else 0,
