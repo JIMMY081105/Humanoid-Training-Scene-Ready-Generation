@@ -1,0 +1,40 @@
+diff --git a/scenesmith/manipuland_agents/stateful_manipuland_agent.py b/scenesmith/manipuland_agents/stateful_manipuland_agent.py
+--- a/scenesmith/manipuland_agents/stateful_manipuland_agent.py
++++ b/scenesmith/manipuland_agents/stateful_manipuland_agent.py
+@@ -1233,25 +1233,31 @@ def _accepted_render_evidence(
+     minimum_score: int,
+     allowed_extra: frozenset[str] = frozenset(),
+ ) -> dict[str, Any]:
+-    """Bind the final score and the exact five copied critic views."""
++    """Bind the final score and exact copied critic-view inventory."""
+ 
+     directory = _regular_directory_without_symlink_components(
+         directory,
+         label="accepted manipuland evidence directory",
+     )
+     if isinstance(minimum_score, bool) or not isinstance(minimum_score, int):
+         raise RuntimeError(f"Manipuland minimum score is not an integer: {minimum_score!r}")
+     if minimum_score < 0 or minimum_score > 10:
+         raise RuntimeError(f"Manipuland minimum score is outside 0..10: {minimum_score}")
+     score = directory / "scores.yaml"
+-    images = [directory / name for name in sorted(_ACCEPTED_IMAGE_NAMES)]
+-    allowed = {score.name, *_ACCEPTED_IMAGE_NAMES, *allowed_extra}
+     actual = {path.name for path in directory.iterdir()}
+-    if actual != allowed:
++    non_image_names = {score.name, *allowed_extra}
++    image_names = sorted(actual - non_image_names)
++    unexpected_entries = [
++        name for name in image_names if Path(name).suffix.lower() != ".png"
++    ]
++    if unexpected_entries:
+         raise RuntimeError(
+             f"Accepted manipuland evidence inventory mismatch: "
+-            f"missing={sorted(allowed - actual)}, extra={sorted(actual - allowed)}"
++            f"unexpected={unexpected_entries}"
+         )
++    if not image_names:
++        raise RuntimeError("Accepted manipuland evidence has no copied critic views")
++    images = [directory / name for name in image_names]
+     for path in directory.iterdir():
+         if path.is_symlink() or not path.is_file():
+             raise RuntimeError(f"Accepted manipuland evidence entry is not regular: {path}")
