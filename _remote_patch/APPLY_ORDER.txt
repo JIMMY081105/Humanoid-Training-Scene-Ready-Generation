@@ -1,0 +1,43 @@
+# Apply only to a clean nepfaff/scenesmith checkout at base commit 9df3f88.
+# Ordering is explicit because later patches stack on earlier versions of the
+# same files (especially indoor_scene_generation.py).
+f0b743a-configurations_ceiling_agent_base_ceiling_agent.yaml.patch
+f0b743a-configurations_furniture_agent_base_furniture_agent.yaml.patch
+f0b743a-configurations_manipuland_agent_base_manipuland_agent.yaml.patch
+f0b743a-configurations_wall_agent_base_wall_agent.yaml.patch
+f0b743a-main.py.patch
+f0b743a-scenesmith_agent_utils_hssd_retrieval_data_loader.py.patch
+f0b743a-scenesmith_experiments_indoor_scene_generation.py.patch
+f0b743a-scenesmith_floor_plan_agents_stateful_floor_plan_agent.py.patch
+4af8392-scenesmith_agent_utils_asset_router_router.py.patch
+4af8392-scenesmith_agent_utils_clearance_zones.py.patch
+4af8392-scenesmith_experiments_indoor_scene_generation.py.patch
+4af8392-scenesmith_manipuland_agents_stateful_manipuland_agent.py.patch
+4af8392-scenesmith_manipuland_agents_tools_manipuland_tools.py.patch
+4af8392-scenesmith_prompts_data_asset_router_request_analysis_wall.yaml.patch
+ab1c3d7-scenesmith_agent_utils_vlm_service.py.patch
+ab1c3d7-tests_unit_test_vlm_service.py.patch
+b2e7d9f-tests_conftest.py.patch
+380036e-artiverse_core_integration.patch
+380036e-floorplan_only_server_gating.patch
+380036e-retrieval_device_override.patch
+380036e-artiverse_provenance_hardening.patch
+380036e-artiverse_rescale_provenance.patch
+380036e-full_quality_external_assembly_guard.patch
+380036e-objathor-offline-payload.patch
+380036e-sam3d-offline-dino-cache.patch
+380036e-school-double-door-leaves.patch
+380036e-simulator-export-fail-closed.patch
+380036e-navigation-common-zones.patch
+380036e-traceable-model-timeout.patch
+380036e-objathor-manipuland-routing.patch
+380036e-thread-safe-projection-timeout.patch
+380036e-action-log-concurrency.patch
+380036e-artiverse-support-surface-extraction.patch
+380036e-manipuland-furniture-checkpoints.patch
+380036e-manipuland-furniture-scope.patch
+380036e-inprocess-server-shutdown.patch
+380036e-dimension-contract.patch
+380036e-manipuland-session-reset.patch
+380036e-articulated-manipuland-evidence.patch
+380036e-manipuland-critic-evidence-context.patch
