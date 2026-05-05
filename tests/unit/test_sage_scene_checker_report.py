@@ -7,7 +7,12 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 TOOLS_DIR = REPO_ROOT / "tools" / "sage_scene_checker"
 sys.path.insert(0, str(TOOLS_DIR))
 
-from check_scenesmith_output import REQUIRED_SCENE_FILES, _required_files, run_checker  # noqa: E402
+from check_scenesmith_output import (  # noqa: E402
+    REQUIRED_SCENE_FILES,
+    _required_files,
+    main,
+    run_checker,
+)
 from money_guard import PAID_API_ENV_VARS  # noqa: E402
 
 
@@ -128,7 +133,17 @@ def _write_fake_scene(
 
 
 def _assert_report_shape(report: dict) -> None:
-    assert set(["scene_id", "pass", "summary", "money_guard", "checks", "repair_suggestions"]).issubset(report)
+    assert set(
+        [
+            "scene_id",
+            "pass",
+            "acceptance_policy",
+            "summary",
+            "money_guard",
+            "checks",
+            "repair_suggestions",
+        ]
+    ).issubset(report)
     assert set(["num_rooms", "num_objects", "num_errors", "num_warnings"]).issubset(report["summary"])
     assert report["money_guard"] == {
         "openai_api_calls": 0,
@@ -199,6 +214,117 @@ def test_overlapping_boxes_are_detected(tmp_path, monkeypatch):
 
     assert any(check["id"] == "object.coarse_collision" and check["status"] == "fail" for check in report["checks"])
     assert report["summary"]["num_warnings"] >= 1
+
+
+def test_default_policy_preserves_warning_tolerant_behavior(tmp_path, monkeypatch):
+    _clear_paid_env(monkeypatch)
+    scene_dir = _write_fake_scene(
+        tmp_path,
+        objects={
+            "chair_1": _fake_object("chair_1", translation=[2.0, 2.0, 0.5]),
+            "chair_2": _fake_object("chair_2", translation=[2.1, 2.0, 0.5]),
+        },
+    )
+
+    report = run_checker(scene_dir=scene_dir, no_paid_api=True)
+
+    assert report["summary"]["num_errors"] == 0
+    assert report["summary"]["num_warnings"] >= 1
+    assert report["pass"] is True
+    assert report["acceptance_policy"] == {
+        "fail_on_warnings": False,
+        "fatal_failed_check_ids": [],
+    }
+
+
+def test_contract_policy_fails_collision_door_and_missing_asset_warnings(
+    tmp_path, monkeypatch
+):
+    _clear_paid_env(monkeypatch)
+    scene_dir = _write_fake_scene(
+        tmp_path,
+        objects={
+            "chair_1": _fake_object(
+                "chair_1",
+                translation=[2.5, 0.4, 0.5],
+                geometry_path="assets/missing.gltf",
+            ),
+            "chair_2": _fake_object(
+                "chair_2", translation=[2.55, 0.4, 0.5]
+            ),
+        },
+    )
+
+    report = run_checker(
+        scene_dir=scene_dir, no_paid_api=True, fail_on_warnings=True
+    )
+
+    failed_warning_ids = {
+        check["id"]
+        for check in report["checks"]
+        if check["severity"] == "warning" and check["status"] == "fail"
+    }
+    assert {
+        "object.coarse_collision",
+        "door.clearance_blocked",
+        "object.asset_path",
+    }.issubset(failed_warning_ids)
+    assert report["pass"] is False
+    assert failed_warning_ids.issubset(
+        report["acceptance_policy"]["fatal_failed_check_ids"]
+    )
+
+
+def test_contract_policy_clean_scene_passes_and_cli_returns_zero(tmp_path, monkeypatch):
+    _clear_paid_env(monkeypatch)
+    scene_dir = _write_fake_scene(tmp_path)
+    output = tmp_path / "strict_report.json"
+
+    exit_code = main(
+        [
+            "--scene-dir",
+            str(scene_dir),
+            "--out",
+            str(output),
+            "--no-paid-api",
+            "--fail-on-warnings",
+        ]
+    )
+
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert report["pass"] is True
+    assert report["acceptance_policy"]["fail_on_warnings"] is True
+
+
+def test_contract_policy_cli_returns_nonzero_for_warning(tmp_path, monkeypatch):
+    _clear_paid_env(monkeypatch)
+    scene_dir = _write_fake_scene(
+        tmp_path,
+        objects={
+            "chair_1": _fake_object(
+                "chair_1", geometry_path="assets/does_not_exist.gltf"
+            )
+        },
+    )
+    output = tmp_path / "strict_failure.json"
+
+    exit_code = main(
+        [
+            "--scene-dir",
+            str(scene_dir),
+            "--out",
+            str(output),
+            "--fail-on-warnings",
+        ]
+    )
+
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert exit_code == 1
+    assert report["pass"] is False
+    assert "object.asset_path" in report["acceptance_policy"][
+        "fatal_failed_check_ids"
+    ]
 
 
 def test_no_sage_installation_is_required_for_basic_checks(tmp_path, monkeypatch):
