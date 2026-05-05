@@ -89,6 +89,21 @@ _SCOPE_PREDECESSOR_INPUT_SCENE_CONTENT_SHA256 = (
 _SCOPE_PREDECESSOR_PLAN_SHA256 = (
     "33906752fe705460f933a80d181b53ee0fe7eba117ff5c7ea929a99cbbfe4805"
 )
+# This is the one durable Room 1 filing-cabinet receipt created immediately before
+# the optional-no-support-surface policy was corrected.  It may be restored only
+# when the receipt bytes, identity, and both scene-content hashes are exact.
+_FILING_CABINET_RUNTIME_PREDECESSOR_SHA256 = (
+    "ede55b31fd4d7f94d16b3c8a6891d6fa1296ae4dc34556983ee02b7a2f655f16"
+)
+_FILING_CABINET_PREDECESSOR_INPUT_SCENE_CONTENT_SHA256 = (
+    "ec5d204593c23d4fc4aba56dd89e9e14367c4fe80f975c3b84cc1f4089ed1372"
+)
+_FILING_CABINET_PREDECESSOR_OUTPUT_SCENE_CONTENT_SHA256 = (
+    "83277726010ad845b8c8400cf5f4ba6aeac3ddbbcf511f982ad34aedd3bc145a"
+)
+_FILING_CABINET_PREDECESSOR_RECEIPT_SHA256 = (
+    "ce68283accd5a7c924a0bc99565747c36cf3f0fd7261e61f7f6fea0dfe0da8a4"
+)
 _SAFE_CHECKPOINT_ID = re.compile(r"^[A-Za-z0-9_.-]+$")
 _ACCEPTED_IMAGE_NAMES = frozenset(
     {"0_side.png", "0_top.png", "1_side.png", "2_side.png", "3_side.png"}
@@ -2835,8 +2850,22 @@ class StatefulManipulandAgent(BaseStatefulAgent, BaseManipulandAgent):
             == _SCOPE_PREDECESSOR_OUTPUT_SCENE_CONTENT_SHA256
             and receipt_file_sha256 == _SCOPE_PREDECESSOR_RECEIPT_SHA256
         )
+        is_exact_filing_cabinet_predecessor = (
+            receipt.get("schema_version") == _FURNITURE_CHECKPOINT_SCHEMA
+            and furniture_index == 1
+            and str(furniture_selection.furniture_id) == "filing_cabinet_0"
+            and receipt.get("checkpoint_runtime_sha256")
+            == _FILING_CABINET_RUNTIME_PREDECESSOR_SHA256
+            and receipt.get("input_scene_content_hash")
+            == _FILING_CABINET_PREDECESSOR_INPUT_SCENE_CONTENT_SHA256
+            and receipt.get("output_scene_content_hash")
+            == _FILING_CABINET_PREDECESSOR_OUTPUT_SCENE_CONTENT_SHA256
+            and receipt_file_sha256 == _FILING_CABINET_PREDECESSOR_RECEIPT_SHA256
+        )
         for key, expected in context.items():
-            if key == "checkpoint_runtime_sha256" and is_exact_predecessor:
+            if key == "checkpoint_runtime_sha256" and (
+                is_exact_predecessor or is_exact_filing_cabinet_predecessor
+            ):
                 continue
             if receipt.get(key) != expected:
                 raise RuntimeError(
