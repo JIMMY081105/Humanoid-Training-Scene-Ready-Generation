@@ -1,0 +1,60 @@
+
+==================================================
+HARD FLOOR-PLAN CONTRACT (HIGHEST PRIORITY)
+==================================================
+
+Represent the broad central circulation/common space as one SceneSmith room named
+`main_corridor`. Generate exactly these 11 unique room IDs and no others:
+
+- classroom_01
+- classroom_02
+- classroom_03
+- classroom_04
+- classroom_05
+- classroom_06
+- library
+- boys_toilet
+- girls_toilet
+- storage_room
+- main_corridor
+
+The front/south side is the bottom of the reference image. Do not rotate or mirror
+the requested layout. Place classroom_01 at the lower left, classroom_02 at the
+lower right, classroom_03 at the middle left, classroom_06 at the middle right,
+classroom_04 at the upper left, and classroom_05 at the upper right. Place the
+library at the lower center. Place boys_toilet and girls_toilet together in the
+lower-left central zone, immediately left/northwest of the library. Place
+storage_room in the lower-right central zone between classroom_02 and
+classroom_06. Place main_corridor as the wide central north-south circulation
+spine connecting every room.
+
+Use these approximate room dimensions unless a small adjustment is necessary for
+valid placement: each classroom 9.0 m by 7.5 m; library 10.0 m by 9.0 m; each
+toilet 4.0 m by 4.0 m; storage_room 5.0 m by 3.7 m; main_corridor 12.0 m by
+20.0 m. Preserve the visual proportions and semantics rather than forcing the
+inconsistent total-area number printed in the reference graphic.
+
+Integrate the main entrance into the south edge of main_corridor/library threshold;
+do not create a separate entrance room. The entrance must be an exterior double
+door at least 1.6 m wide. Every non-circulation room must connect into the common
+circulation graph. All six classrooms and the library must have exterior-facing
+windows. Keep the main corridor broad, open, furnished with benches and planters,
+and free of doorway blockage.
+
+Use exactly 12 student desks and 12 corresponding student chairs in each
+classroom. This satisfies the requested 12-20 capacity while matching the lower
+visual density of the reference image. Maintain clear aisles and orient desks
+toward each classroom's whiteboard/teaching wall.
+
+The school must legitimately exercise compulsory articulated retrieval. Include
+at least these functional articulated furniture requirements in appropriate
+rooms: an openable library bookcase cabinet with hinged glass doors, an openable
+school-supply utility cabinet with two hinged doors, and a teacher filing cabinet
+with operable drawers. At least one of these must be sourced from Artiverse and
+must survive all room gates and final assembly; ArtVIP cannot substitute for the
+required Artiverse asset.
+
+Treat the supplied reference image as the visual target for layout hierarchy,
+warm cream-and-light-wood appearance, daylight, plants, furniture density, and
+open sightlines. Do not claim reference fidelity unless the final top and
+isometric renders pass the dedicated image-reference VLM gate.
