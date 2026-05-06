@@ -1,0 +1,446 @@
+Generate a realistic, simulation-ready one-floor school environment based on a warm, open, welcoming school layout.
+
+Overall concept:
+Create a single-floor school with a central shared circulation space, 6 classrooms, 1 library, 2 separate restrooms (boys and girls), 1 storage room, and wide common circulation areas. The design should feel similar to a modern elementary or middle-school learning environment: warm wood materials, light-colored walls, indoor plants, natural lighting, organized classrooms, and clear circulation.
+
+The style should match a clean, functional, inviting architectural school interior:
+- warm neutral materials
+- light wood furniture
+- beige/light cream walls
+- soft daylight
+- visible windows in classrooms
+- a pleasant and realistic school atmosphere
+- not futuristic, not industrial, not luxury
+- suitable for robot navigation and manipulation experiments
+
+==================================================
+OVERALL FLOOR LAYOUT
+==================================================
+
+Create one complete school floor with the following rooms and approximate arrangement:
+
+- Classroom 1: lower-left side
+- Classroom 2: lower-right side
+- Classroom 3: middle-left side
+- Classroom 4: upper-left side
+- Classroom 5: upper-right side
+- Classroom 6: middle-right side
+- Library: centered near the lower middle, close to the main entrance
+- Boys Toilet: left of the library / lower-left central zone
+- Girls Toilet: adjacent to boys toilet in the same restroom zone
+- Storage Room: middle-right area near Classroom 6 and Classroom 2
+- Central circulation / common area: broad open interior space connecting all rooms
+- Main entrance: bottom-center/front-facing side
+
+The circulation should be intuitive and easy to navigate. The school should have a central spine / lobby-like common area with wide walkable paths and open visibility between spaces. The library should act as an important common academic space near the entrance. The classrooms should be arranged around the circulation zone.
+
+Keep the environment consistent with a realistic single-floor school.
+
+==================================================
+VISUAL STYLE AND MATERIALS
+==================================================
+
+Use:
+- light wood desks, cabinets, shelving, and door frames
+- cream, beige, or off-white walls
+- light tan or pale wood flooring in classrooms and common areas
+- tiled flooring in bathrooms
+- warm indoor lighting plus natural daylight from windows
+- potted plants in common areas and some classrooms
+- bulletin boards, posters, and educational displays
+- realistic scale and spacing
+- cozy but organized school appearance
+
+Avoid:
+- empty, sterile rooms
+- over-cluttered impossible arrangements
+- highly futuristic design
+- hospital-like atmosphere
+- large open spaces with no furniture
+- dark, gloomy lighting
+
+==================================================
+MAIN ENTRANCE / FRONT AREA
+==================================================
+
+Create a clearly visible main entrance at the front/bottom-center of the building.
+
+Include:
+- double entrance doors
+- a small entrance threshold / welcome zone
+- simple reception-like arrival feeling
+- visible path into the library and central circulation
+- a welcome mat or subtle welcoming signage
+- nearby planters or decorative greenery
+- clear transition from exterior to interior
+
+The entrance should feel clean, welcoming, and easy to understand.
+
+==================================================
+CENTRAL COMMON AREA / CIRCULATION SPACE
+==================================================
+
+Create a large open central circulation area connecting all classrooms, library, toilets, and storage room.
+
+This space should include:
+- wide walkable corridors
+- open visibility
+- central seating / built-in seating / small bench elements
+- planter boxes or potted indoor plants
+- wall display areas or bulletin boards
+- a calm and organized school circulation atmosphere
+- enough open space for robot walking and turning
+- no blocked doorways or cramped path segments
+
+The circulation zone should be one of the visual centers of the school.
+
+It should support:
+- student movement
+- teacher movement
+- wheelchair accessibility feel
+- robot navigation
+- sightlines across multiple rooms and zones
+
+==================================================
+LIBRARY (center-lower area)
+==================================================
+
+Generate a warm, inviting school library placed near the center front of the floor.
+
+The library should include:
+- perimeter bookshelves along walls
+- several medium-height bookshelves
+- book display shelves
+- 2 to 4 round reading tables with chairs
+- a small reading/lounge area
+- a few soft lounge chairs or casual reading chairs
+- a low table in the reading area
+- teacher/librarian counter or small circulation desk
+- indoor plants
+- educational posters or reading-related wall graphics
+- organized books, magazines, binders, and learning materials
+
+The library should feel:
+- central
+- calm
+- student-friendly
+- readable and organized
+- not too dense to navigate
+- usable for sitting, reading, searching, and browsing
+
+Add small details such as:
+- stacked books
+- book bins
+- desk organizers
+- bookmarks or stationery
+- storage cubbies
+- a pinboard or notices board
+- soft rug or designated reading area if appropriate
+
+The library should look like the academic heart of the school.
+
+==================================================
+CLASSROOMS (6 TOTAL)
+==================================================
+
+Generate 6 classrooms with similar structure but slightly different furniture arrangements, decorations, and object placements. No two classrooms should look completely identical.
+
+Each classroom should contain:
+- student desks
+- student chairs
+- teacher desk
+- teacher chair
+- front whiteboard
+- side or rear storage cabinet
+- bookshelves or cubby storage
+- classroom wall displays / posters
+- educational materials
+- classroom clock
+- windows for natural light
+- trash bin
+- some potted plants or small classroom greenery
+- clear walking aisles
+
+Each classroom should support realistic school use.
+
+------------------------------------------
+CLASSROOM 1 (lower-left)
+------------------------------------------
+This room should feel like a standard classroom with moderate density.
+
+Include:
+- about 12 to 20 student desks, arranged in grouped clusters or orderly rows
+- matching student chairs
+- teacher desk at the front
+- whiteboard at the teaching wall
+- storage shelf / low cabinet near side wall
+- bulletin board with educational displays
+- a few posters or student work
+- a bookshelf or cubby unit
+- some stationery and books on desks
+- visible windows bringing in daylight
+- a clean teaching zone at the front
+
+This classroom should feel balanced, practical, and easy to move through.
+
+------------------------------------------
+CLASSROOM 2 (lower-right)
+------------------------------------------
+This room should be similar in function to Classroom 1 but with a slightly different layout.
+
+Include:
+- 12 to 20 student desks
+- grouped seating layout or compact rows
+- teacher desk and chair
+- whiteboard or teaching board
+- side storage cabinet
+- classroom shelves with supplies
+- wall display boards
+- posters and learning materials
+- pencil cups, books, and notebooks on some desks
+- windows on the outer wall
+- accessible walkways between desk clusters
+
+This room should have small visual variation from Classroom 1.
+
+------------------------------------------
+CLASSROOM 3 (middle-left)
+------------------------------------------
+This room should feel active and organized.
+
+Include:
+- grouped student desks
+- teacher station at the front
+- whiteboard
+- low bookshelves or open cubbies
+- learning posters and colorful student work
+- some classroom bins
+- wall-mounted notice area
+- a cabinet for teaching materials
+- small desk clutter such as books, pencil holders, worksheets
+
+Keep it realistic and not overfilled.
+
+------------------------------------------
+CLASSROOM 4 (upper-left)
+------------------------------------------
+This room should receive good natural light and feel tidy.
+
+Include:
+- 12 to 20 student desks
+- teacher desk
+- whiteboard
+- side cabinets or shelving
+- educational posters
+- potted plant or small greenery
+- classroom clock
+- books or binders on shelves
+- neat, usable layout with defined teaching front
+
+It should look slightly different from the other classrooms in seating arrangement and decoration placement.
+
+------------------------------------------
+CLASSROOM 5 (upper-right)
+------------------------------------------
+This room should mirror the same overall classroom category but with its own identity.
+
+Include:
+- 12 to 20 student desks
+- teacher desk and chair
+- whiteboard
+- wall storage
+- open shelf or cabinet
+- classroom displays
+- books, notebooks, folders
+- possible art or reading corner detail
+- daylight from windows
+- logical flow from door to teacher area and student seating
+
+------------------------------------------
+CLASSROOM 6 (middle-right)
+------------------------------------------
+This room should feel similar to the other classrooms but slightly denser and very practical.
+
+Include:
+- 12 to 20 student desks
+- front teaching area
+- teacher desk
+- whiteboard
+- bookshelves or cubby storage
+- posters and learning visuals
+- a few plants or decor items
+- school supplies on desks and storage surfaces
+- clear circulation paths between desks
+
+==================================================
+CLASSROOM DETAIL RULES
+==================================================
+
+For all classrooms, include realistic small objects:
+- textbooks
+- notebooks
+- folders
+- worksheets
+- pencil holders
+- markers
+- erasers
+- rulers
+- glue sticks
+- scissors
+- water bottles
+- backpacks
+- storage bins
+- trays for papers
+- board markers
+- whiteboard eraser
+
+Do not place too many random objects. Keep it believable and functional.
+
+Each classroom should have:
+- a strong “front teaching wall”
+- desks oriented toward the board or organized in sensible clusters
+- visible storage
+- student capacity appropriate for a small-to-medium classroom
+- enough walking space for teacher and students
+- enough free space for robot movement
+
+==================================================
+BOYS TOILET
+==================================================
+
+Create a compact but realistic boys toilet next to the girls toilet.
+
+Include:
+- multiple toilet stalls
+- urinals
+- sinks with mirrors
+- soap dispensers
+- paper towel dispenser or hand dryer
+- trash bin
+- tiled flooring
+- restroom partitions
+- simple wall tiles
+- realistic bathroom fixtures
+- door access from common circulation
+
+The toilet should look school-appropriate, clean, and compact.
+
+==================================================
+GIRLS TOILET
+==================================================
+
+Create a compact girls toilet beside the boys toilet.
+
+Include:
+- multiple toilet stalls
+- sinks with mirrors
+- soap dispensers
+- paper towel dispenser or hand dryer
+- trash bin
+- sanitary disposal bins
+- tiled flooring
+- restroom partitions
+- simple clean school restroom appearance
+
+It should match the same visual quality and size logic as the boys toilet.
+
+==================================================
+STORAGE ROOM
+==================================================
+
+Create one practical school storage room near the right-side classrooms.
+
+Include:
+- metal shelving or sturdy storage shelves
+- labeled bins
+- boxes
+- spare classroom supplies
+- paper stacks
+- cleaning materials
+- maintenance supplies
+- extra chairs or folded furniture if space allows
+- school materials and containers
+- organized but somewhat dense storage appearance
+
+The room should feel utilitarian and realistic, but still navigable.
+
+Possible storage contents:
+- stationery stock
+- printer paper boxes
+- textbooks
+- art supplies
+- sports cones or minor equipment
+- cleaning buckets
+- mops
+- spare bins
+- maintenance toolkit
+- bulk classroom materials
+
+==================================================
+DOORS, WINDOWS, LIGHTING
+==================================================
+
+All rooms should have:
+- realistic doors
+- proper wall thickness
+- windows on exterior-facing classrooms and library
+- warm ceiling lighting
+- visible daylight entering classroom and library spaces
+- realistic proportions
+
+Use windows mainly on outer walls so the classrooms and library feel naturally lit.
+
+==================================================
+DECORATION / SCHOOL IDENTITY
+==================================================
+
+Add school-like details throughout:
+- bulletin boards
+- educational posters
+- student artwork
+- simple signage
+- classroom labels if needed
+- plants in common areas
+- clean and modest decorative touches
+- warm institutional interior design
+
+Avoid excessive branding or unrealistic luxury.
+
+==================================================
+ROBOT / SIMULATION REQUIREMENTS
+==================================================
+
+The environment must be suitable for robotics and scene generation experiments.
+
+Requirements:
+- no severe object interpenetration
+- no floating objects
+- no impossible furniture placement
+- maintain clear walkable paths
+- maintain door clearance
+- maintain visibility in common areas
+- preserve room semantics
+- rooms must be easily distinguishable by function
+- furniture should be realistically scaled
+- collision-aware arrangement
+- support humanoid navigation
+- support pick-and-place style tasks
+- support object search tasks
+- support corridor traversal
+- support room-to-room planning
+
+==================================================
+FINAL QUALITY TARGET
+==================================================
+
+The final school floor should look like a believable, warm, modern, single-floor school designed for learning and accessibility.
+
+It should have:
+- strong room semantics
+- coherent layout
+- natural object placement
+- visually pleasing but practical design
+- enough detail to look complete
+- enough structure to be useful for simulation and robot training
+
+The scene should feel close to an architectural concept rendering of a real one-floor school: warm, inviting, functional, and clearly organized.
