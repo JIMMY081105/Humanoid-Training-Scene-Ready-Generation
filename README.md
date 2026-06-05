@@ -25,6 +25,8 @@ these files.
 | `local_setup/` | Environment bootstrap, dependency checks, Drake scene viewing, GLB export |
 | `tests/` | Unit tests for the scene checker, benchmark money-guard, and report generation |
 | `upstream-patches/` | My changes to upstream SceneSmith files, as reviewable diffs |
+| `REFACTOR_PLAN.md` | Current refactor priorities and guardrails for keeping the repo maintainable |
+| `DEVELOPMENT.md` | Local validation commands for tests, scene checks, benchmarks, and rendering |
 
 ## Key engineering problems solved
 
