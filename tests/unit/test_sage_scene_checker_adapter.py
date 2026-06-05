@@ -7,7 +7,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 TOOLS_DIR = REPO_ROOT / "tools" / "sage_scene_checker"
 sys.path.insert(0, str(TOOLS_DIR))
 
-from adapter import load_scenesmith_output, normalize_category  # noqa: E402
+from adapter import _clamp01, load_scenesmith_output, normalize_category  # noqa: E402
 
 
 def _write_json(path: Path, data: dict) -> None:
@@ -143,3 +143,9 @@ def test_adapter_normalizes_common_semantic_categories():
     assert normalize_category("Student Desk") == "furniture"
     assert normalize_category("wall mounted screen") == "wall_mounted"
     assert normalize_category("") == "unknown"
+
+
+def test_adapter_clamps_opening_position_ratio():
+    assert _clamp01(-0.25) == 0.0
+    assert _clamp01(0.5) == 0.5
+    assert _clamp01(1.25) == 1.0

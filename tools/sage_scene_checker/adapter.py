@@ -169,7 +169,7 @@ def _opening_to_sage(opening: dict[str, Any], wall: dict[str, Any], wall_id: str
         "id": str(opening.get("opening_id") or opening.get("id") or f"{wall_id}_{normalized_kind}"),
         "wall_id": wall_id,
         "wall_side": wall.get("direction"),
-        "position_on_wall": max(0.0, min(1.0, raw_pos / wall_length)),
+        "position_on_wall": _clamp01(raw_pos / wall_length),
         "position_along_wall": raw_pos,
         "width": _float_or(opening.get("width"), 0.0),
         "height": _float_or(opening.get("height"), 0.0),
@@ -285,6 +285,10 @@ def _first_present_path(obj: dict[str, Any], room_base: Path) -> Path | None:
             path = room_base / path
         return path
     return None
+
+
+def _clamp01(value: float) -> float:
+    return max(0.0, min(1.0, value))
 
 
 def _place_id(obj: dict[str, Any]) -> str:
