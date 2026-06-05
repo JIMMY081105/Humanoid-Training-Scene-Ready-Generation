@@ -8,7 +8,12 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 TOOLS_DIR = REPO_ROOT / "tools" / "sage_scene_checker"
 sys.path.insert(0, str(TOOLS_DIR))
 
-from money_guard import BackendUsage, MoneyGuardError, check_money_guard  # noqa: E402
+from money_guard import (  # noqa: E402
+    BackendUsage,
+    MoneyGuardError,
+    check_money_guard,
+    paid_api_env_vars_present,
+)
 
 
 def test_money_guard_catches_paid_api_env_vars():
@@ -35,3 +40,15 @@ def test_money_guard_reports_backend_usage_without_paid_calls():
         "external_paid_api_calls": 0,
         "codex_cli_calls": 2,
     }
+
+
+def test_paid_api_env_vars_present_uses_guard_order():
+    present = paid_api_env_vars_present(
+        {
+            "GEMINI_API_KEY": "gemini-test",
+            "OPENAI_API_KEY": "openai-test",
+            "PATH": "ignored",
+        }
+    )
+
+    assert present == ["OPENAI_API_KEY", "GEMINI_API_KEY"]

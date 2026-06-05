@@ -61,6 +61,12 @@ class MoneyGuardError(RuntimeError):
         super().__init__(f"Paid API environment variables are present: {names}")
 
 
+def paid_api_env_vars_present(environ: Mapping[str, str]) -> list[str]:
+    """Return configured paid API credential names that are present."""
+
+    return [name for name in PAID_API_ENV_VARS if environ.get(name)]
+
+
 def check_money_guard(
     *,
     no_paid_api: bool,
@@ -74,7 +80,7 @@ def check_money_guard(
     """
 
     env = environ if environ is not None else os.environ
-    present = [name for name in PAID_API_ENV_VARS if env.get(name)]
+    present = paid_api_env_vars_present(env)
     result = MoneyGuardResult(
         allowed=not (no_paid_api and present),
         no_paid_api=no_paid_api,
