@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from codex_benchmark.cache import CacheManager
+from codex_benchmark.cache import CacheManager, sha256_file, sha256_text
 from codex_benchmark.checkpoint import CheckpointStore
 from codex_benchmark.config import load_config, quick_config
 
@@ -39,3 +39,10 @@ def test_cache_key_is_stable_and_prompt_sensitive(tmp_path: Path) -> None:
     assert prompt_hash1 == prompt_hash2
     assert key1 != key3
     assert prompt_hash1 != prompt_hash3
+
+
+def test_sha256_file_matches_text_hash(tmp_path: Path) -> None:
+    sample = tmp_path / "sample.txt"
+    sample.write_text("benchmark cache input", encoding="utf-8")
+
+    assert sha256_file(sample) == sha256_text("benchmark cache input")

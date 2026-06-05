@@ -11,6 +11,9 @@ from .checkpoint import CheckpointStore
 from .config import BenchmarkConfig
 
 
+FILE_HASH_CHUNK_SIZE = 1024 * 1024
+
+
 class CacheManager:
     def __init__(self, store: CheckpointStore, config: BenchmarkConfig):
         self.store = store
@@ -102,7 +105,7 @@ def sha256_file(path: str | Path) -> str:
     file_path = Path(path)
     digest = hashlib.sha256()
     with file_path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+        for chunk in iter(lambda: handle.read(FILE_HASH_CHUNK_SIZE), b""):
             digest.update(chunk)
     return digest.hexdigest()
 
