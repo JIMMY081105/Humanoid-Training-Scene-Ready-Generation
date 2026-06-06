@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
+
+import pytest
 
 from codex_benchmark.cache import CacheManager, hash_files, sha256_file, sha256_text
 from codex_benchmark.checkpoint import CheckpointStore
@@ -21,6 +24,14 @@ def test_quick_config_reduces_real_call_counts() -> None:
     assert config.stress.call_counts == [2]
     assert config.structured.count == 2
     assert config.resume.total_calls == 3
+
+
+def test_config_rejects_unknown_top_level_keys(tmp_path: Path) -> None:
+    config_path = tmp_path / "config.json"
+    config_path.write_text(json.dumps({"unknown_section": {}}), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="Unknown config key: unknown_section"):
+        load_config(config_path)
 
 
 def test_cache_key_is_stable_and_prompt_sensitive(tmp_path: Path) -> None:
