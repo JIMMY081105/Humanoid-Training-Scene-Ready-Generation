@@ -27,6 +27,8 @@ SUMMARY_TABLE_HEADERS = (
     "cache_hit_rate",
 )
 
+REPORT_TITLE = "Codex CLI Autonomous Pipeline Benchmark"
+
 
 def write_markdown_report(
     summary: dict[str, Any],
@@ -42,7 +44,7 @@ def write_markdown_report(
     overall = summary["overall"]
 
     lines = [
-        f"# Codex CLI Autonomous Pipeline Benchmark",
+        f"# {REPORT_TITLE}",
         "",
         f"- Run ID: `{run.get('run_id', 'unknown')}`",
         f"- Status: `{run.get('status', 'unknown')}`",
