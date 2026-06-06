@@ -15,6 +15,18 @@ from .checkpoint import utc_now
 from .config import BenchmarkConfig
 
 
+RATE_LIMIT_PATTERN = re.compile(
+    r"\brate limit(?:ed|ing)?\b|http\s*429|\b429\b|too many requests|retry after",
+    re.I,
+)
+USAGE_EXHAUSTED_PATTERN = re.compile(
+    r"usage limit|quota|insufficient[_ ]quota|out of credits|billing hard limit",
+    re.I,
+)
+AUTH_FAILURE_PATTERN = re.compile(r"not logged in|authentication|unauthorized|api key", re.I)
+OK_MARKER_PATTERN = re.compile(r"CODEX_[A-Z_]+_OK[^\n]*")
+
+
 @dataclass
 class CodexResult:
     success: bool
@@ -304,29 +316,17 @@ def classify_failure(
         return "rate_limited", _truncate(combined)
     if is_usage_exhausted(combined):
         return "usage_exhausted", _truncate(combined)
-    if re.search(r"not logged in|authentication|unauthorized|api key", combined, re.I):
+    if AUTH_FAILURE_PATTERN.search(combined):
         return "auth", _truncate(combined)
     return "codex_exec_failed", _truncate(combined)
 
 
 def is_rate_limited(text: str) -> bool:
-    return bool(
-        re.search(
-            r"\brate limit(?:ed|ing)?\b|http\s*429|\b429\b|too many requests|retry after",
-            text,
-            re.I,
-        )
-    )
+    return bool(RATE_LIMIT_PATTERN.search(text))
 
 
 def is_usage_exhausted(text: str) -> bool:
-    return bool(
-        re.search(
-            r"usage limit|quota|insufficient[_ ]quota|out of credits|billing hard limit",
-            text,
-            re.I,
-        )
-    )
+    return bool(USAGE_EXHAUSTED_PATTERN.search(text))
 
 
 def _safe_process_text(value: Any) -> str:
@@ -340,7 +340,7 @@ def _safe_process_text(value: Any) -> str:
 def _extract_ok_marker(prompt: str) -> str | None:
     """Pull the `CODEX_*_OK ...` marker the prompt asks the model to echo back."""
 
-    match = re.search(r"CODEX_[A-Z_]+_OK[^\n]*", prompt)
+    match = OK_MARKER_PATTERN.search(prompt)
     if match:
         return " ".join(match.group(0).split())
     return None
