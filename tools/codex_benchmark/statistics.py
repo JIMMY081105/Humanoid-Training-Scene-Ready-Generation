@@ -201,13 +201,7 @@ def _mean(values: list[int] | list[float]) -> float:
 
 
 def _attempt_timeout_count(row: dict[str, Any]) -> int:
-    metadata_json = row.get("metadata_json")
-    if not metadata_json:
-        return 0
-    try:
-        metadata = json.loads(metadata_json)
-    except (TypeError, json.JSONDecodeError):
-        return 0
+    metadata = _metadata(row)
     attempts = metadata.get("attempts", [])
     if not isinstance(attempts, list):
         return 0

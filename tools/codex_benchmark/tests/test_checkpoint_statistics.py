@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from codex_benchmark.checkpoint import CallRecord, CheckpointStore, utc_now
-from codex_benchmark.statistics import compute_summary
+from codex_benchmark.statistics import _attempt_timeout_count, compute_summary
 
 
 def test_checkpoint_records_calls_and_attempt_timeouts(tmp_path: Path) -> None:
@@ -67,3 +67,8 @@ def test_checkpoint_records_calls_and_attempt_timeouts(tmp_path: Path) -> None:
     assert scenario["attempt_timeout_count"] == 1
     assert scenario["attempt_json_failure_rate"] == 0.5
     assert scenario["attempt_schema_failure_rate"] == 0.5
+
+
+def test_attempt_timeout_count_ignores_invalid_metadata() -> None:
+    assert _attempt_timeout_count({"metadata_json": "{not-json"}) == 0
+    assert _attempt_timeout_count({"metadata_json": "[1, 2, 3]"}) == 0
