@@ -3,7 +3,12 @@ from __future__ import annotations
 from pathlib import Path
 
 from codex_benchmark.checkpoint import CallRecord, CheckpointStore, utc_now
-from codex_benchmark.statistics import _attempt_timeout_count, compute_summary
+from codex_benchmark.statistics import (
+    _attempt_timeout_count,
+    _classification_wrong,
+    _metadata_bool,
+    compute_summary,
+)
 
 
 def test_checkpoint_records_calls_and_attempt_timeouts(tmp_path: Path) -> None:
@@ -72,3 +77,16 @@ def test_checkpoint_records_calls_and_attempt_timeouts(tmp_path: Path) -> None:
 def test_attempt_timeout_count_ignores_invalid_metadata() -> None:
     assert _attempt_timeout_count({"metadata_json": "{not-json"}) == 0
     assert _attempt_timeout_count({"metadata_json": "[1, 2, 3]"}) == 0
+
+
+def test_summary_metadata_flags_are_parsed_from_json() -> None:
+    row = {
+        "metadata_json": (
+            '{"classification":{"classification_wrong":true},'
+            '"insufficient_dataset_size":true}'
+        )
+    }
+
+    assert _classification_wrong(row) == 1
+    assert _metadata_bool(row, "insufficient_dataset_size") is True
+    assert _classification_wrong({"metadata_json": '{"classification": []}'}) == 0
