@@ -8,6 +8,26 @@ from typing import Any
 from .config import BenchmarkConfig
 
 
+SUMMARY_TABLE_HEADERS = (
+    "module",
+    "scenario",
+    "calls",
+    "success_rate",
+    "failure_rate",
+    "avg_latency_ms",
+    "max_latency_ms",
+    "timeout_rate",
+    "attempt_timeout_count",
+    "rate_limit_count",
+    "usage_exhausted_count",
+    "invalid_json_rate",
+    "schema_failure_count",
+    "classification_wrong_rate",
+    "avg_retries",
+    "cache_hit_rate",
+)
+
+
 def write_markdown_report(
     summary: dict[str, Any],
     config: BenchmarkConfig,
@@ -157,30 +177,16 @@ def assess_replacement(summary: dict[str, Any], config: BenchmarkConfig) -> dict
 def _summary_table(rows: list[dict[str, Any]]) -> str:
     if not rows:
         return "_No data._"
-    headers = [
-        "module",
-        "scenario",
-        "calls",
-        "success_rate",
-        "failure_rate",
-        "avg_latency_ms",
-        "max_latency_ms",
-        "timeout_rate",
-        "attempt_timeout_count",
-        "rate_limit_count",
-        "usage_exhausted_count",
-        "invalid_json_rate",
-        "schema_failure_count",
-        "classification_wrong_rate",
-        "avg_retries",
-        "cache_hit_rate",
-    ]
     lines = [
-        "| " + " | ".join(headers) + " |",
-        "| " + " | ".join(["---"] * len(headers)) + " |",
+        "| " + " | ".join(SUMMARY_TABLE_HEADERS) + " |",
+        "| " + " | ".join(["---"] * len(SUMMARY_TABLE_HEADERS)) + " |",
     ]
     for row in rows:
-        lines.append("| " + " | ".join(_format_cell(row.get(header, "")) for header in headers) + " |")
+        lines.append(
+            "| "
+            + " | ".join(_format_cell(row.get(header, "")) for header in SUMMARY_TABLE_HEADERS)
+            + " |"
+        )
     return "\n".join(lines)
 
 
