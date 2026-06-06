@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from codex_benchmark.cache import CacheManager, sha256_file, sha256_text
+from codex_benchmark.cache import CacheManager, hash_files, sha256_file, sha256_text
 from codex_benchmark.checkpoint import CheckpointStore
 from codex_benchmark.config import load_config, quick_config
 
@@ -46,3 +46,13 @@ def test_sha256_file_matches_text_hash(tmp_path: Path) -> None:
     sample.write_text("benchmark cache input", encoding="utf-8")
 
     assert sha256_file(sample) == sha256_text("benchmark cache input")
+
+
+def test_hash_files_records_missing_inputs(tmp_path: Path) -> None:
+    missing = tmp_path / "missing.png"
+
+    missing_hash = hash_files([missing])
+
+    assert missing_hash is not None
+    assert missing_hash == hash_files([missing])
+    assert missing_hash != hash_files([])
