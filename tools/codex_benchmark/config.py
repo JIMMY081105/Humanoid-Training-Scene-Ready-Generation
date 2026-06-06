@@ -185,6 +185,26 @@ class BenchmarkConfig:
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
+PATHS_CONFIG_FIELDS = (
+    "database",
+    "artifacts_dir",
+    "reports_dir",
+    "logs_dir",
+    "images_dir",
+    "schemas_dir",
+)
+
+SECTION_PATH_FIELDS = (
+    ("codex", "cwd"),
+    ("structured", "schema_path"),
+    ("image", "schema_path"),
+    ("vlm", "schema_path"),
+    ("vlm", "manifest_path"),
+    ("vlm", "dataset_root"),
+    ("cache_test", "schema_path"),
+)
+
+
 def load_config(path: str | Path) -> BenchmarkConfig:
     """Load config from YAML or JSON and merge it over dataclass defaults."""
 
@@ -212,18 +232,9 @@ def load_config(path: str | Path) -> BenchmarkConfig:
 def resolve_config_paths(config: BenchmarkConfig, base_dir: Path) -> BenchmarkConfig:
     """Resolve all project-relative paths against the directory containing config.yaml."""
 
-    paths = config.paths
-    for field_name in dataclasses.asdict(paths):
-        value = getattr(paths, field_name)
-        setattr(paths, field_name, _resolve_path(value, base_dir))
-
-    config.codex.cwd = _resolve_path(config.codex.cwd, base_dir)
-    config.structured.schema_path = _resolve_path(config.structured.schema_path, base_dir)
-    config.image.schema_path = _resolve_path(config.image.schema_path, base_dir)
-    config.vlm.schema_path = _resolve_path(config.vlm.schema_path, base_dir)
-    config.vlm.manifest_path = _resolve_path(config.vlm.manifest_path, base_dir)
-    config.vlm.dataset_root = _resolve_path(config.vlm.dataset_root, base_dir)
-    config.cache_test.schema_path = _resolve_path(config.cache_test.schema_path, base_dir)
+    _resolve_section_paths(config.paths, PATHS_CONFIG_FIELDS, base_dir)
+    for section_name, field_name in SECTION_PATH_FIELDS:
+        _resolve_section_paths(getattr(config, section_name), (field_name,), base_dir)
     return config
 
 
@@ -258,6 +269,12 @@ def _resolve_path(value: str, base_dir: Path) -> str:
     if path.is_absolute():
         return str(path)
     return str((base_dir / path).resolve())
+
+
+def _resolve_section_paths(section: Any, field_names: tuple[str, ...], base_dir: Path) -> None:
+    for field_name in field_names:
+        value = getattr(section, field_name)
+        setattr(section, field_name, _resolve_path(value, base_dir))
 
 
 def _merge_dataclass(instance: Any, data: Mapping[str, Any]) -> Any:
