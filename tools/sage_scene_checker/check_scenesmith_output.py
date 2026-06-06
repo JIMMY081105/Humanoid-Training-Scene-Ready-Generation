@@ -40,6 +40,11 @@ FORBIDDEN_SAGE_IMPORT_MARKERS = (
     "omni.",
 )
 
+REQUIRED_SCENE_FILES = {
+    "house_state": Path("combined_house/house_state.json"),
+    "sceneeval_state": Path("combined_house/sceneeval_state.json"),
+}
+
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
@@ -133,11 +138,7 @@ def run_checker(
 
 
 def _required_files(scene_path: Path) -> dict[str, Path]:
-    combined = scene_path / "combined_house"
-    return {
-        "house_state": combined / "house_state.json",
-        "sceneeval_state": combined / "sceneeval_state.json",
-    }
+    return {name: scene_path / relative_path for name, relative_path in REQUIRED_SCENE_FILES.items()}
 
 
 def _run_local_checks(floor_plan: dict[str, Any]) -> list[Check]:
