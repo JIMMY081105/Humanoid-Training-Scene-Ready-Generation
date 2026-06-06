@@ -7,7 +7,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 TOOLS_DIR = REPO_ROOT / "tools" / "sage_scene_checker"
 sys.path.insert(0, str(TOOLS_DIR))
 
-from check_scenesmith_output import run_checker  # noqa: E402
+from check_scenesmith_output import REQUIRED_SCENE_FILES, _required_files, run_checker  # noqa: E402
 from money_guard import PAID_API_ENV_VARS  # noqa: E402
 
 
@@ -209,3 +209,13 @@ def test_no_sage_installation_is_required_for_basic_checks(tmp_path, monkeypatch
 
     assert report["pass"] is True
     assert any(check["id"] == "sage.optional" and check["status"] == "pass" for check in report["checks"])
+
+
+def test_required_file_map_resolves_under_scene_directory(tmp_path):
+    scene_dir = tmp_path / "scene_000"
+
+    required = _required_files(scene_dir)
+
+    assert set(required) == set(REQUIRED_SCENE_FILES)
+    assert required["house_state"] == scene_dir / "combined_house" / "house_state.json"
+    assert required["sceneeval_state"] == scene_dir / "combined_house" / "sceneeval_state.json"
