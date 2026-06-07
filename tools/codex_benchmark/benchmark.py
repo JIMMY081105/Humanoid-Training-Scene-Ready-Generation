@@ -43,6 +43,9 @@ except ImportError:  # pragma: no cover - exercised only on minimal installs.
 
 
 EXIT_SIMULATED_CRASH = 86
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+JPEG_SIGNATURE = b"\xff\xd8"
+SVG_SIGNATURE = b"<svg"
 
 
 class SimulatedCrash(RuntimeError):
@@ -753,11 +756,11 @@ def verify_image(path: str | None, min_bytes: int) -> dict[str, Any]:
         }
     suffix = file_path.suffix.lower()
     data = file_path.read_bytes()[:256]
-    if suffix == ".svg" and b"<svg" not in data.lower():
+    if suffix == ".svg" and SVG_SIGNATURE not in data.lower():
         return {"valid": False, "path": str(file_path), "image_hash": None, "error": "not an svg"}
-    if suffix == ".png" and not data.startswith(b"\x89PNG\r\n\x1a\n"):
+    if suffix == ".png" and not data.startswith(PNG_SIGNATURE):
         return {"valid": False, "path": str(file_path), "image_hash": None, "error": "not a png"}
-    if suffix in {".jpg", ".jpeg"} and not data.startswith(b"\xff\xd8"):
+    if suffix in {".jpg", ".jpeg"} and not data.startswith(JPEG_SIGNATURE):
         return {"valid": False, "path": str(file_path), "image_hash": None, "error": "not a jpeg"}
     return {
         "valid": True,
