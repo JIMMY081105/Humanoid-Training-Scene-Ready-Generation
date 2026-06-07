@@ -886,6 +886,13 @@ def parse_positive_int_list(raw: str, *, option_name: str) -> list[int]:
     return values
 
 
+def parse_module_filter(raw: str | None) -> set[str] | None:
+    if not raw:
+        return None
+    modules = {item.strip() for item in raw.split(",") if item.strip()}
+    return modules or None
+
+
 def apply_cli_overrides(config: BenchmarkConfig, args: argparse.Namespace) -> None:
     if args.stress_calls:
         config.stress.call_counts = parse_positive_int_list(
@@ -925,7 +932,7 @@ def main(argv: list[str] | None = None) -> int:
         args.auto_restart = True
         return supervise(args)
 
-    modules = set(args.modules.split(",")) if args.modules else None
+    modules = parse_module_filter(args.modules)
     run_id = args.run_id or generate_run_id()
     suite = BenchmarkSuite(
         config=config,

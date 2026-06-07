@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from codex_benchmark.benchmark import marker_matches
+from codex_benchmark.benchmark import marker_matches, parse_module_filter
 from codex_benchmark.benchmark import parse_positive_int_list
 from codex_benchmark.cache import CacheManager
 from codex_benchmark.checkpoint import CheckpointStore
@@ -96,3 +96,12 @@ def test_parse_positive_int_list_rejects_empty_and_nonpositive_values() -> None:
 def test_parse_positive_int_list_rejects_non_integer_values() -> None:
     with pytest.raises(ValueError, match="must be an integer"):
         parse_positive_int_list("10,many", option_name="--stress-calls")
+
+
+def test_parse_module_filter_strips_empty_values() -> None:
+    assert parse_module_filter(None) is None
+    assert parse_module_filter("stress, structured,,cache ") == {
+        "stress",
+        "structured",
+        "cache",
+    }
