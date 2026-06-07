@@ -91,3 +91,8 @@ def test_parse_positive_int_list_rejects_empty_and_nonpositive_values() -> None:
         parse_positive_int_list("", option_name="--stress-calls")
     with pytest.raises(ValueError, match="values must be positive"):
         parse_positive_int_list("10,0", option_name="--stress-calls")
+
+
+def test_parse_positive_int_list_rejects_non_integer_values() -> None:
+    with pytest.raises(ValueError, match="must be an integer"):
+        parse_positive_int_list("10,many", option_name="--stress-calls")
