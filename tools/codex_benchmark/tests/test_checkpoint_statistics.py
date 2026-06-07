@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from codex_benchmark.checkpoint import CallRecord, CheckpointStore, utc_now
+from codex_benchmark.checkpoint import SCHEMA_VERSION, CallRecord, CheckpointStore, utc_now
 from codex_benchmark.statistics import (
     _attempt_timeout_count,
     _classification_wrong,
@@ -90,3 +90,15 @@ def test_summary_metadata_flags_are_parsed_from_json() -> None:
     assert _classification_wrong(row) == 1
     assert _metadata_bool(row, "insufficient_dataset_size") is True
     assert _classification_wrong({"metadata_json": '{"classification": []}'}) == 0
+
+
+def test_checkpoint_migration_records_schema_version(tmp_path: Path) -> None:
+    store = CheckpointStore(str(tmp_path / "benchmark.sqlite3"))
+    try:
+        row = store.conn.execute(
+            "SELECT value FROM schema_info WHERE key = 'version'"
+        ).fetchone()
+    finally:
+        store.close()
+
+    assert row["value"] == str(SCHEMA_VERSION)
