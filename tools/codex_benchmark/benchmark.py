@@ -876,16 +876,22 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def parse_positive_int_list(raw: str, *, option_name: str) -> list[int]:
+    try:
+        values = [int(item.strip()) for item in raw.split(",") if item.strip()]
+    except ValueError as exc:
+        raise ValueError(f"{option_name} must be an integer or comma-separated integers") from exc
+    if not values or any(value <= 0 for value in values):
+        raise ValueError(f"{option_name} values must be positive")
+    return values
+
+
 def apply_cli_overrides(config: BenchmarkConfig, args: argparse.Namespace) -> None:
     if args.stress_calls:
-        try:
-            config.stress.call_counts = [
-                int(item.strip()) for item in args.stress_calls.split(",") if item.strip()
-            ]
-        except ValueError as exc:
-            raise ValueError("--stress-calls must be an integer or comma-separated integers") from exc
-        if not config.stress.call_counts or any(count <= 0 for count in config.stress.call_counts):
-            raise ValueError("--stress-calls values must be positive")
+        config.stress.call_counts = parse_positive_int_list(
+            args.stress_calls,
+            option_name="--stress-calls",
+        )
     if args.structured_calls is not None:
         if args.structured_calls <= 0:
             raise ValueError("--structured-calls must be positive")

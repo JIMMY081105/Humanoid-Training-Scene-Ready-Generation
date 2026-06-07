@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from codex_benchmark.benchmark import marker_matches
+from codex_benchmark.benchmark import parse_positive_int_list
 from codex_benchmark.cache import CacheManager
 from codex_benchmark.checkpoint import CheckpointStore
 from codex_benchmark.codex_runner import classify_failure, is_rate_limited, is_usage_exhausted
@@ -77,3 +80,14 @@ def test_cache_key_changes_with_codex_version(tmp_path: Path) -> None:
 def test_cache_prompt_template_is_run_scoped() -> None:
     config = load_config(Path(__file__).resolve().parents[1] / "config.yaml")
     assert "{run_id}" in config.cache_test.prompt_template
+
+
+def test_parse_positive_int_list_accepts_comma_values() -> None:
+    assert parse_positive_int_list("10, 20,30", option_name="--stress-calls") == [10, 20, 30]
+
+
+def test_parse_positive_int_list_rejects_empty_and_nonpositive_values() -> None:
+    with pytest.raises(ValueError, match="values must be positive"):
+        parse_positive_int_list("", option_name="--stress-calls")
+    with pytest.raises(ValueError, match="values must be positive"):
+        parse_positive_int_list("10,0", option_name="--stress-calls")
