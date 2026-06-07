@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from codex_benchmark.benchmark import (
+    _normalize_label,
     count_schema_field_issues,
     load_vlm_manifest,
     validate_output,
@@ -114,3 +115,7 @@ def test_load_vlm_manifest_resolves_relative_paths() -> None:
     assert items
     assert Path(items[0]["path"]).is_absolute()
     assert "expected_scene_type" in items[0]
+
+
+def test_normalize_label_collapses_punctuation() -> None:
+    assert _normalize_label("  Science-Lab Room! ") == "science_lab_room"

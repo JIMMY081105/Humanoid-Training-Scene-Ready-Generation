@@ -46,6 +46,7 @@ EXIT_SIMULATED_CRASH = 86
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 JPEG_SIGNATURE = b"\xff\xd8"
 SVG_SIGNATURE = b"<svg"
+LABEL_NORMALIZE_PATTERN = re.compile(r"[^a-z0-9]+")
 
 
 class SimulatedCrash(RuntimeError):
@@ -705,7 +706,7 @@ def validate_vlm_classification(
 
 def _normalize_label(value: Any) -> str:
     text = str(value).strip().lower()
-    text = re.sub(r"[^a-z0-9]+", "_", text)
+    text = LABEL_NORMALIZE_PATTERN.sub("_", text)
     return text.strip("_")
 
 
