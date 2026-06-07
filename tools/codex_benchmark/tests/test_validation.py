@@ -73,6 +73,16 @@ def test_verify_image_accepts_valid_svg(tmp_path: Path) -> None:
     assert result["image_hash"]
 
 
+def test_verify_image_rejects_wrong_binary_signature(tmp_path: Path) -> None:
+    png = tmp_path / "image.png"
+    png.write_bytes(b"not a png file but long enough")
+
+    result = verify_image(str(png), min_bytes=10)
+
+    assert result["valid"] is False
+    assert result["error"] == "not a png"
+
+
 def test_vlm_classification_validation_counts_wrong_scene_type() -> None:
     output = json.dumps(
         {
