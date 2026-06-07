@@ -7,7 +7,7 @@ from pathlib import Path
 from codex_benchmark.benchmark import marker_matches
 from codex_benchmark.cache import CacheManager
 from codex_benchmark.checkpoint import CheckpointStore
-from codex_benchmark.codex_runner import is_rate_limited, is_usage_exhausted
+from codex_benchmark.codex_runner import classify_failure, is_rate_limited, is_usage_exhausted
 from codex_benchmark.config import load_config, quick_config
 
 
@@ -22,6 +22,14 @@ def test_usage_exhausted_ignores_generic_exceeded() -> None:
 def test_rate_limit_and_usage_are_distinguishable() -> None:
     assert is_rate_limited("HTTP 429 too many requests") is True
     assert is_usage_exhausted("HTTP 429 too many requests") is False
+
+
+def test_classify_failure_labels_timeout_and_auth_errors() -> None:
+    assert classify_failure(stdout="", stderr="", return_code=None, timeout=True)[0] == "timeout"
+    assert (
+        classify_failure(stdout="", stderr="not logged in", return_code=1, timeout=False)[0]
+        == "auth"
+    )
 
 
 def test_marker_matches_requires_marker_tokens() -> None:
