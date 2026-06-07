@@ -12,6 +12,11 @@ from typing import Any, Iterable
 
 
 SCHEMA_VERSION = 1
+SQLITE_TIMEOUT_SECONDS = 60
+SQLITE_PRAGMAS = (
+    "PRAGMA journal_mode=WAL",
+    "PRAGMA synchronous=NORMAL",
+)
 
 
 def utc_now() -> str:
@@ -67,10 +72,10 @@ class CheckpointStore:
     def __init__(self, database_path: str):
         self.database_path = Path(database_path)
         self.database_path.parent.mkdir(parents=True, exist_ok=True)
-        self.conn = sqlite3.connect(str(self.database_path), timeout=60)
+        self.conn = sqlite3.connect(str(self.database_path), timeout=SQLITE_TIMEOUT_SECONDS)
         self.conn.row_factory = sqlite3.Row
-        self.conn.execute("PRAGMA journal_mode=WAL")
-        self.conn.execute("PRAGMA synchronous=NORMAL")
+        for pragma in SQLITE_PRAGMAS:
+            self.conn.execute(pragma)
         self._migrate()
 
     def close(self) -> None:
