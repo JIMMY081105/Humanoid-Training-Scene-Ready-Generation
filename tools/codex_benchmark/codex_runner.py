@@ -25,6 +25,7 @@ USAGE_EXHAUSTED_PATTERN = re.compile(
 )
 AUTH_FAILURE_PATTERN = re.compile(r"not logged in|authentication|unauthorized|api key", re.I)
 OK_MARKER_PATTERN = re.compile(r"CODEX_[A-Z_]+_OK[^\n]*")
+ERROR_TEXT_LIMIT = 2000
 
 
 @dataclass
@@ -353,7 +354,7 @@ def _extract_marker(prompt: str, marker: str) -> str | None:
     return None
 
 
-def _truncate(text: str, limit: int = 2000) -> str:
+def _truncate(text: str, limit: int = ERROR_TEXT_LIMIT) -> str:
     text = text.strip()
     if len(text) <= limit:
         return text

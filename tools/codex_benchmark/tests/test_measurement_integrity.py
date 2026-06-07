@@ -8,7 +8,7 @@ from codex_benchmark.benchmark import marker_matches
 from codex_benchmark.cache import CacheManager
 from codex_benchmark.checkpoint import CheckpointStore
 from codex_benchmark.codex_runner import classify_failure, is_rate_limited, is_usage_exhausted
-from codex_benchmark.codex_runner import _extract_marker, _extract_ok_marker
+from codex_benchmark.codex_runner import ERROR_TEXT_LIMIT, _extract_marker, _extract_ok_marker, _truncate
 from codex_benchmark.config import load_config, quick_config
 
 
@@ -49,6 +49,13 @@ def test_marker_extractors_normalize_prompt_markers() -> None:
 
     assert _extract_marker(prompt, "BENCHMARK_IMAGE_OUTPUT_PATH") == "outputs/image.svg"
     assert _extract_ok_marker(prompt) == "CODEX_RESUME_OK run_id=r1 call_index=7"
+
+
+def test_error_truncation_uses_declared_limit() -> None:
+    truncated = _truncate("x" * (ERROR_TEXT_LIMIT + 10))
+
+    assert len(truncated) == ERROR_TEXT_LIMIT + len("...[truncated]")
+    assert truncated.endswith("...[truncated]")
 
 
 def test_cache_key_changes_with_codex_version(tmp_path: Path) -> None:
