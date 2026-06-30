@@ -64,3 +64,22 @@ bash local_setup/run_hssd_furniture.sh     # 或带 qwen-plus 覆盖的 main.py
 
 ## 一句话
 登录 ln08 → `--overlap` 进 m4gn1601 → `source local_setup/compute_node_env.sh` → (首次)`uv sync` → 跑。**重活永远不在 ln08。**
+
+---
+
+## SceneSmith SAGE-style checker, no paid APIs
+
+Run this after a SceneSmith scene exists. It is local-only and does not run
+IsaacSim, image benchmarks, or paid model APIs.
+
+```bash
+unset OPENAI_API_KEY GOOGLE_API_KEY GEMINI_API_KEY ANTHROPIC_API_KEY DASHSCOPE_API_KEY NVIDIA_API_KEY ARK_API_KEY
+python tools/sage_scene_checker/check_scenesmith_output.py \
+  --scene-dir outputs/latest-run/scene_000 \
+  --sage-root "$HOME/projects/SAGE/sage-main" \
+  --out outputs/latest-run/scene_000/validation_report.json \
+  --no-paid-api
+```
+
+`--sage-root` is optional. If SAGE is unavailable or the lightweight import is
+not clean, the checker falls back to built-in local checks.
