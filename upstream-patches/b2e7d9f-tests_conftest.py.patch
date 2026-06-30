@@ -1,0 +1,22 @@
+diff --git a/tests/conftest.py b/tests/conftest.py
+index 0dc6886..6009a5c 100644
+--- a/tests/conftest.py
++++ b/tests/conftest.py
+@@ -4,11 +4,12 @@ This module provides pytest hooks and fixtures that apply across all tests.
+ """
+ 
+ # isort: off
+-# Import bpy first to avoid OpenGL context conflicts with Drake rendering.
+-# When bpy is imported after Drake initializes its rendering context, there's a
+-# segfault due to conflicting OpenGL contexts. Importing bpy first ensures bpy
+-# initializes its context before Drake, avoiding the conflict.
+-import bpy  # noqa: F401
++# Import bpy first to avoid OpenGL context conflicts with Drake rendering when
++# Blender is installed. Some lightweight unit tests do not need Blender.
++try:
++    import bpy  # noqa: F401
++except ModuleNotFoundError:
++    bpy = None
+ 
+ # isort: on
+ 
