@@ -15,3 +15,6 @@ debug_furniture_agent
 .pytest_cache/
 .vscode/
 .mcp.json
+
+# Local code archive (do not commit)
+scenesmith_current_code.tar
