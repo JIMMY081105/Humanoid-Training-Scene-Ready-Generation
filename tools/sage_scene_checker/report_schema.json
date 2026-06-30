@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SceneSmith SAGE-style validation report",
+  "type": "object",
+  "required": ["scene_id", "pass", "summary", "money_guard", "checks", "repair_suggestions"],
+  "properties": {
+    "scene_id": {"type": "string"},
+    "pass": {"type": "boolean"},
+    "summary": {
+      "type": "object",
+      "required": ["num_rooms", "num_objects", "num_errors", "num_warnings"],
+      "properties": {
+        "num_rooms": {"type": "integer", "minimum": 0},
+        "num_objects": {"type": "integer", "minimum": 0},
+        "num_errors": {"type": "integer", "minimum": 0},
+        "num_warnings": {"type": "integer", "minimum": 0}
+      }
+    },
+    "money_guard": {
+      "type": "object",
+      "required": [
+        "openai_api_calls",
+        "gemini_api_calls",
+        "anthropic_api_calls",
+        "external_paid_api_calls",
+        "codex_cli_calls"
+      ],
+      "properties": {
+        "openai_api_calls": {"type": "integer", "minimum": 0},
+        "gemini_api_calls": {"type": "integer", "minimum": 0},
+        "anthropic_api_calls": {"type": "integer", "minimum": 0},
+        "external_paid_api_calls": {"type": "integer", "minimum": 0},
+        "codex_cli_calls": {"type": "integer", "minimum": 0}
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "severity", "status", "message"],
+        "properties": {
+          "id": {"type": "string"},
+          "severity": {"enum": ["info", "warning", "error"]},
+          "status": {"enum": ["pass", "fail"]},
+          "message": {"type": "string"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "repair_suggestions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["check_id", "suggestion"],
+        "properties": {
+          "check_id": {"type": "string"},
+          "object_id": {"type": ["string", "null"]},
+          "suggestion": {"type": "string"}
+        }
+      }
+    }
+  },
+  "additionalProperties": true
+}
+
