@@ -1,0 +1,440 @@
+diff --git a/scenesmith/manipuland_agents/tools/manipuland_tools.py b/scenesmith/manipuland_agents/tools/manipuland_tools.py
+index f4392d4..2ca9269 100644
+--- a/scenesmith/manipuland_agents/tools/manipuland_tools.py
++++ b/scenesmith/manipuland_agents/tools/manipuland_tools.py
+@@ -12,7 +12,7 @@ import trimesh
+ 
+ from agents import function_tool
+ from omegaconf import DictConfig
+-from pydrake.all import RollPitchYaw
++from pydrake.all import RigidTransform, RollPitchYaw
+ from scipy.spatial import ConvexHull, QhullError
+ from typing_extensions import TypedDict
+ 
+@@ -24,6 +24,7 @@ from scenesmith.agent_utils.placement_noise import (
+     PlacementNoiseMode,
+     apply_placement_noise,
+ )
++from scenesmith.agent_utils.physics_validation import compute_scene_collisions
+ from scenesmith.agent_utils.rescale_helpers import rescale_object_common
+ from scenesmith.agent_utils.response_datatypes import (
+     AssetGenerationResult,
+@@ -127,6 +128,9 @@ class ManipulandTools:
+         self.top_surface_overlap_tolerance = (
+             cfg.placement_validation.top_surface_overlap_tolerance
+         )
++        self._rejected_support_surfaces: set[str] = set()
++        self._max_parent_collision_lift_m = 0.08
++        self._collision_lift_margin_m = 0.005
+ 
+         # Initialize loop detector from config.
+         loop_config = cfg.loop_detection
+@@ -473,6 +477,226 @@ class ManipulandTools:
+ 
+         return (True, None)
+ 
++    def _translate_scene_object_world_z(
++        self, scene_obj: SceneObject, dz: float
++    ) -> None:
++        """Translate an object and any composite members upward in world Z."""
++        delta = RigidTransform(p=[0.0, 0.0, dz])
++        scene_obj.transform = delta @ scene_obj.transform
++
++        composite_type = scene_obj.metadata.get("composite_type")
++        if composite_type in ("stack", "pile"):
++            for member in scene_obj.metadata.get("member_assets", []):
++                if "transform" in member:
++                    member_transform = deserialize_rigid_transform(member["transform"])
++                    member["transform"] = serialize_rigid_transform(
++                        delta @ member_transform
++                    )
++        elif composite_type == "filled_container":
++            container_asset = scene_obj.metadata.get("container_asset")
++            if container_asset and "transform" in container_asset:
++                container_transform = deserialize_rigid_transform(
++                    container_asset["transform"]
++                )
++                container_asset["transform"] = serialize_rigid_transform(
++                    delta @ container_transform
++                )
++            for fill_asset in scene_obj.metadata.get("fill_assets", []):
++                if "transform" in fill_asset:
++                    fill_transform = deserialize_rigid_transform(
++                        fill_asset["transform"]
++                    )
++                    fill_asset["transform"] = serialize_rigid_transform(
++                        delta @ fill_transform
++                    )
++
++    def _compute_object_collisions(self, object_id: UniqueID) -> list:
++        """Return Drake collision pairs involving one object."""
++        cfg_physics = self.cfg.physics_validation
++        object_id_str = str(object_id)
++        collisions = compute_scene_collisions(
++            scene=self.scene,
++            penetration_threshold=cfg_physics.object_penetration_threshold_m,
++            floor_penetration_tolerance=cfg_physics.floor_penetration_tolerance_m,
++            current_furniture_id=self.current_furniture_id,
++            manipuland_furniture_tolerance_m=(
++                cfg_physics.manipuland_furniture_tolerance_m
++            ),
++        )
++        return [
++            collision
++            for collision in collisions
++            if object_id_str in (collision.object_a_id, collision.object_b_id)
++        ]
++
++    def _remove_if_placement_collides(
++        self,
++        object_id: UniqueID,
++        surface_id: str,
++        response_asset_id: str,
++    ) -> str | None:
++        """Remove a newly placed manipuland if Drake reports a collision.
++
++        Footprint and clearance checks only validate the requested surface frame.
++        Some extracted furniture surfaces can still sit inside the furniture's
++        collision mesh. This guard runs the same collision query exposed by the
++        physics tool, removes the offending object, and blocks further placement
++        on that support surface when the parent furniture collision is the cause.
++        """
++        object_id_str = str(object_id)
++
++        try:
++            object_collisions = self._compute_object_collisions(object_id)
++        except Exception as e:
++            console_logger.warning(
++                "Post-placement collision guard could not run for %s: %s",
++                object_id_str,
++                e,
++            )
++            return None
++
++        if not object_collisions:
++            return None
++
++        current_furniture_id = str(self.current_furniture_id)
++        total_lift_m = 0.0
++        lift_attempted = False
++        parent_collision = False
++        for _ in range(2):
++            parent_collisions = [
++                collision
++                for collision in object_collisions
++                if current_furniture_id
++                in (collision.object_a_id, collision.object_b_id)
++            ]
++            parent_collision = bool(parent_collisions)
++            if not parent_collision:
++                break
++
++            max_penetration = max(
++                collision.penetration_depth for collision in parent_collisions
++            )
++            remaining_lift = self._max_parent_collision_lift_m - total_lift_m
++            lift_m = min(
++                max_penetration + self._collision_lift_margin_m,
++                remaining_lift,
++            )
++            if lift_m <= 0.001:
++                break
++
++            obj = self.scene.get_object(object_id)
++            if obj is None:
++                break
++
++            self._translate_scene_object_world_z(obj, lift_m)
++            total_lift_m += lift_m
++            lift_attempted = True
++            console_logger.info(
++                "Lifted %s by %.3fm after parent collision on %s; "
++                "rechecking physics",
++                object_id_str,
++                lift_m,
++                surface_id,
++            )
++
++            try:
++                object_collisions = self._compute_object_collisions(object_id)
++            except Exception as e:
++                console_logger.warning(
++                    "Post-lift collision recheck failed for %s: %s",
++                    object_id_str,
++                    e,
++                )
++                return None
++
++            if not object_collisions:
++                console_logger.info(
++                    "Post-placement collision cleared for %s after %.3fm lift",
++                    object_id_str,
++                    total_lift_m,
++                )
++                return None
++
++        if parent_collision:
++            self._rejected_support_surfaces.add(surface_id)
++
++        obj = self.scene.get_object(object_id)
++        object_name = obj.name if obj else object_id_str
++        self.scene.remove_object(object_id)
++
++        collision_summary = "; ".join(
++            collision.to_description() for collision in object_collisions[:3]
++        )
++        if len(object_collisions) > 3:
++            collision_summary += f"; +{len(object_collisions) - 3} more"
++
++        surface_message = (
++            f" Surface {surface_id} is now blocked for this furniture because "
++            "its support plane appears to intersect the parent collision mesh."
++            if parent_collision
++            else ""
++        )
++        lift_message = (
++            f" Auto-lifted by {total_lift_m:.3f}m before removal, but "
++            "collision validation still failed."
++            if lift_attempted
++            else ""
++        )
++        message = (
++            f"Rejected placement of '{object_name}' ({object_id_str}) on "
++            f"surface {surface_id}: collision mesh validation found "
++            f"{collision_summary}.{lift_message} The object was removed."
++            f"{surface_message} "
++            "Choose a different surface or skip this furniture; do not retry "
++            "this blocked surface."
++        )
++        console_logger.warning(message)
++
++        return self._create_placement_failure_result(
++            asset_id=response_asset_id,
++            message=message,
++            error_type=ManipulandErrorType.PHYSICS_RESOLUTION_FAILED,
++        )
++
++    def _blocked_surface_failure(self, surface_id: str, response_asset_id: str) -> str:
++        """Return a consistent failure for surfaces blocked by collision checks."""
++        return self._create_placement_failure_result(
++            asset_id=response_asset_id,
++            message=(
++                f"Surface {surface_id} is blocked because previous "
++                "post-placement collision validation found it intersects "
++                "the parent furniture collision mesh. Choose a different "
++                "surface or skip this furniture."
++            ),
++            error_type=ManipulandErrorType.PHYSICS_RESOLUTION_FAILED,
++        )
++
++    def _guard_composite_result(
++        self,
++        result_json: str,
++        surface_id: str,
++        object_id_field: str,
++    ) -> str:
++        """Run collision validation for newly created composite manipulands."""
++        try:
++            result = json.loads(result_json)
++        except json.JSONDecodeError:
++            return result_json
++
++        if not result.get("success"):
++            return result_json
++
++        object_id = result.get(object_id_field)
++        if not object_id:
++            return result_json
++
++        collision_failure = self._remove_if_placement_collides(
++            object_id=UniqueID(object_id),
++            surface_id=surface_id,
++            response_asset_id=str(object_id),
++        )
++        return collision_failure if collision_failure is not None else result_json
++
+     def _create_tool_closures(self) -> dict[str, Any]:
+         """Create tool closures that capture current furniture/surface context."""
+ 
+@@ -1012,6 +1236,17 @@ class ManipulandTools:
+ 
+             # Get the target surface.
+             target_surface = self.support_surfaces[surface_id]
++            if surface_id in self._rejected_support_surfaces:
++                return self._create_placement_failure_result(
++                    asset_id=asset_id,
++                    message=(
++                        f"Surface {surface_id} is blocked because previous "
++                        "post-placement collision validation found it intersects "
++                        "the parent furniture collision mesh. Choose a different "
++                        "surface or skip this furniture."
++                    ),
++                    error_type=ManipulandErrorType.PHYSICS_RESOLUTION_FAILED,
++                )
+ 
+             # Convert string ID to UniqueID.
+             try:
+@@ -1175,6 +1410,16 @@ class ManipulandTools:
+             # Add to scene.
+             self.scene.add_object(scene_object)
+ 
++            collision_failure = self._remove_if_placement_collides(
++                object_id=object_id,
++                surface_id=surface_id,
++                response_asset_id=asset_id,
++            )
++            if collision_failure is not None:
++                return collision_failure
++            scene_object = self.scene.get_object(object_id) or scene_object
++            world_transform = scene_object.transform
++
+             # Extract world pose for response.
+             world_position = world_transform.translation()
+             world_rpy = RollPitchYaw(world_transform.rotation())
+@@ -1269,6 +1514,25 @@ class ManipulandTools:
+                     error_type=ManipulandErrorType.OBJECT_NOT_FOUND,
+                 ).to_json()
+ 
++            if surface_id in self._rejected_support_surfaces:
++                if (
++                    scene_obj.placement_info is not None
++                    and str(scene_obj.placement_info.parent_surface_id) == surface_id
++                ):
++                    self.scene.remove_object(unique_id)
++                return ManipulandOperationResult(
++                    success=False,
++                    message=(
++                        f"Surface {surface_id} is blocked because previous "
++                        "post-placement collision validation found it intersects "
++                        "the parent furniture collision mesh. The manipuland was "
++                        "removed if it was on that blocked surface. Choose a "
++                        "different surface or skip this furniture."
++                    ),
++                    object_id=object_id,
++                    error_type=ManipulandErrorType.PHYSICS_RESOLUTION_FAILED,
++                ).to_json()
++
+             # Validate position is within surface bounds (convex hull).
+             position_2d = np.array([position_x, position_z])
+             try:
+@@ -1498,6 +1762,16 @@ class ManipulandTools:
+             scene_obj.placement_info.position_2d = position_2d.copy()
+             scene_obj.placement_info.rotation_2d = rotation_radians
+ 
++            collision_failure = self._remove_if_placement_collides(
++                object_id=unique_id,
++                surface_id=surface_id,
++                response_asset_id=object_id,
++            )
++            if collision_failure is not None:
++                return collision_failure
++            scene_obj = self.scene.get_object(unique_id) or scene_obj
++            world_transform = scene_obj.transform
++
+             # Extract world pose for response.
+             world_position = world_transform.translation()
+             world_rpy = RollPitchYaw(world_transform.rotation())
+@@ -1771,7 +2045,12 @@ class ManipulandTools:
+ 
+         Delegates to create_stack_tool_impl in stack_tools.py.
+         """
+-        return create_stack_tool_impl(
++        if surface_id in self._rejected_support_surfaces:
++            return self._blocked_surface_failure(
++                surface_id=surface_id, response_asset_id="stack"
++            )
++
++        result = create_stack_tool_impl(
+             asset_ids=asset_ids,
+             surface_id=surface_id,
+             position_x=position_x,
+@@ -1783,6 +2062,11 @@ class ManipulandTools:
+             support_surfaces=self.support_surfaces,
+             generate_unique_id=self.scene.generate_unique_id,
+         )
++        return self._guard_composite_result(
++            result_json=result,
++            surface_id=surface_id,
++            object_id_field="stack_object_id",
++        )
+ 
+     @log_scene_action
+     def _fill_container_impl(
+@@ -1799,7 +2083,12 @@ class ManipulandTools:
+ 
+         Delegates to fill_container_tool_impl in fill_tools.py.
+         """
+-        return fill_container_tool_impl(
++        if surface_id in self._rejected_support_surfaces:
++            return self._blocked_surface_failure(
++                surface_id=surface_id, response_asset_id=container_asset_id
++            )
++
++        result = fill_container_tool_impl(
+             container_asset_id=container_asset_id,
+             fill_asset_ids=fill_asset_ids,
+             surface_id=surface_id,
+@@ -1815,6 +2104,11 @@ class ManipulandTools:
+             is_top_surface_fn=self._is_top_surface,
+             validate_footprint_fn=self._validate_convex_hull_footprint,
+         )
++        return self._guard_composite_result(
++            result_json=result,
++            surface_id=surface_id,
++            object_id_field="filled_container_id",
++        )
+ 
+     @log_scene_action
+     def _create_arrangement_impl(
+@@ -1831,7 +2125,12 @@ class ManipulandTools:
+ 
+         Delegates to create_arrangement_impl in arrangement_tools.py.
+         """
+-        return create_arrangement_impl(
++        if surface_id in self._rejected_support_surfaces:
++            return self._blocked_surface_failure(
++                surface_id=surface_id, response_asset_id=container_asset_id
++            )
++
++        result = create_arrangement_impl(
+             container_asset_id=container_asset_id,
+             fill_assets=fill_assets,
+             surface_id=surface_id,
+@@ -1847,6 +2146,11 @@ class ManipulandTools:
+             top_surface_overlap_tolerance=self.top_surface_overlap_tolerance,
+             is_top_surface_fn=self._is_top_surface,
+         )
++        return self._guard_composite_result(
++            result_json=result,
++            surface_id=surface_id,
++            object_id_field="filled_container_id",
++        )
+ 
+     @log_scene_action
+     def _create_pile_impl(
+@@ -1861,7 +2165,12 @@ class ManipulandTools:
+ 
+         Delegates to create_pile_tool_impl in pile_tools.py.
+         """
+-        return create_pile_tool_impl(
++        if surface_id in self._rejected_support_surfaces:
++            return self._blocked_surface_failure(
++                surface_id=surface_id, response_asset_id="pile"
++            )
++
++        result = create_pile_tool_impl(
+             asset_ids=asset_ids,
+             surface_id=surface_id,
+             position_x=position_x,
+@@ -1872,6 +2181,11 @@ class ManipulandTools:
+             support_surfaces=self.support_surfaces,
+             generate_unique_id=self.scene.generate_unique_id,
+         )
++        return self._guard_composite_result(
++            result_json=result,
++            surface_id=surface_id,
++            object_id_field="pile_object_id",
++        )
+ 
+     def _scene_object_to_manipuland_info(self, obj: SceneObject) -> ManipulandInfo:
+         """Convert SceneObject to ManipulandInfo DTO."""
