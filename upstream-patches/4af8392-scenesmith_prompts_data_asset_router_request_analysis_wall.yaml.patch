@@ -1,0 +1,63 @@
+diff --git a/scenesmith/prompts/data/asset_router/request_analysis_wall.yaml b/scenesmith/prompts/data/asset_router/request_analysis_wall.yaml
+index 168af60..5b3df45 100644
+--- a/scenesmith/prompts/data/asset_router/request_analysis_wall.yaml
++++ b/scenesmith/prompts/data/asset_router/request_analysis_wall.yaml
+@@ -37,9 +37,13 @@ prompt: |
+     Examples: wall cabinet with doors, medicine cabinet, bathroom cabinet,
+     kitchen wall cabinet, light switch, dimmer switch, wall-mounted shelf
+     with drawers, sconce with adjustable arm.
+-  - ["thin_covering"]: Flat artwork WITHOUT a prominent 3D frame.
+-    Use for: posters, prints, canvas paintings, unframed artwork, tapestries.
+-    KEY: If no frame is mentioned, prefer thin_covering for paintings/artwork.
++  - ["thin_covering"]: Flat artwork and printed wall information.
++    Use for: posters, maps, charts, formula sheets, diagrams, student artwork,
++    prints, canvas paintings, lightly framed posters, classroom displays, and
++    other mostly-flat printed decorations.
++    KEY: Prefer thin_covering for classroom posters, world maps, science/math
++    diagrams, formula posters, and student artwork even if the word "framed" is
++    used, unless the frame itself is the main 3D object.
+     LIMITATION: Only works for simple rectangular shapes without extrusions.
+     Cannot represent ornate frames, 3D relief, or complex border shapes.
+     Examples: "abstract painting", "Van Gogh Starry Night", "movie poster",
+@@ -47,11 +51,14 @@ prompt: |
+     For thin_covering, also set thin_covering_type:
+     - "single_image": Artwork/image spans entire surface (most wall art).
+     - "tileable": Pattern repeats (tapestry, wallpaper section - rare).
+-  - ["generated"]: 3D wall items WITH frames, depth, or structure.
+-    Use for: explicitly framed artwork, mirrors, clocks, shelves, mounted TVs.
+-    KEY: Only use for artwork if "framed" or frame style is explicitly mentioned.
+-    Examples: "framed landscape painting", "ornate gold-framed mirror",
+-    "decorative clock", "floating shelf", "mounted TV", "picture frame".
++  - ["generated"]: 3D wall items WITH meaningful depth or structure.
++    Use for: mirrors, clocks, shelves, mounted TVs, wall cabinets, whiteboards,
++    notice boards, ornate/thick picture frames, and objects whose frame or body
++    needs real 3D geometry.
++    KEY: Do not use generated just because a classroom poster/map/chart says
++    "framed"; route those to thin_covering unless a thick frame is the focus.
++    Examples: "ornate gold-framed mirror", "decorative clock",
++    "floating shelf", "mounted TV", "cork notice board", "picture frame".
+   </strategies>
+ 
+   <output_schema>
+@@ -86,15 +93,16 @@ prompt: |
+     "original_description": null
+   }
+ 
+-  Input: "framed landscape painting", dimensions=[0.8, 0.6, 0.05]
++  Input: "framed classroom science poster", dimensions=[0.8, 0.6, 0.03]
+   Output:
+   {
+     "items": [{
+-      "description": "framed landscape painting",
+-      "short_name": "painting",
+-      "dimensions": [0.8, 0.6, 0.05],
++      "description": "framed classroom science poster",
++      "short_name": "science_poster",
++      "dimensions": [0.8, 0.6, 0.03],
+       "object_type": "WALL_MOUNTED",
+-      "strategies": ["generated"]
++      "strategies": ["thin_covering"],
++      "thin_covering_type": "single_image"
+     }],
+     "original_description": null
+   }
