@@ -1,0 +1,499 @@
+diff --git a/scenesmith/agent_utils/asset_router/router.py b/scenesmith/agent_utils/asset_router/router.py
+index 3233f2f..0d45dd1 100644
+--- a/scenesmith/agent_utils/asset_router/router.py
++++ b/scenesmith/agent_utils/asset_router/router.py
+@@ -2,12 +2,15 @@
+ 
+ import json
+ import logging
++import re
+ import tempfile
+ import time
+ 
+ from pathlib import Path
+ from typing import TYPE_CHECKING
+ 
++import trimesh
++
+ from omegaconf import DictConfig
+ 
+ from scenesmith.agent_utils.articulated_retrieval_server import (
+@@ -1384,6 +1387,13 @@ class AssetRouter:
+         """
+         # Determine asset source (text-to-3D vs library retrieval).
+         asset_source = self.cfg.asset_manager.general_asset_source
++        if self._should_use_primitive_manipuland_fallback(item):
++            console_logger.info(
++                f"Using direct primitive manipuland fallback for '{item.description}'"
++            )
++            return self._create_primitive_manipuland_fallback_geometry(
++                item=item, geometry_dir=geometry_dir
++            )
+ 
+         # For library retrieval, pre-fetch candidates (single server call).
+         hssd_candidates: list | None = None
+@@ -1398,6 +1408,14 @@ class AssetRouter:
+             )
+             if not hssd_candidates:
+                 console_logger.warning(f"No HSSD candidates for '{item.description}'")
++                if self._should_use_primitive_ceiling_fallback(item):
++                    return self._create_primitive_ceiling_fallback_geometry(
++                        item=item, geometry_dir=geometry_dir
++                    )
++                if self._should_use_primitive_manipuland_fallback(item):
++                    return self._create_primitive_manipuland_fallback_geometry(
++                        item=item, geometry_dir=geometry_dir
++                    )
+                 return None
+         elif asset_source == "objaverse":
+             objaverse_candidates = self._fetch_objaverse_candidates(
+@@ -1488,8 +1506,449 @@ class AssetRouter:
+                 f"Suggestions: {validation.suggestions}"
+             )
+ 
++        if asset_source == "hssd" and self._should_use_primitive_ceiling_fallback(item):
++            return self._create_primitive_ceiling_fallback_geometry(
++                item=item, geometry_dir=geometry_dir
++            )
++
++        if self._should_use_primitive_manipuland_fallback(item):
++            return self._create_primitive_manipuland_fallback_geometry(
++                item=item, geometry_dir=geometry_dir
++            )
++
+         return None
+ 
++    def _should_use_primitive_ceiling_fallback(self, item: AssetItem) -> bool:
++        """Return True for simple classroom ceiling assets HSSD often misses."""
++        if item.object_type != ObjectType.CEILING_MOUNTED:
++            return False
++
++        text = f"{item.short_name} {item.description}".lower()
++        if "projector" in text:
++            return True
++
++        has_light_term = any(
++            term in text
++            for term in (
++                "led",
++                "light panel",
++                "ceiling panel",
++                "troffer",
++                "recessed light",
++                "recessed panel",
++                "fluorescent",
++            )
++        )
++        has_flat_panel_term = any(
++            term in text
++            for term in (
++                "panel",
++                "rectangular",
++                "troffer",
++                "recessed",
++                "flush",
++                "slim",
++            )
++        )
++        return has_light_term and has_flat_panel_term
++
++    def _create_primitive_ceiling_fallback_geometry(
++        self, item: AssetItem, geometry_dir: Path
++    ) -> GeneratedGeometry | None:
++        """Create a simple ceiling mesh when retrieval fails.
++
++        The fallback is intentionally limited to classroom ceiling light panels and
++        projectors. It still goes through the normal mesh-to-SDF conversion path, so
++        collision geometry and physics validation remain in effect.
++        """
++        text = f"{item.short_name} {item.description}".lower()
++        if "projector" in text:
++            return self._create_primitive_projector_geometry(item, geometry_dir)
++        return self._create_primitive_ceiling_panel_geometry(item, geometry_dir)
++
++    def _create_primitive_ceiling_panel_geometry(
++        self, item: AssetItem, geometry_dir: Path
++    ) -> GeneratedGeometry | None:
++        """Create a shallow rectangular LED panel mesh."""
++        try:
++            width, depth, height = item.dimensions or [1.2, 0.3, 0.08]
++            width = max(float(width), 0.2)
++            depth = max(float(depth), 0.08)
++            height = max(float(height), 0.04)
++        except Exception:
++            width, depth, height = 1.2, 0.3, 0.08
++
++        safe_name = "".join(
++            ch if ch.isalnum() or ch in ("_", "-") else "_" for ch in item.short_name
++        ).strip("_")
++        safe_name = safe_name or "ceiling_led_panel"
++        geometry_path = (
++            geometry_dir / f"{safe_name}_primitive_panel_{int(time.time())}.glb"
++        )
++
++        try:
++            geometry_dir.mkdir(parents=True, exist_ok=True)
++            mesh = trimesh.creation.box(extents=(width, depth, height))
++            mesh.visual.face_colors = [240, 246, 255, 255]
++            mesh.export(geometry_path)
++        except Exception as e:
++            console_logger.error(
++                f"Primitive ceiling panel fallback failed for '{item.description}': {e}",
++                exc_info=True,
++            )
++            return None
++
++        console_logger.info(
++            f"Using primitive ceiling panel fallback for '{item.description}' "
++            f"at {geometry_path} ({width:.2f}m x {depth:.2f}m x {height:.2f}m)"
++        )
++        return GeneratedGeometry(
++            geometry_path=geometry_path,
++            item=item,
++            asset_source="generated",
++        )
++
++    def _create_primitive_projector_geometry(
++        self, item: AssetItem, geometry_dir: Path
++    ) -> GeneratedGeometry | None:
++        """Create a compact projector body with lens and short ceiling bracket."""
++        try:
++            width, depth, height = item.dimensions or [0.45, 0.35, 0.25]
++            width = max(float(width), 0.25)
++            depth = max(float(depth), 0.18)
++            height = max(float(height), 0.16)
++        except Exception:
++            width, depth, height = 0.45, 0.35, 0.25
++
++        safe_name = "".join(
++            ch if ch.isalnum() or ch in ("_", "-") else "_" for ch in item.short_name
++        ).strip("_")
++        safe_name = safe_name or "ceiling_projector"
++        geometry_path = (
++            geometry_dir / f"{safe_name}_primitive_projector_{int(time.time())}.glb"
++        )
++
++        try:
++            geometry_dir.mkdir(parents=True, exist_ok=True)
++
++            body_h = height * 0.58
++            body = trimesh.creation.box(extents=(width, depth * 0.82, body_h))
++            body.visual.face_colors = [238, 238, 232, 255]
++
++            lens = trimesh.creation.box(
++                extents=(width * 0.24, depth * 0.08, body_h * 0.32)
++            )
++            lens.apply_translation((0.0, -depth * 0.45, -body_h * 0.05))
++            lens.visual.face_colors = [24, 28, 34, 255]
++
++            bracket = trimesh.creation.box(
++                extents=(width * 0.14, depth * 0.14, height * 0.28)
++            )
++            bracket.apply_translation((0.0, 0.0, body_h * 0.5 + height * 0.14))
++            bracket.visual.face_colors = [170, 174, 178, 255]
++
++            mount_plate = trimesh.creation.box(
++                extents=(width * 0.42, depth * 0.34, height * 0.06)
++            )
++            mount_plate.apply_translation((0.0, 0.0, body_h * 0.5 + height * 0.31))
++            mount_plate.visual.face_colors = [210, 212, 214, 255]
++
++            scene = trimesh.Scene([body, lens, bracket, mount_plate])
++            scene.export(geometry_path)
++        except Exception as e:
++            console_logger.error(
++                f"Primitive projector fallback failed for '{item.description}': {e}",
++                exc_info=True,
++            )
++            return None
++
++        console_logger.info(
++            f"Using primitive projector fallback for '{item.description}' "
++            f"at {geometry_path} ({width:.2f}m x {depth:.2f}m x {height:.2f}m)"
++        )
++        return GeneratedGeometry(
++            geometry_path=geometry_path,
++            item=item,
++            asset_source="generated",
++        )
++
++    def _should_use_primitive_manipuland_fallback(self, item: AssetItem) -> bool:
++        """Return True for small classroom supplies that HSSD often confuses."""
++        if item.object_type != ObjectType.MANIPULAND:
++            return False
++
++        text = f"{item.short_name} {item.description}".lower()
++        tokens = re.findall(r"[a-z0-9]+", text)
++        token_set = set(tokens)
++        normalized = " ".join(tokens)
++        excluded_container_terms = (
++            "cup",
++            "holder",
++            "organizer",
++            "tray",
++            "rack",
++            "container",
++            "sorter",
++        )
++        if any(term in token_set for term in excluded_container_terms):
++            return False
++
++        phrase_terms = (
++            "typing pad",
++            "input panel",
++            "button grid",
++            "computer mouse",
++            "water bottle",
++        )
++        token_terms = (
++            "keyboard",
++            "mouse",
++            "bottle",
++            "pencil",
++            "pen",
++            "marker",
++            "eraser",
++            "paper",
++            "notebook",
++            "textbook",
++            "book",
++            "folder",
++        )
++        return any(term in normalized for term in phrase_terms) or any(
++            term in token_set for term in token_terms
++        )
++
++    def _create_primitive_manipuland_fallback_geometry(
++        self, item: AssetItem, geometry_dir: Path
++    ) -> GeneratedGeometry | None:
++        """Create simple school-supply meshes after HSSD validation fails.
++
++        These are intentionally limited to compact tabletop items. They still go
++        through the normal mesh-to-SDF path, so collision geometry and physics
++        validation remain in effect.
++        """
++        text = f"{item.short_name} {item.description}".lower()
++        tokens = re.findall(r"[a-z0-9]+", text)
++        token_set = set(tokens)
++        normalized = " ".join(tokens)
++        try:
++            width, depth, height = item.dimensions or [0.18, 0.08, 0.025]
++            width = max(float(width), 0.01)
++            depth = max(float(depth), 0.01)
++            height = max(float(height), 0.008)
++        except Exception:
++            width, depth, height = 0.18, 0.08, 0.025
++
++        safe_name = "".join(
++            ch if ch.isalnum() or ch in ("_", "-") else "_" for ch in item.short_name
++        ).strip("_")
++        safe_name = safe_name or "school_supply"
++        geometry_path = (
++            geometry_dir / f"{safe_name}_primitive_supply_{int(time.time())}.glb"
++        )
++
++        try:
++            geometry_dir.mkdir(parents=True, exist_ok=True)
++            if (
++                "keyboard" in token_set
++                or "typing pad" in normalized
++                or "input panel" in normalized
++                or "button grid" in normalized
++            ):
++                scene = self._primitive_keyboard_scene(width, depth, height)
++            elif "mouse" in token_set:
++                scene = self._primitive_mouse_scene(width, depth, height)
++            elif any(term in token_set for term in ("pencil", "pen", "marker")):
++                scene = self._primitive_writing_tool_scene(width, depth, height, text)
++            elif "bottle" in token_set:
++                scene = self._primitive_bottle_scene(width, depth, height)
++            elif any(term in token_set for term in ("notebook", "textbook", "book")):
++                scene = self._primitive_book_scene(width, depth, height, text)
++            elif "folder" in token_set:
++                scene = self._primitive_folder_scene(width, depth, height)
++            elif "paper" in token_set:
++                scene = self._primitive_paper_stack_scene(width, depth, height)
++            else:
++                scene = self._primitive_eraser_scene(width, depth, height)
++            scene.export(geometry_path)
++        except Exception as e:
++            console_logger.error(
++                f"Primitive manipuland fallback failed for '{item.description}': {e}",
++                exc_info=True,
++            )
++            return None
++
++        console_logger.info(
++            f"Using primitive manipuland fallback for '{item.description}' "
++            f"at {geometry_path} ({width:.2f}m x {depth:.2f}m x {height:.2f}m)"
++        )
++        return GeneratedGeometry(
++            geometry_path=geometry_path,
++            item=item,
++            asset_source="generated",
++        )
++
++    def _primitive_keyboard_scene(
++        self, width: float, depth: float, height: float
++    ) -> trimesh.Scene:
++        """Create a shallow keyboard as one stable mesh."""
++        body_h = min(max(height, 0.012), 0.04)
++        body = trimesh.creation.box(extents=(width, depth, body_h))
++        body.visual.face_colors = [28, 30, 34, 255]
++        # Detailed key grids repeatedly produced malformed GLTF after SDF
++        # conversion on ParaCloud. The single-box keyboard preserves footprint
++        # and collision behavior while staying robust.
++        return self._primitive_scene([body])
++
++    def _primitive_mouse_scene(
++        self, width: float, depth: float, height: float
++    ) -> trimesh.Scene:
++        """Create a compact desktop mouse."""
++        body = trimesh.creation.uv_sphere(segments=24, ring_count=12)
++        body.apply_scale((width * 0.5, depth * 0.5, height * 0.5))
++        body.visual.face_colors = [35, 37, 42, 255]
++
++        wheel = trimesh.creation.box(
++            extents=(
++                max(width * 0.08, 0.006),
++                max(depth * 0.18, 0.008),
++                max(height * 0.2, 0.003),
++            )
++        )
++        wheel.apply_translation((0.0, -depth * 0.18, height * 0.36))
++        wheel.visual.face_colors = [12, 12, 14, 255]
++        return self._primitive_scene([body, wheel])
++
++    def _primitive_bottle_scene(
++        self, width: float, depth: float, height: float
++    ) -> trimesh.Scene:
++        radius = max(min(width, depth) * 0.32, 0.012)
++        body_height = max(height * 0.78, 0.04)
++        neck_height = max(height * 0.16, 0.012)
++        cap_height = max(height * 0.06, 0.006)
++
++        body = trimesh.creation.cylinder(radius=radius, height=body_height, sections=32)
++        body.apply_translation((0.0, 0.0, body_height * 0.5))
++        body.visual.face_colors = [90, 160, 220, 210]
++
++        neck = trimesh.creation.cylinder(
++            radius=radius * 0.48, height=neck_height, sections=24
++        )
++        neck.apply_translation((0.0, 0.0, body_height + neck_height * 0.5))
++        neck.visual.face_colors = [130, 190, 230, 220]
++
++        cap = trimesh.creation.cylinder(
++            radius=radius * 0.55, height=cap_height, sections=24
++        )
++        cap.apply_translation(
++            (0.0, 0.0, body_height + neck_height + cap_height * 0.5)
++        )
++        cap.visual.face_colors = [35, 75, 150, 255]
++
++        return self._primitive_scene([body, neck, cap])
++
++    def _primitive_writing_tool_scene(
++        self, width: float, depth: float, height: float, text: str
++    ) -> trimesh.Scene:
++        """Create a pencil/pen/marker-like cylinder."""
++        length = max(width, depth, height, 0.08)
++        radius = max(min(width, depth, height) * 0.35, 0.004)
++        shaft = trimesh.creation.cylinder(radius=radius, height=length, sections=16)
++        shaft.apply_transform(
++            trimesh.transformations.rotation_matrix(1.57079632679, [0, 1, 0])
++        )
++        shaft.visual.face_colors = (
++            [230, 176, 48, 255] if "pencil" in text else [40, 90, 180, 255]
++        )
++
++        tip = trimesh.creation.cone(radius=radius, height=radius * 3.0, sections=16)
++        tip.apply_transform(
++            trimesh.transformations.rotation_matrix(1.57079632679, [0, 1, 0])
++        )
++        tip.apply_translation((length * 0.5 + radius * 1.5, 0.0, 0.0))
++        tip.visual.face_colors = [45, 35, 28, 255]
++        return self._primitive_scene([shaft, tip])
++
++    def _primitive_eraser_scene(
++        self, width: float, depth: float, height: float
++    ) -> trimesh.Scene:
++        """Create a small rectangular eraser."""
++        mesh = trimesh.creation.box(extents=(width, depth, height))
++        mesh.visual.face_colors = [245, 145, 165, 255]
++        return self._primitive_scene([mesh])
++
++    def _primitive_book_scene(
++        self, width: float, depth: float, height: float, text: str
++    ) -> trimesh.Scene:
++        """Create a flat book/notebook slab with a visible cover and page block."""
++        width = max(width, 0.08)
++        depth = max(depth, 0.06)
++        height = max(height, 0.008)
++        pages_h = height * 0.72
++        cover_h = max(height * 0.16, 0.002)
++
++        pages = trimesh.creation.box(extents=(width * 0.94, depth * 0.9, pages_h))
++        pages.visual.face_colors = [242, 238, 220, 255]
++
++        cover = trimesh.creation.box(extents=(width, depth, cover_h))
++        cover.apply_translation((0.0, 0.0, pages_h * 0.5 + cover_h * 0.5))
++        if "notebook" in text:
++            cover.visual.face_colors = [48, 104, 172, 255]
++        elif "textbook" in text:
++            cover.visual.face_colors = [174, 52, 54, 255]
++        else:
++            cover.visual.face_colors = [62, 116, 76, 255]
++
++        spine = trimesh.creation.box(
++            extents=(max(width * 0.06, 0.006), depth, height)
++        )
++        spine.apply_translation((-width * 0.47, 0.0, height * 0.02))
++        spine.visual.face_colors = [38, 42, 52, 255]
++        return self._primitive_scene([pages, cover, spine])
++
++    def _primitive_folder_scene(
++        self, width: float, depth: float, height: float
++    ) -> trimesh.Scene:
++        """Create a shallow manila folder with a small tab."""
++        width = max(width, 0.12)
++        depth = max(depth, 0.09)
++        height = max(height, 0.006)
++        body = trimesh.creation.box(extents=(width, depth, height))
++        body.visual.face_colors = [216, 180, 108, 255]
++
++        tab = trimesh.creation.box(
++            extents=(width * 0.32, depth * 0.12, max(height * 1.2, 0.004))
++        )
++        tab.apply_translation((width * 0.25, depth * 0.53, height * 0.2))
++        tab.visual.face_colors = [230, 196, 122, 255]
++        return self._primitive_scene([body, tab])
++
++    def _primitive_paper_stack_scene(
++        self, width: float, depth: float, height: float
++    ) -> trimesh.Scene:
++        """Create a non-degenerate stack of white classroom papers."""
++        width = max(width, 0.1)
++        depth = max(depth, 0.08)
++        layer_h = max(height / 3.0, 0.002)
++        meshes = []
++        for idx in range(3):
++            sheet = trimesh.creation.box(extents=(width, depth, layer_h))
++            sheet.apply_translation(
++                (
++                    (idx - 1) * min(width * 0.01, 0.003),
++                    (1 - idx) * min(depth * 0.01, 0.003),
++                    idx * layer_h,
++                )
++            )
++            sheet.visual.face_colors = [248, 248, 242, 255]
++            meshes.append(sheet)
++        return self._primitive_scene(meshes)
++
++    def _primitive_scene(self, meshes: list[trimesh.Trimesh]) -> trimesh.Scene:
++        """Export primitive fallbacks as one mesh for stable bounds conversion."""
++        combined = trimesh.util.concatenate(meshes)
++        return trimesh.Scene([combined])
++
+     def _fetch_hssd_candidates(
+         self,
+         item: AssetItem,
