@@ -1,0 +1,18 @@
+diff --git a/scenesmith/agent_utils/clearance_zones.py b/scenesmith/agent_utils/clearance_zones.py
+index f194042..a8a7b46 100644
+--- a/scenesmith/agent_utils/clearance_zones.py
++++ b/scenesmith/agent_utils/clearance_zones.py
+@@ -722,7 +722,12 @@ def compute_wall_height_violations(
+         # Object top height.
+         obj_top = obj_max[2]
+ 
+-        if obj_top > wall_height:
++        # Ceiling-mounted objects are placed flush with the ceiling, and mesh
++        # conversion can leave their top face a few millimeters above the wall
++        # height due to floating-point/canonicalization noise. Treat only
++        # meaningful overshoots as violations.
++        wall_height_tolerance_m = 0.02
++        if obj_top > wall_height + wall_height_tolerance_m:
+             violations.append(
+                 WallHeightExceededViolation(
+                     object_id=str(obj.object_id),
