@@ -43,15 +43,15 @@ ROOMS = [
 LOGGER = logging.getLogger(__name__)
 
 
-def _load_cfg(repo_dir: Path, run_dir: Path):
+def _load_cfg(repo_dir: Path, run_dir: Path, csv_path: str, run_name: str):
     register_resolvers()
     config_dir = repo_dir.resolve() / "configurations"
     with hydra.initialize_config_dir(config_dir=str(config_dir), version_base=None):
         cfg = hydra.compose(
             config_name="config",
             overrides=[
-                "+name=brand_new_school_floor_final_assemble",
-                "experiment.csv_path=inputs/full_school_floor_20260703.csv",
+                f"+name={run_name}",
+                f"experiment.csv_path={csv_path}",
                 "experiment.num_workers=1",
                 "experiment.pipeline.start_stage=wall_mounted",
                 "experiment.pipeline.stop_stage=manipuland",
@@ -74,9 +74,9 @@ def _load_cfg(repo_dir: Path, run_dir: Path):
     return cfg
 
 
-def _verify_final_rooms(scene_dir: Path) -> list[str]:
+def _verify_final_rooms(scene_dir: Path, room_ids: list[str]) -> list[str]:
     missing: list[str] = []
-    for room_id in ROOMS:
+    for room_id in room_ids:
         final_state = (
             scene_dir
             / f"room_{room_id}"
@@ -87,6 +87,25 @@ def _verify_final_rooms(scene_dir: Path) -> list[str]:
         if not final_state.exists():
             missing.append(room_id)
     return missing
+
+
+def _room_ids_from_layout(layout: HouseLayout) -> list[str]:
+    room_ids = [room.room_id for room in layout.placed_rooms]
+    return room_ids or ROOMS
+
+
+def _verify_room_gates(gate_dir: Path, room_ids: list[str]) -> list[str]:
+    failures: list[str] = []
+    for room_id in room_ids:
+        gate_path = gate_dir / f"{room_id}.json"
+        if not gate_path.exists():
+            failures.append(f"{room_id}: missing gate JSON")
+            continue
+        with gate_path.open() as f:
+            result = json.load(f)
+        if result.get("status") != "pass":
+            failures.append(f"{room_id}: status={result.get('status')}")
+    return failures
 
 
 def _load_room(scene_dir: Path, room_id: str) -> RoomScene:
@@ -187,6 +206,28 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-dir", required=True)
     parser.add_argument("--run-dir", required=True)
+    parser.add_argument(
+        "--csv",
+        default="inputs/full_school_floor_20260703.csv",
+        help="Prompt CSV used for this run. Must match the floor-plan/room stage.",
+    )
+    parser.add_argument(
+        "--run-name",
+        default="scenesmith_final_assemble",
+        help="Hydra run name for assembly.",
+    )
+    parser.add_argument(
+        "--gate-dir",
+        help=(
+            "Directory containing room self-exam JSON files. Defaults to "
+            "scene_000/quality_gates/room_self_exam."
+        ),
+    )
+    parser.add_argument(
+        "--allow-ungated",
+        action="store_true",
+        help="Bypass room self-exam gate. Use only for debugging, never final runs.",
+    )
     parser.add_argument("--render", action="store_true")
     args = parser.parse_args()
 
@@ -199,18 +240,34 @@ def main() -> None:
     run_dir = Path(args.run_dir).resolve()
     scene_dir = run_dir / "scene_000"
 
-    missing = _verify_final_rooms(scene_dir)
-    if missing:
-        raise RuntimeError(f"Refusing to assemble: missing final rooms: {missing}")
-
-    cfg = _load_cfg(repo_dir=repo_dir, run_dir=run_dir)
-    cfg_dict = OmegaConf.to_container(cfg, resolve=True)
-
     layout_path = scene_dir / "house_layout.json"
     with layout_path.open() as f:
         layout = HouseLayout.from_dict(json.load(f), house_dir=scene_dir)
+    room_ids = _room_ids_from_layout(layout)
 
-    rooms = {room_id: _load_room(scene_dir, room_id) for room_id in ROOMS}
+    missing = _verify_final_rooms(scene_dir, room_ids)
+    if missing:
+        raise RuntimeError(f"Refusing to assemble: missing final rooms: {missing}")
+
+    gate_dir = (
+        Path(args.gate_dir).resolve()
+        if args.gate_dir
+        else scene_dir / "quality_gates" / "room_self_exam"
+    )
+    if not args.allow_ungated:
+        gate_failures = _verify_room_gates(gate_dir, room_ids)
+        if gate_failures:
+            raise RuntimeError(
+                "Refusing to assemble: room self-exam gate has not passed: "
+                + "; ".join(gate_failures)
+            )
+
+    cfg = _load_cfg(
+        repo_dir=repo_dir, run_dir=run_dir, csv_path=args.csv, run_name=args.run_name
+    )
+    cfg_dict = OmegaConf.to_container(cfg, resolve=True)
+
+    rooms = {room_id: _load_room(scene_dir, room_id) for room_id in room_ids}
     house = HouseScene(layout=layout, rooms=rooms)
 
     combined_dir = scene_dir / "combined_house"
