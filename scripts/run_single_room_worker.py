@@ -53,6 +53,63 @@ def _configure_ports(cfg, offset: int) -> None:
                 )
 
 
+def _asset_pipeline_overrides(asset_pipeline: str) -> list[str]:
+    """Return Hydra overrides for the requested asset source policy.
+
+    Keep the policy explicit because using an HSSD-only run when the target is
+    full-quality generation silently bypasses SAM3D and most richer asset routes.
+    """
+    common = [
+        "furniture_agent.asset_manager.hssd.use_top_k=20",
+        "wall_agent.asset_manager.hssd.use_top_k=20",
+        "ceiling_agent.asset_manager.hssd.use_top_k=20",
+        "manipuland_agent.asset_manager.hssd.use_top_k=20",
+        "furniture_agent.collision_geometry.coacd.max_convex_hull=32",
+        "wall_agent.collision_geometry.coacd.max_convex_hull=32",
+        "ceiling_agent.collision_geometry.coacd.max_convex_hull=32",
+        "manipuland_agent.collision_geometry.coacd.max_convex_hull=32",
+        "furniture_agent.collision_geometry.vhacd.max_convex_hulls=32",
+        "wall_agent.collision_geometry.vhacd.max_convex_hulls=32",
+        "ceiling_agent.collision_geometry.vhacd.max_convex_hulls=32",
+        "manipuland_agent.collision_geometry.vhacd.max_convex_hulls=32",
+    ]
+
+    if asset_pipeline == "hssd":
+        return common + [
+            "furniture_agent.asset_manager.general_asset_source=hssd",
+            "wall_agent.asset_manager.general_asset_source=hssd",
+            "ceiling_agent.asset_manager.general_asset_source=hssd",
+            "manipuland_agent.asset_manager.general_asset_source=hssd",
+            "furniture_agent.asset_manager.artiverse_articulated.enabled=true",
+            "furniture_agent.asset_manager.artiverse_articulated.data_path=data/artiverse",
+            "furniture_agent.asset_manager.router.strategies.artiverse_articulated.enabled=true",
+            "wall_agent.asset_manager.router.strategies.artiverse_articulated.enabled=false",
+            "ceiling_agent.asset_manager.router.strategies.artiverse_articulated.enabled=false",
+            "manipuland_agent.asset_manager.router.strategies.artiverse_articulated.enabled=false",
+        ]
+
+    if asset_pipeline == "generated_sam3d":
+        return common + [
+            "furniture_agent.asset_manager.general_asset_source=generated",
+            "wall_agent.asset_manager.general_asset_source=generated",
+            "ceiling_agent.asset_manager.general_asset_source=generated",
+            "manipuland_agent.asset_manager.general_asset_source=generated",
+            "furniture_agent.asset_manager.backend=sam3d",
+            "wall_agent.asset_manager.backend=sam3d",
+            "ceiling_agent.asset_manager.backend=sam3d",
+            "manipuland_agent.asset_manager.backend=sam3d",
+            "furniture_agent.asset_manager.router.strategies.generated.enabled=true",
+            "wall_agent.asset_manager.router.strategies.generated.enabled=true",
+            "ceiling_agent.asset_manager.router.strategies.generated.enabled=true",
+            "manipuland_agent.asset_manager.router.strategies.generated.enabled=true",
+            "furniture_agent.asset_manager.artiverse_articulated.enabled=true",
+            "furniture_agent.asset_manager.artiverse_articulated.data_path=data/artiverse",
+            "furniture_agent.asset_manager.router.strategies.artiverse_articulated.enabled=true",
+        ]
+
+    raise ValueError(f"Unsupported asset pipeline: {asset_pipeline}")
+
+
 def _load_cfg(args: argparse.Namespace):
     register_resolvers()
     config_dir = Path(args.repo_dir).resolve() / "configurations"
@@ -60,8 +117,8 @@ def _load_cfg(args: argparse.Namespace):
         cfg = hydra.compose(
             config_name="config",
             overrides=[
-                "+name=brand_new_school_floor_room_worker",
-                "experiment.csv_path=inputs/full_school_floor_20260703.csv",
+                f"+name={args.run_name}",
+                f"experiment.csv_path={args.csv}",
                 "experiment.num_workers=1",
                 f"experiment.pipeline.start_stage={args.start_stage}",
                 f"experiment.pipeline.stop_stage={args.stop_stage}",
@@ -84,21 +141,8 @@ def _load_cfg(args: argparse.Namespace):
                 "manipuland_agent.asset_manager.router.strategies.thin_covering.generator.enabled=false",
                 "furniture_agent.context_image_generation.enabled=false",
                 "manipuland_agent.context_image_generation.enabled=false",
-                "furniture_agent.asset_manager.hssd.use_top_k=20",
-                "wall_agent.asset_manager.hssd.use_top_k=20",
-                "ceiling_agent.asset_manager.hssd.use_top_k=20",
-                "manipuland_agent.asset_manager.hssd.use_top_k=20",
-                "furniture_agent.asset_manager.general_asset_source=hssd",
-                "wall_agent.asset_manager.general_asset_source=hssd",
-                "ceiling_agent.asset_manager.general_asset_source=hssd",
-                "manipuland_agent.asset_manager.general_asset_source=hssd",
-                "furniture_agent.asset_manager.artiverse_articulated.enabled=true",
-                "furniture_agent.asset_manager.artiverse_articulated.data_path=data/artiverse",
-                "furniture_agent.asset_manager.router.strategies.artiverse_articulated.enabled=true",
-                "wall_agent.asset_manager.router.strategies.artiverse_articulated.enabled=false",
-                "ceiling_agent.asset_manager.router.strategies.artiverse_articulated.enabled=false",
-                "manipuland_agent.asset_manager.router.strategies.artiverse_articulated.enabled=false",
-            ],
+            ]
+            + _asset_pipeline_overrides(args.asset_pipeline),
         )
 
     with open_dict(cfg):
@@ -119,9 +163,28 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo-dir", required=True)
     parser.add_argument("--run-dir", required=True)
+    parser.add_argument(
+        "--csv",
+        default="inputs/full_school_floor_20260703.csv",
+        help="Prompt CSV used for this run. Must match the floor-plan stage.",
+    )
+    parser.add_argument(
+        "--run-name",
+        default="scenesmith_room_worker",
+        help="Hydra run name for this room worker.",
+    )
     parser.add_argument("--room-id", required=True)
     parser.add_argument("--start-stage", required=True)
     parser.add_argument("--stop-stage", default="manipuland")
+    parser.add_argument(
+        "--asset-pipeline",
+        choices=["hssd", "generated_sam3d"],
+        default="hssd",
+        help=(
+            "Asset source policy. Use generated_sam3d for full-quality runs; "
+            "hssd preserves the old fast continuation behavior."
+        ),
+    )
     parser.add_argument("--port-offset", type=int, required=True)
     parser.add_argument("--render-gpu-id", type=int, default=0)
     args = parser.parse_args()
