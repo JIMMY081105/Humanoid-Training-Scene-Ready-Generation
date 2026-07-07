@@ -35,9 +35,9 @@ def reset_scene() -> None:
     bpy.ops.object.delete()
 
 
-def room_positions(layout: dict) -> dict[str, Vector]:
+def room_centers(layout: dict) -> dict[str, Vector]:
     placed = layout.get("placed_rooms") or []
-    positions: dict[str, Vector] = {}
+    centers: dict[str, Vector] = {}
     if isinstance(placed, dict):
         iterator = placed.values()
     else:
@@ -45,8 +45,12 @@ def room_positions(layout: dict) -> dict[str, Vector]:
     for item in iterator:
         rid = item["room_id"]
         pos = item.get("position", [0.0, 0.0])
-        positions[rid] = Vector((float(pos[0]), float(pos[1]), 0.0))
-    return positions
+        width = float(item.get("width", 0.0))
+        depth = float(item.get("depth", 0.0))
+        centers[rid] = Vector(
+            (float(pos[0]) + width / 2.0, float(pos[1]) + depth / 2.0, 0.0)
+        )
+    return centers
 
 
 def object_matrix(room_pos: Vector, transform: dict) -> Matrix:
@@ -122,12 +126,12 @@ def add_room_geometry_from_layout(layout: dict) -> None:
 
 
 def build_scene(scene_dir: Path, state: dict) -> dict:
-    positions = room_positions(state["layout"])
+    centers = room_centers(state["layout"])
     add_room_geometry_from_layout(state["layout"])
     stats = {"imported_assets": 0, "box_objects": 0, "missing_assets": []}
 
     for room_id, room in state["rooms"].items():
-        room_pos = positions.get(room_id, Vector((0.0, 0.0, 0.0)))
+        room_pos = centers.get(room_id, Vector((0.0, 0.0, 0.0)))
         room_dir = scene_dir / f"room_{room_id}"
         for object_id, obj in (room.get("objects") or {}).items():
             object_type = obj.get("object_type")
@@ -230,7 +234,10 @@ def main() -> None:
         "created_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         **stats,
     }
-    (combined_dir / "direct_visual_manifest.json").write_text(json.dumps(manifest, indent=2))
+    manifest_path = Path(args.output_blend).resolve().with_name(
+        "direct_visual_manifest.json"
+    )
+    manifest_path.write_text(json.dumps(manifest, indent=2))
 
 
 if __name__ == "__main__":
