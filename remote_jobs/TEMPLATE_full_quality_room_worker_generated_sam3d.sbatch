@@ -33,6 +33,7 @@ fi
 export PYTHONUNBUFFERED=1
 export LOGLEVEL=INFO
 export HYDRA_FULL_ERROR=1
+export PYTHONPATH="/data/run01/scvj260/scenesmith${PYTHONPATH:+:$PYTHONPATH}"
 export HTTP_PROXY="${HTTP_PROXY:-http://ln08:18092}"
 export HTTPS_PROXY="$HTTP_PROXY"
 export http_proxy="$HTTP_PROXY"
@@ -53,7 +54,28 @@ nvidia-smi
 test -f external/checkpoints/sam3.pt
 test -f external/checkpoints/pipeline.yaml
 
+PROBE_CODE="$(curl --max-time 60 --proxy "$HTTP_PROXY" -s -o /dev/null -w "%{http_code}" https://api.openai.com/v1/models || true)"
+echo "[probe] openai_http=$PROBE_CODE proxy=$HTTP_PROXY"
+case "$PROBE_CODE" in
+  200|401|403) ;;
+  *) echo "[guard] Proxy probe failed from GPU node; refusing to start." >&2; exit 20 ;;
+esac
+
 echo "[policy] generated_sam3d; this must not write combined_house"
+echo "[preflight] resolving worker Hydra config and checking it does not force HSSD"
+.venv/bin/python scripts/run_single_room_worker.py \
+  --repo-dir /data/run01/scvj260/scenesmith \
+  --run-dir "$RUN_DIR" \
+  --csv "$PROMPT_CSV" \
+  --run-name "$RUN_NAME" \
+  --room-id "$ROOM_ID" \
+  --start-stage "$START_STAGE" \
+  --stop-stage "$STOP_STAGE" \
+  --asset-pipeline generated_sam3d \
+  --port-offset "$PORT_OFFSET" \
+  --render-gpu-id "$RENDER_GPU_ID" \
+  --config-only
+
 .venv/bin/python scripts/run_single_room_worker.py \
   --repo-dir /data/run01/scvj260/scenesmith \
   --run-dir "$RUN_DIR" \
