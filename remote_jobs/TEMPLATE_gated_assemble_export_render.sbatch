@@ -25,6 +25,7 @@ GATE_DIR="${GATE_DIR:-$SCENE_DIR/quality_gates/room_self_exam}"
 export PYTHONUNBUFFERED=1
 export LOGLEVEL=INFO
 export HYDRA_FULL_ERROR=1
+export PYTHONPATH="/data/run01/scvj260/scenesmith${PYTHONPATH:+:$PYTHONPATH}"
 
 echo "[slurm] job_id=${SLURM_JOB_ID:-unknown} node=$(hostname) start=$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
 nvidia-smi || true
