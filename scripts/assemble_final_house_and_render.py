@@ -57,7 +57,7 @@ def _load_cfg(repo_dir: Path, run_dir: Path, csv_path: str, run_name: str):
                 "experiment.pipeline.stop_stage=manipuland",
                 "experiment.pipeline.parallel_rooms=false",
                 "floor_plan_agent.mode=house",
-                "codex.enabled=false",
+                "++codex.enabled=false",
             ],
         )
 
