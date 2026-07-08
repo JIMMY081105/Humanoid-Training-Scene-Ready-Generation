@@ -29,6 +29,7 @@ source local_setup/compute_node_env.sh
 export PYTHONUNBUFFERED=1
 export LOGLEVEL=INFO
 export HYDRA_FULL_ERROR=1
+export PYTHONPATH="/data/run01/scvj260/scenesmith${PYTHONPATH:+:$PYTHONPATH}"
 export HTTP_PROXY="${HTTP_PROXY:-http://ln08:18092}"
 export HTTPS_PROXY="$HTTP_PROXY"
 export http_proxy="$HTTP_PROXY"
@@ -78,11 +79,13 @@ echo "[preflight] validating articulated router behavior"
   furniture_agent.asset_manager.general_asset_source=generated \
   wall_agent.asset_manager.general_asset_source=generated \
   ceiling_agent.asset_manager.general_asset_source=generated \
-  manipuland_agent.asset_manager.general_asset_source=generated \
+  manipuland_agent.asset_manager.general_asset_source=objaverse \
   furniture_agent.asset_manager.backend=sam3d \
   wall_agent.asset_manager.backend=sam3d \
   ceiling_agent.asset_manager.backend=sam3d \
   manipuland_agent.asset_manager.backend=sam3d \
+  manipuland_agent.asset_manager.objaverse.use_top_k=10 \
+  manipuland_agent.asset_manager.objaverse.use_lenient_validation=true \
   furniture_agent.asset_manager.router.strategies.generated.enabled=true \
   wall_agent.asset_manager.router.strategies.generated.enabled=true \
   ceiling_agent.asset_manager.router.strategies.generated.enabled=true \
