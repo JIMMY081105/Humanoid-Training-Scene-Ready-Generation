@@ -5,6 +5,7 @@ room checkpoint, runs one room only, and never assembles combined_house.
 """
 
 import argparse
+import json
 import logging
 import os
 from pathlib import Path
@@ -80,12 +81,12 @@ def _asset_pipeline_overrides(asset_pipeline: str) -> list[str]:
             "wall_agent.asset_manager.general_asset_source=hssd",
             "ceiling_agent.asset_manager.general_asset_source=hssd",
             "manipuland_agent.asset_manager.general_asset_source=hssd",
-            "furniture_agent.asset_manager.artiverse_articulated.enabled=true",
-            "furniture_agent.asset_manager.artiverse_articulated.data_path=data/artiverse",
-            "furniture_agent.asset_manager.router.strategies.artiverse_articulated.enabled=true",
-            "wall_agent.asset_manager.router.strategies.artiverse_articulated.enabled=false",
-            "ceiling_agent.asset_manager.router.strategies.artiverse_articulated.enabled=false",
-            "manipuland_agent.asset_manager.router.strategies.artiverse_articulated.enabled=false",
+            "++furniture_agent.asset_manager.artiverse_articulated.enabled=true",
+            "++furniture_agent.asset_manager.artiverse_articulated.data_path=data/artiverse",
+            "++furniture_agent.asset_manager.router.strategies.artiverse_articulated.enabled=true",
+            "++wall_agent.asset_manager.router.strategies.artiverse_articulated.enabled=false",
+            "++ceiling_agent.asset_manager.router.strategies.artiverse_articulated.enabled=false",
+            "++manipuland_agent.asset_manager.router.strategies.artiverse_articulated.enabled=false",
         ]
 
     if asset_pipeline == "generated_sam3d":
@@ -93,21 +94,75 @@ def _asset_pipeline_overrides(asset_pipeline: str) -> list[str]:
             "furniture_agent.asset_manager.general_asset_source=generated",
             "wall_agent.asset_manager.general_asset_source=generated",
             "ceiling_agent.asset_manager.general_asset_source=generated",
-            "manipuland_agent.asset_manager.general_asset_source=generated",
+            "manipuland_agent.asset_manager.general_asset_source=objaverse",
             "furniture_agent.asset_manager.backend=sam3d",
             "wall_agent.asset_manager.backend=sam3d",
             "ceiling_agent.asset_manager.backend=sam3d",
             "manipuland_agent.asset_manager.backend=sam3d",
+            "manipuland_agent.asset_manager.objaverse.use_top_k=10",
+            "manipuland_agent.asset_manager.objaverse.use_lenient_validation=true",
             "furniture_agent.asset_manager.router.strategies.generated.enabled=true",
             "wall_agent.asset_manager.router.strategies.generated.enabled=true",
             "ceiling_agent.asset_manager.router.strategies.generated.enabled=true",
             "manipuland_agent.asset_manager.router.strategies.generated.enabled=true",
-            "furniture_agent.asset_manager.artiverse_articulated.enabled=true",
-            "furniture_agent.asset_manager.artiverse_articulated.data_path=data/artiverse",
-            "furniture_agent.asset_manager.router.strategies.artiverse_articulated.enabled=true",
+            "++furniture_agent.asset_manager.artiverse_articulated.enabled=true",
+            "++furniture_agent.asset_manager.artiverse_articulated.data_path=data/artiverse",
+            "++furniture_agent.asset_manager.router.strategies.artiverse_articulated.enabled=true",
         ]
 
     raise ValueError(f"Unsupported asset pipeline: {asset_pipeline}")
+
+
+def _asset_policy_summary(cfg) -> dict:
+    agents = ("furniture_agent", "wall_agent", "ceiling_agent", "manipuland_agent")
+    summary = {}
+    for agent_name in agents:
+        agent = cfg[agent_name]
+        collision = agent.collision_geometry
+        summary[agent_name] = {
+            "general_asset_source": str(agent.asset_manager.general_asset_source),
+            "backend": str(agent.asset_manager.get("backend", "")),
+            "objaverse_top_k": int(agent.asset_manager.objaverse.use_top_k)
+            if "objaverse" in agent.asset_manager
+            else None,
+            "coacd_max_convex_hull": int(collision.coacd.max_convex_hull),
+            "vhacd_max_convex_hulls": int(collision.vhacd.max_convex_hulls),
+        }
+    return summary
+
+
+def _validate_asset_policy(cfg, asset_pipeline: str) -> None:
+    summary = _asset_policy_summary(cfg)
+    if asset_pipeline != "generated_sam3d":
+        return
+
+    expected_sources = {
+        "furniture_agent": "generated",
+        "wall_agent": "generated",
+        "ceiling_agent": "generated",
+        "manipuland_agent": "objaverse",
+    }
+    errors = []
+    for agent_name, expected in expected_sources.items():
+        actual = summary[agent_name]["general_asset_source"]
+        if actual != expected:
+            errors.append(f"{agent_name}.asset_manager.general_asset_source={actual}, expected {expected}")
+
+    for agent_name in ("furniture_agent", "wall_agent", "ceiling_agent"):
+        if summary[agent_name]["backend"] != "sam3d":
+            errors.append(f"{agent_name}.asset_manager.backend is not sam3d")
+
+    for agent_name, values in summary.items():
+        if values["coacd_max_convex_hull"] > 32:
+            errors.append(f"{agent_name}.collision_geometry.coacd.max_convex_hull > 32")
+        if values["vhacd_max_convex_hulls"] > 32:
+            errors.append(f"{agent_name}.collision_geometry.vhacd.max_convex_hulls > 32")
+
+    if errors:
+        raise RuntimeError(
+            "Resolved Hydra asset policy does not match generated_sam3d contract: "
+            + "; ".join(errors)
+        )
 
 
 def _load_cfg(args: argparse.Namespace):
@@ -124,9 +179,9 @@ def _load_cfg(args: argparse.Namespace):
                 f"experiment.pipeline.stop_stage={args.stop_stage}",
                 "experiment.pipeline.parallel_rooms=false",
                 "floor_plan_agent.mode=house",
-                "codex.enabled=true",
-                f"codex.cwd={args.repo_dir}",
-                "codex.timeout_seconds=1800",
+                "++codex.enabled=true",
+                f"++codex.cwd={args.repo_dir}",
+                "++codex.timeout_seconds=1800",
                 "furniture_agent.asset_manager.router.parallel_workers=1",
                 "wall_agent.asset_manager.router.parallel_workers=1",
                 "ceiling_agent.asset_manager.router.parallel_workers=1",
@@ -187,6 +242,11 @@ def main() -> None:
     )
     parser.add_argument("--port-offset", type=int, required=True)
     parser.add_argument("--render-gpu-id", type=int, default=0)
+    parser.add_argument(
+        "--config-only",
+        action="store_true",
+        help="Resolve and validate Hydra config, print asset policy JSON, then exit.",
+    )
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -194,14 +254,23 @@ def main() -> None:
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
+    os.environ.setdefault("SCENESMITH_MANIPULAND_MAX_FURNITURE", "3")
+
+    cfg = _load_cfg(args)
+    _validate_asset_policy(cfg, args.asset_pipeline)
+    asset_policy = _asset_policy_summary(cfg)
+    console_logger.info(
+        "Resolved asset policy: %s", json.dumps(asset_policy, sort_keys=True)
+    )
+    if args.config_only:
+        print(json.dumps(asset_policy, indent=2, sort_keys=True))
+        return
+
     from agents import set_default_openai_api, set_tracing_disabled
 
     set_default_openai_api("chat_completions")
     set_tracing_disabled(True)
 
-    os.environ.setdefault("SCENESMITH_MANIPULAND_MAX_FURNITURE", "3")
-
-    cfg = _load_cfg(args)
     cfg_dict = OmegaConf.to_container(cfg, resolve=True)
 
     run_dir = Path(args.run_dir).resolve()
