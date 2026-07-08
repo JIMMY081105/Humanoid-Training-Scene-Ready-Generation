@@ -7,6 +7,7 @@ This file is the handoff contract for future SceneSmith runs. It exists to preve
 - Do not use an `hssd_only_fast` run as the final-quality run unless the user explicitly approves it.
 - Do not set `general_asset_source=hssd` for a full-quality scene unless the user explicitly asks for HSSD-only speed.
 - Keep SAM3D available by using `general_asset_source=generated` and `backend=sam3d` for furniture, wall, ceiling, and manipuland agents when the target is quality.
+- Use Objaverse/ObjectThor retrieval for small manipuland objects in full-quality runs to avoid primitive-shape fallbacks.
 - Keep articulated retrieval available. In this repo that means ArtVIP through `asset_manager.articulated.sources.artvip.enabled=true`; Artiverse is the separate `artiverse_articulated` route when that local dataset/config is available.
 - Do not assemble `combined_house`, final Drake exports, Isaac/USD exports, or final renders until every required room has passed a room-level quality gate.
 - A render-only review folder is not a quality gate. A gate must produce pass/fail records and must block export on failure.
@@ -17,18 +18,19 @@ This file is the handoff contract for future SceneSmith runs. It exists to preve
 
 1. Prompt and run setup
 2. Environment/GPU preflight
-3. Full-quality asset policy check
-4. Articulated router validation
-5. Floor plan generation
-6. Room-level generation
-7. Room render capture
-8. Room self-exam gate
-9. Room repair/regeneration loop
-10. Final assembly
-11. Drake/SceneEval/collision export
-12. Isaac/USD/MuJoCo export if requested
-13. Outlook renders and local transfer
-14. Final validation report
+3. Compute-node API proxy verification
+4. Full-quality asset policy check
+5. Articulated router validation
+6. Floor plan generation
+7. Room-level generation
+8. Room render capture
+9. Room self-exam gate
+10. Room repair/regeneration loop
+11. Final assembly
+12. Drake/SceneEval/collision export
+13. Isaac/USD/MuJoCo export if requested
+14. Outlook renders and local transfer
+15. Final validation report
 
 ## 1. Prompt And Run Setup
 
@@ -60,7 +62,29 @@ curl --max-time 60 --proxy "$HTTP_PROXY" -s -o /dev/null -w "%{http_code}" https
 
 Expected OpenAI probe codes: `200`, `401`, or `403`. Other codes mean proxy/network is not ready.
 
-## 3. Full-Quality Asset Policy
+## 3. Compute-Node API Proxy Verification
+
+Function: ensure GPU jobs can reach OpenAI for the whole run. A local laptop SSH tunnel bound only to `127.0.0.1` is not enough: compute nodes cannot reach it, and it dies when the laptop disconnects.
+
+Required policy:
+
+- GPU jobs must use a proxy reachable from compute nodes, for example the old cluster-facing login-node endpoint `http://ln08:18092`.
+- The proxy/tunnel must be bound on an interface visible to compute nodes, not only login-node localhost.
+- The proxy must be managed in a persistent login-node session or service (`tmux`, `screen`, `autossh`, or cluster-managed proxy), not a fragile foreground tunnel from the laptop.
+- If the laptop disconnects, the proxy must keep running. Otherwise multi-day runs will stall at the next OpenAI call.
+- Every SLURM script must probe OpenAI from inside the GPU allocation and fail fast if unreachable.
+
+Preflight from a GPU allocation:
+
+```bash
+curl --max-time 60 --proxy "http://ln08:18092" \
+  -s -o /dev/null -w "%{http_code}" \
+  https://api.openai.com/v1/models
+```
+
+Do not launch scene generation until this works from the compute node that will run the job.
+
+## 4. Full-Quality Asset Policy
 
 Function: make the asset router use generated SAM3D assets where appropriate and keep richer articulated routes available.
 
@@ -70,11 +94,13 @@ Full-quality overrides:
 furniture_agent.asset_manager.general_asset_source=generated
 wall_agent.asset_manager.general_asset_source=generated
 ceiling_agent.asset_manager.general_asset_source=generated
-manipuland_agent.asset_manager.general_asset_source=generated
+manipuland_agent.asset_manager.general_asset_source=objaverse
 furniture_agent.asset_manager.backend=sam3d
 wall_agent.asset_manager.backend=sam3d
 ceiling_agent.asset_manager.backend=sam3d
 manipuland_agent.asset_manager.backend=sam3d
+manipuland_agent.asset_manager.objaverse.use_top_k=10
+manipuland_agent.asset_manager.objaverse.use_lenient_validation=true
 furniture_agent.asset_manager.router.strategies.generated.enabled=true
 wall_agent.asset_manager.router.strategies.generated.enabled=true
 ceiling_agent.asset_manager.router.strategies.generated.enabled=true
@@ -101,9 +127,40 @@ furniture_agent.asset_manager.artiverse_articulated.data_path=data/artiverse
 furniture_agent.asset_manager.router.strategies.artiverse_articulated.enabled=true
 ```
 
-Important: `backend=sam3d` alone is not enough. If `general_asset_source=hssd`, SAM3D is bypassed.
+Important:
 
-## 4. Articulated Router Validation
+- `backend=sam3d` alone is not enough. If `general_asset_source=hssd`, SAM3D is bypassed.
+- Before launching room workers, grep `scripts/run_single_room_worker.py` for any forced `general_asset_source` override and run the worker with `--config-only`; the resolved Hydra config printed in the log must show furniture/wall/ceiling as `generated` and manipulands as `objaverse` for `--asset-pipeline generated_sam3d`.
+
+Config-only room-worker check:
+
+```bash
+.venv/bin/python scripts/run_single_room_worker.py \
+  --repo-dir /data/run01/scvj260/scenesmith \
+  --run-dir "outputs/<date>/<run_name>" \
+  --csv <prompt_csv> \
+  --run-name <run_name>_room_worker_config_check \
+  --room-id <room_id> \
+  --start-stage furniture \
+  --stop-stage manipuland \
+  --asset-pipeline generated_sam3d \
+  --port-offset <unique_offset> \
+  --render-gpu-id 0 \
+  --config-only
+```
+
+Expected resolved policy:
+
+```json
+{
+  "furniture_agent": {"general_asset_source": "generated", "backend": "sam3d"},
+  "wall_agent": {"general_asset_source": "generated", "backend": "sam3d"},
+  "ceiling_agent": {"general_asset_source": "generated", "backend": "sam3d"},
+  "manipuland_agent": {"general_asset_source": "objaverse"}
+}
+```
+
+## 5. Articulated Router Validation
 
 Function: prove that enabling ArtVIP/Artiverse-style paths changes actual router behavior before spending GPU/API budget on a full run.
 
@@ -133,7 +190,7 @@ If this fails:
 - Inspect/fix the asset router analysis prompt or strategy parsing.
 - Do not assume config flags are enough.
 
-## 5. Floor Plan Generation
+## 6. Floor Plan Generation
 
 Function: create the building layout, rooms, doors, wall geometry, and floor-plan assets.
 
@@ -157,7 +214,7 @@ Output:
 - `scene_000/room_geometry/`
 - `scene_000/room_<room_id>/`
 
-## 6. Room-Level Generation
+## 7. Room-Level Generation
 
 Function: generate furniture, wall objects, ceiling objects, and manipulands for each room.
 
@@ -185,7 +242,7 @@ Parallel policy:
 - Do not run final assembly while room workers are active.
 - Give each worker a unique `--port-offset`.
 
-## 7. Room Render Capture
+## 8. Room Render Capture
 
 Function: render each generated room so SAGE/Codex/VLM can examine object placement.
 
@@ -206,7 +263,7 @@ Current helper:
 
 Limitation: this helper renders review images only. It does not judge them.
 
-## 8. Room Self-Exam Gate
+## 9. Room Self-Exam Gate
 
 Function: block bad rooms before final assembly/export.
 
@@ -273,7 +330,7 @@ Pass threshold:
 
 If any required room fails, go to the repair loop. Do not combine/export.
 
-## 9. Room Repair/Regeneration Loop
+## 10. Room Repair/Regeneration Loop
 
 Function: fix failed rooms only, preserving good rooms.
 
@@ -295,7 +352,7 @@ After each repair:
 rerender room -> rerun SAGE/Codex room self-exam -> only mark pass if JSON passes
 ```
 
-## 10. Final Assembly
+## 11. Final Assembly
 
 Function: merge all passed room outputs into one `combined_house`.
 
@@ -317,7 +374,7 @@ Guardrail:
 - Back up existing `combined_house` before overwriting.
 - `scripts/assemble_final_house_and_render.py` refuses to run if any room gate JSON is missing or non-passing, unless `--allow-ungated` is explicitly passed for debugging.
 
-## 11. Drake/SceneEval/Collision Export
+## 12. Drake/SceneEval/Collision Export
 
 Function: create simulator-ready scene files.
 
@@ -345,7 +402,7 @@ Full-quality acceptance:
 
 If Drake package assets are exported to a standalone folder, include `floor_plans/`, `room_geometry/`, and all `room_*/generated_assets/` dependencies.
 
-## 12. Isaac/USD/MuJoCo Export
+## 13. Isaac/USD/MuJoCo Export
 
 Function: export to additional simulation formats when requested.
 
@@ -363,7 +420,7 @@ Isaac Sim note:
 - Isaac Sim consumes USD best. Drake DMD/SDF is not automatically an Isaac-native export.
 - If Isaac is required, run the USD path and then run the Isaac compatibility fixer if needed.
 
-## 13. Outlook Renders And Local Transfer
+## 14. Outlook Renders And Local Transfer
 
 Function: generate user-facing preview images and copy the final package locally.
 
@@ -380,7 +437,7 @@ Transfer rule:
 - Use hash-verified archives/chunks for large folders.
 - Do not report final success until local files are present and at least one render is visually inspected.
 
-## 14. Final Validation Report
+## 15. Final Validation Report
 
 Function: make it clear what was actually run.
 
@@ -400,6 +457,9 @@ The final report must include:
 - Collision hull caps used.
 - Full-house Drake load result on a 2-GPU allocation.
 - Articulated router validation output path and pass/fail status.
+- Worker `--config-only` resolved asset policy output proving no forced HSSD path.
+- Compute-node OpenAI proxy endpoint and probe result.
+- Whether manipulands used Objaverse/ObjectThor instead of primitive fallback.
 
 ## Cost And Schedule Estimate
 
@@ -441,6 +501,9 @@ Do not launch until these are answered:
 - Output target: full-quality or fast/HSSD-only?
 - Asset policy: `generated_sam3d` or `hssd`?
 - Are ArtVIP and/or Artiverse expected?
+- Are manipulands using Objaverse/ObjectThor rather than primitive fallback?
+- Has `run_single_room_worker.py --config-only` proved no forced HSSD path?
+- Is the OpenAI proxy reachable from the actual compute node and persistent after laptop disconnect?
 - How many GPUs, and which room per GPU?
 - What exact files will each job write?
 - Where is the SAGE/Codex room gate output stored?
