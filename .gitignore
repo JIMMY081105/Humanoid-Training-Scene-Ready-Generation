@@ -18,3 +18,11 @@ debug_furniture_agent
 
 # Local code archive (do not commit)
 scenesmith_current_code.tar
+
+# Personal connection/infra details — never publish (cluster access, ssh,
+# VPN/proxy wiring, remote handoffs). Keep locally only.
+CODEX_SQZ_REMOTE_HANDOFF.md
+local_setup/setup_env_sqz.sh
+local_setup/RECONNECT_RUNBOOK.md
+local_setup/compute_node_env.sh
+private/
