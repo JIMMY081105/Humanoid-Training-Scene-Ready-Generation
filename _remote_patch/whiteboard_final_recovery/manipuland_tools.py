@@ -20,7 +20,10 @@ from typing_extensions import TypedDict
 from scenesmith.agent_utils.action_logger import log_scene_action
 from scenesmith.agent_utils.asset_manager import AssetGenerationRequest, AssetManager
 from scenesmith.agent_utils.loop_detector import LoopDetector
-from scenesmith.agent_utils.physical_feasibility import apply_surface_projection
+from scenesmith.agent_utils.physical_feasibility import (
+    apply_surface_projection,
+    clone_scene_with_collision_repairs,
+)
 from scenesmith.agent_utils.placement_noise import (
     PlacementNoiseMode,
     apply_placement_noise,
@@ -672,7 +675,7 @@ class ManipulandTools:
         cfg_physics = self.cfg.physics_validation
         object_id_str = str(object_id)
         collisions = compute_scene_collisions(
-            scene=self.scene,
+            scene=clone_scene_with_collision_repairs(self.scene),
             penetration_threshold=cfg_physics.object_penetration_threshold_m,
             floor_penetration_tolerance=cfg_physics.floor_penetration_tolerance_m,
             current_furniture_id=self.current_furniture_id,

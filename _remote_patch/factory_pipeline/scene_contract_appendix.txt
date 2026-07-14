@@ -1,0 +1,49 @@
+==================================================
+IMMUTABLE FULL-QUALITY FACTORY CONTRACT APPENDIX
+==================================================
+
+This appendix is authoritative and is evaluated together with the complete source
+prompt. Generate exactly these 14 enclosed SceneSmith room IDs and no others:
+
+ingredient_receiving, dry_storage, cold_storage, washing_preparation,
+qc_laboratory, office_administration, processing_hall, packaging_hall,
+finished_goods_storage, maintenance, changing_room, break_room, boys_toilet,
+girls_toilet.
+
+The shell is exactly 44.0 m west-east by 32.0 m south-north with 5.0 m clear
+height. Do not rotate or mirror it. The southeast loading dock, entrance
+transition, internal circulation, exterior truck road, landscaping, and the
+physically backed shared toilet foyer are explicit common/exterior zones, not
+additional rooms.
+
+The immutable layout, inventories, workflow edges, windows, clearances, articulated
+roles, and collision policy are defined by scripts/factory_contract.json. Its
+validated contract hash must be bound by the input manifest, room prompt binding,
+every factory gate, final assembly, and acceptance record.
+
+The physical workflow must progress from ingredient receiving through dry or cold
+storage, washing/preparation, processing, packaging, finished-goods storage, and
+the loading dock without forcing raw ingredients back through a clean zone.
+Maintain 3.0 m forklift routes, 2.5 m production aisles, 1.2-1.5 m worker
+clearances, clear doors/exits/windows, wet/electrical separation, modular machinery,
+declared under-machine free space, and separable pedestrian/forklift paths. The
+truck stays outside the shell.
+
+Use generated SAM3D only for the seven approved distinctive model families:
+forklift, pallet jack, hygienic mixer/hopper, washing/sorting/inspection unit,
+filling/dosing unit, combined sealing/carton/label module, and box/delivery truck.
+Aliases reuse an accepted family asset. Use accurate procedural geometry for
+structural industrial forms. Do not use HSSD or primitive substitutes for
+distinctive machinery. Use ObjectThor for eligible manipulands, keep ArtVIP
+enabled, and require at least one authority-validated Artiverse articulated asset
+to survive final assembly.
+
+Require three real articulated roles: a cold-room insulated door, one maintenance
+tool cabinet or changing-room locker, and one office filing cabinet or break-room
+refrigerator. All must pass measured Drake joint-motion tests, and at least one must
+be the validated Artiverse survivor.
+
+No reference image was supplied. The complete source prompt plus this immutable
+appendix is the sole appearance and architecture authority. Do not manufacture or
+substitute a reference-image claim. All deterministic and visual decisions must
+bind these exact prompt bytes and the factory contract hash.

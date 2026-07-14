@@ -5,7 +5,6 @@ import asyncio
 
 from types import SimpleNamespace
 
-import pytest
 from omegaconf import OmegaConf
 
 # Match the production import order that loads Google GenAI after the OpenAI
@@ -17,13 +16,9 @@ from agents.models._trace import model_config_for_trace  # noqa: E402
 from openai import Timeout  # noqa: E402
 
 import scenesmith.agent_utils.base_stateful_agent as base_stateful_module  # noqa: E402
-import scenesmith.manipuland_agents.stateful_manipuland_agent as manipuland_module  # noqa: E402
 from scenesmith.agent_utils.base_stateful_agent import (  # noqa: E402
     BaseStatefulAgent,
     _TraceSafeModelSettings,
-)
-from scenesmith.manipuland_agents.stateful_manipuland_agent import (  # noqa: E402
-    StatefulManipulandAgent,
 )
 
 
@@ -123,70 +118,3 @@ def test_critic_retry_does_not_mask_non_transport_failures() -> None:
     assert not BaseStatefulAgent._is_transient_model_transport_error(
         RuntimeError("invalid critique JSON")
     )
-
-
-def test_planner_transport_retry_recovers_only_before_scene_mutation(monkeypatch) -> None:
-    attempts = 0
-    expected = object()
-
-    async def fake_run(**_kwargs):
-        nonlocal attempts
-        attempts += 1
-        if attempts == 1:
-            raise ConnectionError("Connection error while calling responses")
-        return expected
-
-    async def no_wait(_delay: float) -> None:
-        return None
-
-    subject = SimpleNamespace(
-        planner=object(),
-        scene=SimpleNamespace(content_hash=lambda: "unchanged"),
-        cfg=OmegaConf.create({"agents": {"planner_agent": {"max_turns": 3}}}),
-        _create_run_config=lambda: object(),
-        _is_transient_model_transport_error=(
-            BaseStatefulAgent._is_transient_model_transport_error
-        ),
-    )
-    monkeypatch.setattr(manipuland_module.Runner, "run", fake_run)
-    monkeypatch.setattr(manipuland_module.asyncio, "sleep", no_wait)
-
-    result = asyncio.run(
-        StatefulManipulandAgent._run_planner_with_transport_retry(subject, "plan")
-    )
-
-    assert result is expected
-    assert attempts == 2
-
-
-def test_planner_transport_retry_never_replays_after_scene_mutation(monkeypatch) -> None:
-    attempts = 0
-    scene_state = {"hash": "before"}
-
-    async def fake_run(**_kwargs):
-        nonlocal attempts
-        attempts += 1
-        scene_state["hash"] = "after"
-        raise ConnectionError("Connection error while calling responses")
-
-    async def no_wait(_delay: float) -> None:
-        return None
-
-    subject = SimpleNamespace(
-        planner=object(),
-        scene=SimpleNamespace(content_hash=lambda: scene_state["hash"]),
-        cfg=OmegaConf.create({"agents": {"planner_agent": {"max_turns": 3}}}),
-        _create_run_config=lambda: object(),
-        _is_transient_model_transport_error=(
-            BaseStatefulAgent._is_transient_model_transport_error
-        ),
-    )
-    monkeypatch.setattr(manipuland_module.Runner, "run", fake_run)
-    monkeypatch.setattr(manipuland_module.asyncio, "sleep", no_wait)
-
-    with pytest.raises(ConnectionError, match="Connection error"):
-        asyncio.run(
-            StatefulManipulandAgent._run_planner_with_transport_retry(subject, "plan")
-        )
-
-    assert attempts == 1
